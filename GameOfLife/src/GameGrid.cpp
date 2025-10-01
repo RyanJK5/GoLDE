@@ -1,7 +1,8 @@
 #include "GameGrid.h"
-#include <iostream>
+#include "Logging.h"
 
-static gol::log::Logger logger = gol::log::Logger(gol::log::LogCode::Info, true);
+#include <iostream>
+#include <unordered_set>
 
 gol::GameGrid::GameGrid(const std::vector<unsigned char>&  seedBuffer, size_t width, size_t height)
 	: m_grid(width * height), m_width(width), m_height(height)

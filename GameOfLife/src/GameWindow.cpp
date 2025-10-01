@@ -2,14 +2,14 @@
 #include <chrono>
 #include <iostream>
 
-#define LOGGER logger
-#include "Logger.h"
+#include "vendor/imgui.h"
+#include "vendor/imgui_impl_glfw.h"
+#include "vendor/imgui_impl_opengl3.h"
+
 #include "ShaderManager.h"
 #include "GLException.h"
-
+#include "Logging.h"
 #include "GameWindow.h"
-
-static gol::log::Logger logger = gol::log::Logger(gol::log::LogCode::Info, true);
 
 static void FrameResized(GLFWwindow* window, int width, int height)
 {
@@ -168,6 +168,7 @@ void gol::GameWindow::PaintUpdate()
 
     double x, y;
     glfwGetCursorPos(m_window, &x, &y);
+
     auto [viewX, viewY, viewWidth, viewHeight] = ViewportBounds();
 
     if (x < viewX || y < viewY || x >= viewX + viewWidth || y >= viewY + viewHeight)

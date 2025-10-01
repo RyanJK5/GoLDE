@@ -21,8 +21,13 @@
   <ItemGroup>
     <ClCompile Include="src\GameGrid.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
-    <ClCompile Include="src\Logger.cpp" />
+    <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
+    <ClCompile Include="src\vendor\imgui.cpp" />
+    <ClCompile Include="src\vendor\imgui_demo.cpp" />
+    <ClCompile Include="src\vendor\imgui_draw.cpp" />
+    <ClCompile Include="src\vendor\imgui_tables.cpp" />
+    <ClCompile Include="src\vendor\imgui_widgets.cpp" />
     <Text Include="shader\default.shader">
       <FileType>Document</FileType>
     </Text>
@@ -32,8 +37,16 @@
     <ClInclude Include="src\GameGrid.h" />
     <ClInclude Include="src\GameWindow.h" />
     <ClInclude Include="src\GLException.h" />
-    <ClInclude Include="src\Logger.h" />
+    <ClInclude Include="src\Logging.h" />
     <ClInclude Include="src\ShaderManager.h" />
+    <ClInclude Include="src\vendor\imconfig.h" />
+    <ClInclude Include="src\vendor\imgui.h" />
+    <ClInclude Include="src\vendor\imgui_impl_glfw.h" />
+    <ClInclude Include="src\vendor\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\vendor\imgui_internal.h" />
+    <ClInclude Include="src\vendor\imstb_rectpack.h" />
+    <ClInclude Include="src\vendor\imstb_textedit.h" />
+    <ClInclude Include="src\vendor\imstb_truetype.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -94,7 +107,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp23</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -1,8 +1,6 @@
-#pragma once
+#ifndef __GameGrid_h__
+#define __GameGrid_h__
 #include <vector>
-
-#define LOGGER logger
-#include "Logger.h"
 
 namespace gol
 {
@@ -46,3 +44,5 @@ namespace gol
 
 	};
 }
+
+#endif

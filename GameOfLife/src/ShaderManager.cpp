@@ -1,12 +1,8 @@
 #include <fstream>
 
-#define LOGGER logger
-
 #include "ShaderManager.h"
-#include "Logger.h"
+#include "Logging.h"
 #include "GLException.h"
-
-static gol::log::Logger logger = gol::log::Logger(gol::log::LogCode::Info, true);
 
 gol::ShaderManager::ShaderManager(const std::string& shaderFilePath)
 {

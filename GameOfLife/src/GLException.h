@@ -1,5 +1,8 @@
-#pragma once
+#ifndef __GLException_h__
+#define __GLException_h__
+
 #include <exception>
+#include <string_view>
 
 namespace gol
 {
@@ -8,6 +11,8 @@ namespace gol
 	public:
 		GLException() : std::exception() { }
 
-		GLException(const std::string& str) : std::exception(str.c_str()) { }
-};
+		GLException(std::string_view str) : std::exception(std::move(str).data()) {}
+	};
 }
+
+#endif

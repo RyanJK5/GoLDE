@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __GameWindow_h__
+#define __GameWindow_h__
+
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -40,3 +42,5 @@ namespace gol
 		GLFWwindow* m_window;
 	};
 }
+
+#endif
