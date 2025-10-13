@@ -30,6 +30,8 @@ namespace gol
 		Info
 	};
 
+	inline LogCode Level = LogCode::Info;
+
 	namespace logimpl
 	{
 		constexpr std::string_view StringRepresentation(gol::LogCode code);
@@ -42,6 +44,9 @@ namespace gol
 	template <typename... Args>
 	inline void Log(LogCode code, const std::source_location& location, std::format_string<Args...> str = "", Args&&... args)
 	{
+		if (code < Level)
+			return;
+
 		std::println("{} at {}:{} in {}",
 			logimpl::StringRepresentation(code),
 			logimpl::SimplifyFileName(location.file_name()),
@@ -49,7 +54,7 @@ namespace gol
 			logimpl::SimplifyFunctionName(location.function_name())
 		);
 		if (!str.get().empty())
-			std::println(str, args...);
+			std::println(str, std::forward<Args>(args)...);
 	}
 
 	void LogGLErrors(const std::string& call, const std::source_location& location = std::source_location::current());

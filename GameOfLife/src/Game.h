@@ -2,12 +2,11 @@
 #define __Game_h__
 
 #include <optional>
+#include <memory>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
+#include "GameWindow.h"
 #include "GameGrid.h"
-#include "DrawHandler.h"
+#include "GraphicsHandler.h"
 
 namespace gol
 {
@@ -20,6 +19,7 @@ namespace gol
 	{
 		None, Insert, Delete
 	};
+
 
 	class Game
 	{
@@ -35,54 +35,48 @@ namespace gol
 		Game(const Game&& other) = delete;
 		Game& operator=(const Game& other) = delete;
 		Game& operator=(const Game&& other) = delete;
-		~Game();
 	
 		void Begin();
 	private:
-		void InitOpenGL();
 		void InitImGUI();
 
 		void UpdateState();
-		void UpdateViewport();
 
-		Rect WindowBounds() const;
-		Rect ViewportBounds() const;
-
-		std::optional<Vec2> GetCursorGridPos();
+		std::optional<Vec2> CursorGridPos();
 		void UpdateMouseState(Vec2 gridPos);
 
 		bool SimulationUpdate(double timeElapsedMs);
 		void PaintUpdate();
 
 	private:
-		static struct InputState
+		struct InputState
 		{
-			bool EnterDown;
 			DrawMode DrawMode;
+			bool EnterDown;
 
 			InputState()
-				: EnterDown(false)
-				, DrawMode(DrawMode::None)
+				: DrawMode(DrawMode::None)
+				, EnterDown(false)
 			{ }
 		};
 
-		static struct SimulationSettings
+		struct SimulationSettings
 		{
-			GameState State;
 			double TickDelayMs;
+			GameState State;
 
 			SimulationSettings(GameState state, double tickDelayMs = 0)
-				: State(state)
-				, TickDelayMs(tickDelayMs)
+				: TickDelayMs(tickDelayMs)
+				, State(state)
 			{}
 		};
 	private:
-		GLFWwindow* m_window;
-		DrawHandler m_draw;
+		GameGrid m_Grid = { 64, 64 };
+		SimulationSettings m_Settings = { GameState::Paint, 10 };
+		InputState m_Input;
 
-		GameGrid m_grid;
-		SimulationSettings m_settings;
-		InputState m_input;
+		GameWindow m_Window;
+		GraphicsHandler m_Graphics;
 	};
 }
 

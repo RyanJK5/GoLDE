@@ -4,54 +4,71 @@
 #include <cstdint>
 #include <concepts>
 
+#include "vendor/imgui.h"
+
 namespace gol
 {
 	template <typename T> requires std::totally_ordered<T>
-	struct GenVec
+	struct GenericVec
 	{
 		T X;
 		T Y;
 
-		GenVec() : X(0), Y(0) { }
-		GenVec(T x, T y) : X(x), Y(y) { }
+		GenericVec() : X(0), Y(0) { }
+		GenericVec(T x, T y) : X(x), Y(y) { }
 	};
 
 	template <typename T> requires std::totally_ordered<T>
-	struct GenRect
+	struct GenericSize
 	{
-		union
-		{
-			GenVec<T> Pos;
-			struct
-			{
-				T X;
-				T Y;
-			};
-		};
-		union
-		{
-			GenVec<T> Size;
-			struct
-			{
-				T Width;
-				T Height;
-			};
-		};
+		T Width;
+		T Height;
 
-		GenRect() : Pos(0,0), Size(0,0) { }
-		GenRect(T x, T y, T width, T height) : Pos(x, y), Size(width, height) { }
-		GenRect(GenVec<T> pos, GenVec<T> size) : Pos(pos), Size(size) { }
 
-		inline bool InBounds(T x, T y) const { return x > X && x < X + Width && y > Y && y < Y + Height; }
-		
-		inline bool InBounds(GenVec<T> pos) const { return InBounds(pos.X, pos.Y); }
+		GenericSize() : Width(0), Height(0) { }
+		GenericSize(T width, T height) : Width(width), Height(height) { }
 	};
 
-	using Vec2 = GenVec<int32_t>;
-	using Vec2F = GenVec<float>;
+	template <typename T> requires std::totally_ordered<T>
+	struct GenericRect
+	{
+		T X;
+		T Y;
+		T Width;
+		T Height;
 
-	using Rect = GenRect<int32_t>;
-	using RectF = GenRect<float>;
+		inline GenericVec<T> Pos() { return { X, Y }; }
+		inline GenericSize<T> Size() { return { Width, Height }; }
+
+		GenericRect(T x, T y, T width, T height) : X(x), Y(y), Width(width), Height(height) { }
+		GenericRect(GenericVec<T> pos, GenericSize<T> size) : X(pos.X), Y(pos.Y), Width(size.Width), Height(size.Height) {}
+
+		inline bool InBounds(std::totally_ordered auto x, std::totally_ordered auto y) const
+			{ return x > X && x < X + Width && y > Y && y < Y + Height; }
+		
+		inline bool InBounds(GenericVec<T> pos) const { return InBounds(pos.X, pos.Y); }
+	};
+
+	struct Vec2F : public GenericVec<float>
+	{
+		Vec2F() : GenericVec() { }
+		Vec2F(ImVec2 vec) : GenericVec(vec.x, vec.y) { }
+		Vec2F(float x, float y) : GenericVec(x, y) { }
+	};
+
+	struct Size2F : public GenericSize<float>
+	{
+		Size2F() : GenericSize() { }
+		Size2F(ImVec2 vec) : GenericSize(vec.x, vec.y) { }
+		Size2F(float x, float y) : GenericSize(x, y) { }
+	};
+
+	using Vec2 = GenericVec<int32_t>;
+
+	using Size2 = GenericSize<int32_t>;
+
+	using Rect = GenericRect<int32_t>;
+	using RectF = GenericRect<float>;
 }
 
 #endif

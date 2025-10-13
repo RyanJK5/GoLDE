@@ -4,7 +4,7 @@
 #include "Logging.h"
 #include "GLException.h"
 
-gol::ShaderManager::ShaderManager(const std::string& shaderFilePath)
+gol::ShaderManager::ShaderManager(std::string_view shaderFilePath)
 {
     GL_DEBUG(m_programID = glCreateProgram());
     try
@@ -12,7 +12,7 @@ gol::ShaderManager::ShaderManager(const std::string& shaderFilePath)
         std::optional<IDPair> shaderIds = ParseShader(shaderFilePath);
 
         if (!shaderIds)
-            throw GLException("File '" + shaderFilePath + "' could not be read");
+            throw GLException(std::format("File '{}' could not be read", shaderFilePath));
 
         CreateShader(m_programID, shaderIds.value().first);
         CreateShader(m_programID, shaderIds.value().second);
@@ -29,31 +29,35 @@ gol::ShaderManager::ShaderManager(const std::string& shaderFilePath)
 
 gol::ShaderManager::ShaderManager(ShaderManager&& other) noexcept
 {
-    m_programID = other.m_programID;
-    other.m_programID = 0;
+    m_programID = std::exchange(other.m_programID, 0);
 }
 
 gol::ShaderManager& gol::ShaderManager::operator=(ShaderManager&& other) noexcept
 {
-    m_programID = other.m_programID;
-    other.m_programID = 0;
+    if (this != &other)
+    {
+        Destroy();
+        m_programID = std::exchange(other.m_programID, 0);
+    }
     return *this;
 }
 
 gol::ShaderManager::~ShaderManager()
 {
-    GL_DEBUG(glDeleteProgram(m_programID));
+    Destroy();
 }
+
+void gol::ShaderManager::Destroy() { GL_DEBUG(glDeleteProgram(m_programID)); }
 
 uint32_t gol::ShaderManager::Program() const
 {
 	return m_programID;
 }
 
-uint32_t gol::ShaderManager::CompileShader(uint32_t type, const std::string& source) const
+uint32_t gol::ShaderManager::CompileShader(uint32_t type, std::string_view source) const
 {
     uint32_t id = glCreateShader(type);
-    const char* src = source.c_str();
+    const char* src = source.data();
 
     GL_DEBUG(glShaderSource(id, 1, &src, nullptr));
     GL_DEBUG(glCompileShader(id));
@@ -76,13 +80,12 @@ uint32_t gol::ShaderManager::CompileShader(uint32_t type, const std::string& sou
     throw GLException(error);
 }
 
-std::optional<IDPair> gol::ShaderManager::ParseShader(const std::string& filePath) const
+std::optional<IDPair> gol::ShaderManager::ParseShader(std::string_view filePath) const
 {
     std::optional<uint32_t> id1{};
     std::optional<uint32_t> id2{};
-    bool first = true;
 
-    std::ifstream stream(filePath);
+    std::ifstream stream(filePath.data());
     if (!stream.is_open())
         return std::nullopt;
 

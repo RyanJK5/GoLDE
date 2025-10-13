@@ -2,6 +2,7 @@
 #define __GameGrid_h__
 
 #include <vector>
+#include <optional>
 
 #include "Graphics2D.h"
 
@@ -10,37 +11,38 @@ namespace gol
 	class GameGrid
 	{
 	public:
-		GameGrid(const std::vector<unsigned char>& seedBuffer, uint32_t width, uint32_t height);
+		GameGrid(const std::vector<unsigned char>& seedBuffer, int32_t width, int32_t height);
 
-		GameGrid(uint32_t width, uint32_t height);
+		GameGrid(int32_t width, int32_t height);
+		GameGrid(Size2 size);
 
 		void Update();
 
-		inline uint32_t Width() const { return m_width; }
-		inline uint32_t Height() const { return m_height; }
+		inline int32_t Width() const { return m_Width; }
+		inline int32_t Height() const { return m_Height; }
+		inline Size2 Size() const { return { m_Width, m_Height }; }
 
 		bool Dead() const;
 
-		inline bool Enable(uint32_t x, uint32_t y) { return Set(x, y, true); }
-		inline bool Disable(uint32_t x, uint32_t y) { return Set(x, y, false); }
-		bool Set(uint32_t x, uint32_t y, bool active);
-		bool Toggle(uint32_t x, uint32_t y);
+		inline bool Enable(int32_t x, int32_t y) { return Set(x, y, true); }
+		inline bool Disable(int32_t x, int32_t y) { return Set(x, y, false); }
+		bool Set(int32_t x, int32_t y, bool active);
+		bool Toggle(int32_t x, int32_t y);
+		std::optional<bool> Get(int32_t x, int32_t y) const;
 
-		inline bool Get(uint32_t x, uint32_t y) const { return m_grid[y * m_width + x]; }
+		Vec2F GLCoords(int32_t x, int32_t y) const;
 
-		Vec2F GLCoords(uint32_t x, uint32_t y) const;
-
-		Vec2F GLCellDimensions() const;
+		Size2F GLCellDimensions() const;
 
 		std::vector<float> GenerateGLBuffer() const;
 	private:
 		void ParseSeed(const std::vector<unsigned char>& seedBuffer);
 
-		uint8_t CountNeighbors(uint32_t x, uint32_t y);
+		int8_t CountNeighbors(int32_t x, int32_t y);
 	private:
-		std::vector<bool> m_grid;
-		uint32_t m_width;
-		uint32_t m_height;
+		std::vector<bool> m_Grid;
+		int32_t m_Width;
+		int32_t m_Height;
 	};
 }
 

@@ -14,77 +14,41 @@
 #include "Graphics2D.h"
 
 gol::Game::Game()
-    : m_window(nullptr)
-    , m_draw()
-    , m_grid(64, 64)
-    , m_settings(GameState::Paint, 10)
-    , m_input()
-{
-    try
-    {
-        InitOpenGL();
-        InitImGUI();
-    }
-    catch (GLException e)
-    {
-        glfwTerminate();
-        throw e;
-    }
-}
-
-gol::Game::~Game()
-{
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    glfwTerminate();
-}
-
-gol::Rect gol::Game::WindowBounds() const
-{
-    int32_t windowWidth, windowHeight;
-    glfwGetFramebufferSize(m_window, &windowWidth, &windowHeight);
-    return { 0, 0, windowWidth, windowHeight };
-}
-
-void gol::Game::UpdateViewport()
-{
-    Rect bounds = ViewportBounds();
-    glViewport(bounds.X, bounds.Y, bounds.Width, bounds.Height);
-}
+    : m_Window(DefaultWindowWidth, DefaultWindowHeight)
+    , m_Graphics(GraphicsHandler("shader/default.shader", DefaultWindowWidth, DefaultWindowHeight))
+{ }
 
 void gol::Game::UpdateState()
 {
-    int enterState = glfwGetKey(m_window, GLFW_KEY_ENTER);
-    if (enterState == GLFW_PRESS)
-        m_input.EnterDown = true;
-    else if (m_input.EnterDown && enterState == GLFW_RELEASE)
+    bool enterState = m_Window.GetKeyState(ImGuiKey_Enter);
+    if (enterState)
+        m_Input.EnterDown = true;
+    else if (m_Input.EnterDown && !enterState)
     {
-        m_input.EnterDown = false;
-        switch (m_settings.State)
+        m_Input.EnterDown = false;
+        switch (m_Settings.State)
         {
         case GameState::Paint:
-            m_settings.State = GameState::Simulation;
+            m_Settings.State = GameState::Simulation;
             return;
         case GameState::Simulation:
-            m_grid = GameGrid(m_grid.Width(), m_grid.Height());
-            m_settings.State = GameState::Paint;
+            m_Grid = GameGrid(m_Grid.Size());
+            m_Settings.State = GameState::Paint;
             break;
         }
     }
 }
 
-std::optional<gol::Vec2> gol::Game::GetCursorGridPos()
+std::optional<gol::Vec2> gol::Game::CursorGridPos()
 {
-    double x, y;
-    glfwGetCursorPos(m_window, &x, &y);
-    Rect view = ViewportBounds();
-    if (!view.InBounds(x, y))
+    Rect view = m_Window.ViewportBounds(m_Grid.Size());
+    Vec2F cursor = m_Window.CursorPos();
+    if (!view.InBounds(cursor.X, cursor.Y))
         return std::nullopt;
 
-    uint32_t xPos = (x - view.X) / (float(view.Width) / m_grid.Width());
-    uint32_t yPos = (y - view.Y) / (float(view.Height) / m_grid.Height());
-    if (xPos < 0 || xPos >= m_grid.Width() || yPos < 0 || yPos >= m_grid.Height())
+    int32_t xPos = static_cast<int32_t>((cursor.X - view.X) / (float(view.Width) / m_Grid.Width()));
+    int32_t yPos = static_cast<int32_t>((cursor.Y - view.Y) / (float(view.Height) / m_Grid.Height()));
+    if (xPos >= m_Grid.Width() || yPos >= m_Grid.Height())
         return std::nullopt;
     
     return Vec2(xPos, yPos);
@@ -92,70 +56,16 @@ std::optional<gol::Vec2> gol::Game::GetCursorGridPos()
 
 void gol::Game::UpdateMouseState(Vec2 gridPos)
 {
-    int mouseState = glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT);
-    if (mouseState == GLFW_PRESS)
+    bool mouseState = m_Window.GetMouseState(ImGuiMouseButton_Left);
+    if (mouseState)
     {
-        if (m_input.DrawMode == DrawMode::None)
-            m_input.DrawMode = m_grid.Get(gridPos.X, gridPos.Y) ? DrawMode::Delete : DrawMode::Insert;
+        if (m_Input.DrawMode == DrawMode::None)
+            m_Input.DrawMode = *m_Grid.Get(gridPos.X, gridPos.Y) ? DrawMode::Delete : DrawMode::Insert;
 
-        m_grid.Set(gridPos.X, gridPos.Y, m_input.DrawMode == DrawMode::Insert);
+        m_Grid.Set(gridPos.X, gridPos.Y, m_Input.DrawMode == DrawMode::Insert);
     }
-    else if (mouseState == GLFW_RELEASE)
-        m_input.DrawMode = DrawMode::None;
-}
-
-gol::Rect gol::Game::ViewportBounds() const
-{
-    int32_t windowWidth, windowHeight;
-    glfwGetFramebufferSize(m_window, &windowWidth, &windowHeight);
-
-    const float widthRatio = static_cast<float>(windowWidth) / m_grid.Width(); // 1920 / 64 = 30
-    const float heightRatio = static_cast<float>(windowHeight) / m_grid.Height(); // 1080 / 64 = 16.875
-    if (widthRatio > heightRatio)
-    {
-        const int32_t newWidth = heightRatio * m_grid.Width();
-        const int32_t newX = (windowWidth - newWidth) / 2;
-        return Rect{ newX, 0, newWidth, windowHeight };
-    }
-    const int32_t newHeight = widthRatio * m_grid.Height();
-    const int32_t newY = (windowHeight - newHeight) / 2;
-    return Rect{ 0, newY, windowWidth, newHeight };
-}
-
-void gol::Game::InitOpenGL()
-{
-    if (!glfwInit())
-        throw GLException("Failed to initialize glfw");
-
-    m_window = glfwCreateWindow(DefaultWindowWidth, DefaultWindowHeight, "Conway's Game of Life", NULL, NULL);
-
-    if (!m_window)
-        throw GLException("Failed to create window");
-
-    glfwMakeContextCurrent(m_window);
-
-    glLineWidth(4);
-
-    glfwSwapInterval(1);
-
-    if (glewInit() != GLEW_OK)
-        throw GLException("Failed to initialize glew");
-
-    gol::ShaderManager shader("shader/default.shader");
-    GL_DEBUG(glUseProgram(shader.Program()));
-    
-    UpdateViewport();
-}
-
-void gol::Game::InitImGUI()
-{
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-    ImGui_ImplOpenGL3_Init();
+    else
+        m_Input.DrawMode = DrawMode::None;
 }
 
 static double GetTimeMs(const std::chrono::steady_clock& clock)
@@ -165,36 +75,36 @@ static double GetTimeMs(const std::chrono::steady_clock& clock)
 
 bool gol::Game::SimulationUpdate(double timeElapsedMs)
 {   
-    const bool success = timeElapsedMs >= m_settings.TickDelayMs;
+    const bool success = timeElapsedMs >= m_Settings.TickDelayMs;
     if (success)
     {
-        if (m_grid.Dead())
+        if (m_Grid.Dead())
         {
-            m_settings.State = GameState::Paint;
-            m_grid = GameGrid(DefaultGridWidth, DefaultGridHeight);
+            m_Settings.State = GameState::Paint;
+            m_Grid = GameGrid(DefaultGridWidth, DefaultGridHeight);
         }
         else
-            m_grid.Update();
+            m_Grid.Update();
     }
 
-    m_draw.ClearBackground(WindowBounds(), ViewportBounds());
-    m_draw.DrawGrid(m_grid.GenerateGLBuffer());
+    m_Graphics.ClearBackground(m_Window.WindowBounds(), m_Window.ViewportBounds(m_Grid.Size()));
+    m_Graphics.DrawGrid(m_Grid.GenerateGLBuffer());
     
     return success;
 }
 
 void gol::Game::PaintUpdate()
 {
-    m_draw.ClearBackground(WindowBounds(), ViewportBounds());
-    m_draw.DrawGrid(m_grid.GenerateGLBuffer());
+    m_Graphics.ClearBackground(m_Window.WindowBounds(), m_Window.ViewportBounds(m_Grid.Size()));
+    m_Graphics.DrawGrid(m_Grid.GenerateGLBuffer());
 
-    const std::optional<Vec2> gridPos = GetCursorGridPos();
+    const std::optional<Vec2> gridPos = CursorGridPos();
     if (gridPos)
     {
         UpdateMouseState(*gridPos);
-        m_draw.DrawSelection({ 
-            m_grid.GLCoords(gridPos->X, gridPos->Y), 
-            m_grid.GLCellDimensions() 
+        m_Graphics.DrawSelection({ 
+            m_Grid.GLCoords(gridPos->X, gridPos->Y), 
+            m_Grid.GLCellDimensions() 
         });
     }
 }
@@ -204,14 +114,14 @@ void gol::Game::Begin()
     const std::chrono::steady_clock clock{};
     double lastTimeMs = GetTimeMs(clock);
 
-    while (!glfwWindowShouldClose(m_window))
+    while (m_Window.Open())
     {
-        GL_DEBUG(glfwPollEvents());
-
-        UpdateViewport();
+        m_Window.FrameStart(m_Graphics.TextureID());
+        m_Window.UpdateViewport(m_Grid.Size());
+        m_Graphics.RescaleFrameBuffer(m_Window.WindowBounds().Size());
         UpdateState();
 
-        switch (m_settings.State)
+        switch (m_Settings.State)
         {
         case GameState::Paint:
             PaintUpdate();
@@ -223,6 +133,6 @@ void gol::Game::Begin()
             break;
         }
 
-        GL_DEBUG(glfwSwapBuffers(m_window));
+        m_Window.FrameEnd();
     }
 }

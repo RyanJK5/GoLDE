@@ -19,7 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\DrawHandler.cpp" />
+    <ClCompile Include="src\GameWindow.cpp" />
+    <ClCompile Include="src\GraphicsHandler.cpp" />
     <ClCompile Include="src\GameGrid.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Logging.cpp" />
@@ -38,7 +39,8 @@
     <Text Include="src\vendor\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\DrawHandler.h" />
+    <ClInclude Include="src\GameWindow.h" />
+    <ClInclude Include="src\GraphicsHandler.h" />
     <ClInclude Include="src\GameGrid.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GLException.h" />
@@ -109,12 +111,14 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
