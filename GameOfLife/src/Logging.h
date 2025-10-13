@@ -1,5 +1,5 @@
 #ifndef __Logger_h__
-#define __Logger_h_
+#define __Logger_h__
 
 #include <format>
 #include <source_location>

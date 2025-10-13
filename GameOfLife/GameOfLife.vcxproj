@@ -19,30 +19,37 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\DrawHandler.cpp" />
     <ClCompile Include="src\GameGrid.cpp" />
-    <ClCompile Include="src\GameWindow.cpp" />
+    <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\vendor\imgui.cpp" />
     <ClCompile Include="src\vendor\imgui_demo.cpp" />
     <ClCompile Include="src\vendor\imgui_draw.cpp" />
+    <ClCompile Include="src\vendor\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\vendor\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\vendor\imgui_tables.cpp" />
     <ClCompile Include="src\vendor\imgui_widgets.cpp" />
     <Text Include="shader\default.shader">
       <FileType>Document</FileType>
     </Text>
     <ClCompile Include="src\Application.cpp" />
+    <Text Include="src\vendor\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DrawHandler.h" />
     <ClInclude Include="src\GameGrid.h" />
-    <ClInclude Include="src\GameWindow.h" />
+    <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GLException.h" />
+    <ClInclude Include="src\Graphics2D.h" />
     <ClInclude Include="src\Logging.h" />
     <ClInclude Include="src\ShaderManager.h" />
     <ClInclude Include="src\vendor\imconfig.h" />
     <ClInclude Include="src\vendor\imgui.h" />
     <ClInclude Include="src\vendor\imgui_impl_glfw.h" />
     <ClInclude Include="src\vendor\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\vendor\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="src\vendor\imgui_internal.h" />
     <ClInclude Include="src\vendor\imstb_rectpack.h" />
     <ClInclude Include="src\vendor\imstb_textedit.h" />

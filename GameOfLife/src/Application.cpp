@@ -1,15 +1,14 @@
-#include "GameWindow.h"
 #include <exception>
 #include <iostream>
 
-#include <fstream>
+#include "Game.h"
 
 int main()
 {
     try
     {
-        gol::GameWindow window {};
-        window.Begin();
+        gol::Game game {};
+        game.Begin();
     }
     catch (std::exception e)
     {

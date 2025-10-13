@@ -6,7 +6,7 @@
 
 #include "Logging.h"
 
-constexpr std::array<std::string_view, 3> TermBlacklist = { "class", "__cdecl", "std::" };
+constexpr std::array<std::string_view, 4> TermBlacklist = { "class", "__cdecl", "__thiscall", "std::" };
 constexpr std::array<std::string_view, 1> TemplateBlacklist = { "basic_string" };
 
 namespace
