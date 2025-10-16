@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GameActionButton.cpp" />
     <ClCompile Include="src\GameWindow.cpp" />
     <ClCompile Include="src\GraphicsHandler.cpp" />
     <ClCompile Include="src\GameGrid.cpp" />
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\KeyShortcut.cpp" />
     <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\vendor\imgui.cpp" />
@@ -32,7 +34,7 @@
     <ClCompile Include="src\vendor\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\vendor\imgui_tables.cpp" />
     <ClCompile Include="src\vendor\imgui_widgets.cpp" />
-    <Text Include="shader\default.shader">
+    <Text Include="resources\shader\default.shader">
       <FileType>Document</FileType>
     </Text>
     <ClCompile Include="src\Application.cpp" />
@@ -49,6 +51,7 @@
     <ClInclude Include="src\KeyShortcut.h" />
     <ClInclude Include="src\Logging.h" />
     <ClInclude Include="src\ShaderManager.h" />
+    <ClInclude Include="src\GameActionButton.h" />
     <ClInclude Include="src\vendor\imconfig.h" />
     <ClInclude Include="src\vendor\imgui.h" />
     <ClInclude Include="src\vendor\imgui_impl_glfw.h" />

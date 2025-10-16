@@ -2,10 +2,12 @@
 #define __GLWindow_h__
 
 #include <memory>
+#include <optional>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "GameActionButton.h"
 #include "KeyShortcut.h"
 #include "ShaderManager.h"
 #include "GameEnums.h"
@@ -22,13 +24,7 @@ namespace gol
 	struct UpdateInfo
 	{
 		GameAction Action;
-	};
-
-	struct DrawInfo
-	{
-		uint32_t SimulationTextureID;
-		GameState State;
-		bool GridDead;
+		std::optional<Vec2> UpdatePosition;
 	};
 
 	class GameWindow
@@ -55,15 +51,16 @@ namespace gol
 
 		void BeginFrame();
 		UpdateInfo CreateGUI(const DrawInfo& inInfo);
-		void EndFrame() const;
+		void EndFrame();
 
-		void UpdateViewport(Size2 gridSize) const;
+		void UpdateViewport(Size2 gridSize);
 	private:
 		static constexpr int32_t IOFlags = 
 			ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
 		static constexpr int32_t DockspaceFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 	private:
 		void InitImGUI();
+		void CreateButtons();
 
 		void CreateDockspace();
 		void InitDockspace(uint32_t dockspaceID);
@@ -78,8 +75,7 @@ namespace gol
 
 		ImFont* m_Font;
 		
-		KeyShortcut<ImGuiKey_Enter> m_EnterShortcut;
-		KeyShortcut<ImGuiKey_Space> m_SpaceShortcut;
+		std::vector<GameActionButton> m_Buttons;
 	};
 }
 #endif

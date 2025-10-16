@@ -1,3 +1,5 @@
+#include <string_view>
+
 #include "Logging.h"
 #include "GameWindow.h"
 #include "GLException.h"
@@ -32,6 +34,8 @@ gol::GameWindow::GameWindow(int32_t width, int32_t height)
         throw GLException("Failed to initialize glew");
 
     InitImGUI();
+
+    CreateButtons();
 }
 
 gol::GameWindow::~GameWindow()
@@ -49,7 +53,9 @@ void gol::GameWindow::InitImGUI()
      ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= IOFlags;
     io.ConfigDebugHighlightIdConflicts = true;
-    m_Font = io.Fonts->AddFontFromFileTTF("resources/font/arial.ttf", 30.0f);
+
+    auto path = std::filesystem::path("resources") / "font" / "arial.ttf";
+    m_Font = io.Fonts->AddFontFromFileTTF(path.string().c_str(), 30.0f);
 
     ImVec4 transparent = ImVec4(0, 0, 0, 0);
     ImVec4 background = ImVec4(0.1, 0.1, 0.1, 1);
@@ -84,6 +90,49 @@ void gol::GameWindow::InitImGUI()
 
     ImGui_ImplGlfw_InitForOpenGL(m_Window.get(), true);
     ImGui_ImplOpenGL3_Init();
+}
+
+void gol::GameWindow::CreateButtons()
+{
+    Size2F topRow = { 100, 50 };
+    Size2F bottomRow = { 155, 50 };
+    m_Buttons.emplace_back(
+        "Start",
+        GameAction::Start,
+        topRow,
+        [](auto info) { return !info.GridDead && (info.State == GameState::Paint || info.State == GameState::Paused); },
+        std::initializer_list<KeyShortcut> { ImGuiKey_Enter },
+        true
+    );
+    m_Buttons.emplace_back(
+        "Clear",
+        GameAction::Clear,
+        topRow,
+        [](auto info) { return !info.GridDead; },
+        std::initializer_list<KeyShortcut> { }
+    );
+    m_Buttons.emplace_back(
+        "Reset",
+        GameAction::Reset,
+        topRow,
+        [](auto info) { return info.State == GameState::Simulation; },
+        std::initializer_list<KeyShortcut> { ImGuiKey_Enter }
+    );
+    m_Buttons.emplace_back(
+        "Pause",
+        GameAction::Pause,
+        bottomRow,
+        [](auto info) { return info.State == GameState::Simulation; },
+        std::initializer_list<KeyShortcut> { ImGuiKey_Space },
+        true
+    );
+    m_Buttons.emplace_back(
+        "Resume",
+        GameAction::Resume,
+        bottomRow,
+        [](auto info) { return info.State == GameState::Paused; },
+        std::initializer_list<KeyShortcut> { ImGuiKey_Space }
+    );
 }
 
 gol::Rect gol::GameWindow::WindowBounds() const
@@ -150,62 +199,13 @@ gol::GameAction gol::GameWindow::DisplaySimulationControl(const DrawInfo& info)
 {
     ImGui::Begin("Simulation Control");
 
-    auto disableBegin = [](bool enabled)
-    {
-        if (enabled)
-            return;
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-    };
-    auto disableEnd = [](bool enabled)
-    {
-        if (enabled)
-            return;
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
-    };
-
     GameAction result = GameAction::None;
-
-    bool enterShortcut = m_EnterShortcut.Update();
-    bool spaceShortcut = m_SpaceShortcut.Update();
-
-    bool startEnabled = !info.GridDead && (info.State == GameState::Paint || info.State == GameState::Paused);
-    disableBegin(startEnabled);
-    if (ImGui::Button("Start", { 100, 50 }) || (startEnabled && enterShortcut))
-        result = GameAction::Start;
-    disableEnd(startEnabled);
-
-    bool clearEnabled = !info.GridDead;
-    disableBegin(clearEnabled);
-    ImGui::SameLine();
-    ImGui::Button("Clear", { 100, 50 });
-    if (ImGui::IsItemActivated())
-        result = GameAction::Clear;
-    disableEnd(clearEnabled);
-
-    bool resetEnabled = info.State == GameState::Simulation;
-    disableBegin(resetEnabled);
-    ImGui::SameLine();
-    ImGui::Button("Reset", { 100, 50 });
-    if (ImGui::IsItemActivated() || (resetEnabled && enterShortcut))
-        result = GameAction::Reset;
-    disableEnd(resetEnabled);
-
-    bool pauseEnabled = info.State == GameState::Simulation;
-    disableBegin(pauseEnabled);
-    ImGui::Button("Pause", { 100, 50 });
-    if (ImGui::IsItemActivated() || (pauseEnabled && spaceShortcut))
-        result = GameAction::Pause;
-    disableEnd(pauseEnabled);
-
-    bool resumeEnabled = info.State == GameState::Paused;
-    disableBegin(resumeEnabled);
-    ImGui::SameLine();
-    ImGui::Button("Resume", { 100, 50 });
-    if (ImGui::IsItemActivated() || (resumeEnabled && spaceShortcut))
-        result = GameAction::Resume;
-    disableEnd(resumeEnabled);
+    for (auto& button : m_Buttons)
+    {
+        GameAction action = button.Update(info);
+        if (result == GameAction::None)
+            result = action;
+    }
 
     ImGui::End();
     return result;
@@ -220,6 +220,7 @@ gol::UpdateInfo gol::GameWindow::CreateGUI(const DrawInfo& info)
 
     result.Action = DisplaySimulationControl(info);
     DisplaySimulation(info.SimulationTextureID);
+    
 
     ImGui::Begin("Presets");
     ImGui::Text("Hello, down!");
@@ -275,14 +276,13 @@ void gol::GameWindow::InitDockspace(uint32_t dockspaceID)
         &rightID
     );
 
-    // we now dock our windows into the docking node we made above
     ImGui::DockBuilderDockWindow("Presets", downID);
     ImGui::DockBuilderDockWindow("Simulation", rightID);
     ImGui::DockBuilderDockWindow("Simulation Control", leftID);
     ImGui::DockBuilderFinish(dockspaceID);
 }
 
-void gol::GameWindow::EndFrame() const
+void gol::GameWindow::EndFrame()
 {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -295,7 +295,7 @@ void gol::GameWindow::EndFrame() const
     GL_DEBUG(glfwSwapBuffers(m_Window.get()));
 }
 
-void gol::GameWindow::UpdateViewport(Size2 gridSize) const
+void gol::GameWindow::UpdateViewport(Size2 gridSize)
 {
     Rect bounds = ViewportBounds(gridSize);
     glViewport(bounds.X - m_WindowBounds.X, bounds.Y - m_WindowBounds.Y, bounds.Width, bounds.Height);

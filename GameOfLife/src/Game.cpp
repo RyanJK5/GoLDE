@@ -15,7 +15,7 @@
 
 gol::Game::Game()
     : m_Window(DefaultWindowWidth, DefaultWindowHeight)
-    , m_Graphics(GraphicsHandler("shader/default.shader", DefaultWindowWidth, DefaultWindowHeight))
+    , m_Graphics(GraphicsHandler(std::filesystem::path("resources") / "shader" / "default.shader", DefaultWindowWidth, DefaultWindowHeight))
 { }
 
 void gol::Game::UpdateState(const UpdateInfo& info)
@@ -89,31 +89,27 @@ bool gol::Game::SimulationUpdate(double timeElapsedMs)
         m_Grid.Update();
     }
 
-    m_Graphics.ClearBackground(m_Window.WindowBounds(), m_Window.ViewportBounds(m_Grid.Size()));
     m_Graphics.DrawGrid(m_Grid.GenerateGLBuffer());
-    
     return success;
 }
 
 void gol::Game::PaintUpdate()
 {
-    m_Graphics.ClearBackground(m_Window.WindowBounds(), m_Window.ViewportBounds(m_Grid.Size()));
     m_Graphics.DrawGrid(m_Grid.GenerateGLBuffer());
 
     const std::optional<Vec2> gridPos = CursorGridPos();
     if (gridPos)
     {
         UpdateMouseState(*gridPos);
-        m_Graphics.DrawSelection({ 
-            m_Grid.GLCoords(gridPos->X, gridPos->Y), 
-            m_Grid.GLCellDimensions() 
+        m_Graphics.DrawSelection({
+            m_Grid.GLCoords(gridPos->X, gridPos->Y),
+            m_Grid.GLCellDimensions()
         });
     }
 }
 
 void gol::Game::PauseUpdate()
 {
-    m_Graphics.ClearBackground(m_Window.WindowBounds(), m_Window.ViewportBounds(m_Grid.Size()));
     m_Graphics.DrawGrid(m_Grid.GenerateGLBuffer());
 }
 
@@ -128,6 +124,7 @@ void gol::Game::Begin()
 
         m_Window.UpdateViewport(m_Grid.Size());
         m_Graphics.RescaleFrameBuffer(m_Window.WindowBounds().Size());
+        m_Graphics.ClearBackground(m_Window.WindowBounds(), m_Window.ViewportBounds(m_Grid.Size()));
 
         const UpdateInfo& info = m_Window.CreateGUI({ m_Graphics.TextureID(), m_State, m_Grid.Dead()});
         UpdateState(info);

@@ -4,7 +4,7 @@
 #include "Logging.h"
 #include "GLException.h"
 
-gol::ShaderManager::ShaderManager(std::string_view shaderFilePath)
+gol::ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath)
 {
     GL_DEBUG(m_programID = glCreateProgram());
     try
@@ -12,7 +12,7 @@ gol::ShaderManager::ShaderManager(std::string_view shaderFilePath)
         std::optional<IDPair> shaderIds = ParseShader(shaderFilePath);
 
         if (!shaderIds)
-            throw GLException(std::format("File '{}' could not be read", shaderFilePath));
+            throw GLException(std::format("File '{}' could not be read", shaderFilePath.string()));
 
         CreateShader(m_programID, shaderIds.value().first);
         CreateShader(m_programID, shaderIds.value().second);
@@ -80,12 +80,12 @@ uint32_t gol::ShaderManager::CompileShader(uint32_t type, std::string_view sourc
     throw GLException(error);
 }
 
-std::optional<IDPair> gol::ShaderManager::ParseShader(std::string_view filePath) const
+std::optional<gol::ShaderManager::IDPair> gol::ShaderManager::ParseShader(const std::filesystem::path& shaderFilePath) const
 {
     std::optional<uint32_t> id1{};
     std::optional<uint32_t> id2{};
 
-    std::ifstream stream(filePath.data());
+    std::ifstream stream(shaderFilePath);
     if (!stream.is_open())
         return std::nullopt;
 

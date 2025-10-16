@@ -9,7 +9,7 @@
 #include "Logging.h"
 #include "GLException.h"
 
-gol::GraphicsHandler::GraphicsHandler(std::string_view shaderFilePath, int32_t windowWidth, int32_t windowHeight)
+gol::GraphicsHandler::GraphicsHandler(const std::filesystem::path& shaderFilePath, int32_t windowWidth, int32_t windowHeight)
     : m_Shader(shaderFilePath)
 {
     GL_DEBUG(glGenBuffers(1, &m_GridBuffer));

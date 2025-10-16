@@ -57,9 +57,15 @@
     <ClCompile Include="src\GameWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\KeyShortcut.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameActionButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="shader\default.shader">
+    <Text Include="resources\shader\default.shader">
       <Filter>Source Files</Filter>
     </Text>
     <Text Include="src\vendor\LICENSE.txt" />
@@ -120,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\KeyShortcut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameActionButton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

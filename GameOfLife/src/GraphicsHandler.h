@@ -2,6 +2,7 @@
 #define __DrawManager_h__
 
 #include <vector>
+#include <filesystem>
 
 #include "Graphics2D.h"
 #include "ShaderManager.h"
@@ -11,7 +12,7 @@ namespace gol
 	class GraphicsHandler
 	{
 	public:
-		GraphicsHandler(std::string_view shaderFilePath, int32_t windowWidth, int32_t windowHeight);
+		GraphicsHandler(const std::filesystem::path& shaderFilePath, int32_t windowWidth, int32_t windowHeight);
 
 		GraphicsHandler(const GraphicsHandler& other) = delete;
 		GraphicsHandler& operator=(const GraphicsHandler& other) = delete;

@@ -5,16 +5,17 @@
 
 #include <string>
 #include <optional>
-
-using IDPair = typename std::pair<unsigned int, unsigned int>;
+#include <filesystem>
 
 namespace gol
 {
+    
     class ShaderManager
     {
+    using IDPair = typename std::pair<unsigned int, unsigned int>;
 
     public:
-        explicit ShaderManager(std::string_view shaderFilePath);
+        explicit ShaderManager(const std::filesystem::path& shaderFilePath);
 
         ShaderManager(const ShaderManager& other) = delete;
 
@@ -30,7 +31,7 @@ namespace gol
     private:
         uint32_t CompileShader(uint32_t type, std::string_view source) const;
 
-        std::optional<IDPair> ParseShader(std::string_view filePath) const;
+        std::optional<IDPair> ParseShader(const std::filesystem::path& filePath) const;
 
         void CreateShader(uint32_t program, uint32_t shaderId);
 

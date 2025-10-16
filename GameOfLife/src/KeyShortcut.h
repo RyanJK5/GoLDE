@@ -5,29 +5,19 @@
 
 #include "vendor/imgui.h"
 
-template <ImGuiKey ... Keys>
-class KeyShortcut
+namespace gol
 {
-public:
-	bool Update()
+	class KeyShortcut
 	{
-		bool keyCombo = KeyDown(Keys...);
-		bool result = m_Down && !keyCombo;
+	public:
+		KeyShortcut(ImGuiKeyChord shortcut, bool onRelease = true) : m_Shortcut(shortcut), m_OnRelease(onRelease), m_Down(false) { }
 
-		if (keyCombo)
-			m_Down = true;
-		else if (m_Down)
-			m_Down = false;
+		bool Active();
+	private:
+		ImGuiKeyChord m_Shortcut;
+		bool m_OnRelease;
+		bool m_Down;
+	};
+}
 
-		return result;
-	}
-private:
-	template <typename... Args>
-	static bool KeyDown(Args&&... keys)
-	{
-		return (... && ImGui::IsKeyDown(keys));
-	}
-
-	bool m_Down = false;
-};
 #endif
