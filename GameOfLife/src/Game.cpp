@@ -1,5 +1,4 @@
 #include <fstream>
-#include <chrono>
 #include <iostream>
 #include <algorithm>
 
@@ -76,11 +75,6 @@ void gol::Game::UpdateMouseState(Vec2 gridPos)
         m_DrawMode = DrawMode::None;
 }
 
-static double GetTimeMs(const std::chrono::steady_clock& clock)
-{
-    return clock.now().time_since_epoch().count() / pow(10, 6);
-}
-
 bool gol::Game::SimulationUpdate(double timeElapsedMs)
 {   
     const bool success = timeElapsedMs >= m_TickDelayMs;
@@ -115,9 +109,6 @@ void gol::Game::PauseUpdate()
 
 void gol::Game::Begin()
 {
-    const std::chrono::steady_clock clock{};
-    double lastTimeMs = GetTimeMs(clock);
-
     while (m_Window.Open())
     {
         m_Window.BeginFrame();
@@ -138,9 +129,9 @@ void gol::Game::Begin()
             PauseUpdate();
             break;
         case GameState::Simulation:
-            double currentTimeMs = GetTimeMs(clock);
-            if (SimulationUpdate(currentTimeMs - lastTimeMs))
-                lastTimeMs = currentTimeMs;
+            double currentTimeMs = glfwGetTime() * 1000;
+            if (SimulationUpdate(currentTimeMs))
+                glfwSetTime(0);
             break;
         }
 

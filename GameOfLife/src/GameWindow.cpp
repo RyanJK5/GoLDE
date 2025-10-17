@@ -209,10 +209,8 @@ gol::UpdateInfo gol::GameWindow::CreateGUI(const DrawInfo& info)
 
     result.Action = DisplaySimulationControl(info);
     DisplaySimulation(info.SimulationTextureID);
-    
 
     ImGui::Begin("Presets");
-    ImGui::Text("Hello, down!");
     ImGui::End();
 
     ImGui::PopFont();
