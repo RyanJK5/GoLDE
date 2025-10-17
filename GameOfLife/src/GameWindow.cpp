@@ -2,7 +2,7 @@
 
 #include "Logging.h"
 #include "GameWindow.h"
-#include "StyleLoader.h"
+#include "GUILoader.h"
 #include "GLException.h"
 
 #include "vendor/imgui.h"
@@ -35,8 +35,6 @@ gol::GameWindow::GameWindow(int32_t width, int32_t height)
         throw GLException("Failed to initialize glew");
 
     InitImGUI();
-
-    CreateButtons();
 }
 
 gol::GameWindow::~GameWindow()
@@ -48,8 +46,8 @@ gol::GameWindow::~GameWindow()
 
 void gol::GameWindow::InitImGUI()
 {
-    auto styleInfo = StyleLoader::ReadStyle(std::filesystem::path("config") / "style.yaml");
-    if (!styleInfo.has_value())
+    auto styleInfo = StyleLoader::LoadStyle<ImVec4>(std::filesystem::path("config") / "style.yaml");
+    if (!styleInfo)
         throw StyleLoader::StyleLoaderException(styleInfo.error());
 
     IMGUI_CHECKVERSION();
@@ -72,9 +70,11 @@ void gol::GameWindow::InitImGUI()
 
     ImGui_ImplGlfw_InitForOpenGL(m_Window.get(), true);
     ImGui_ImplOpenGL3_Init();
+    
+    CreateButtons(styleInfo->Shortcuts);
 }
 
-void gol::GameWindow::CreateButtons()
+void gol::GameWindow::CreateButtons(const std::unordered_map<GameAction, std::vector<ImGuiKeyChord>>& shortcuts)
 {
     Size2F topRow = { 100, 50 };
     Size2F bottomRow = { 155, 50 };
@@ -83,7 +83,7 @@ void gol::GameWindow::CreateButtons()
         GameAction::Start,
         topRow,
         [](auto info) { return !info.GridDead && (info.State == GameState::Paint || info.State == GameState::Paused); },
-        std::initializer_list<KeyShortcut> { ImGuiKey_Enter },
+        shortcuts.at(GameAction::Start),
         true
     );
     m_Buttons.emplace_back(
@@ -91,21 +91,21 @@ void gol::GameWindow::CreateButtons()
         GameAction::Clear,
         topRow,
         [](auto info) { return !info.GridDead; },
-        std::initializer_list<KeyShortcut> { }
+        shortcuts.at(GameAction::Clear)
     );
     m_Buttons.emplace_back(
         "Reset",
         GameAction::Reset,
         topRow,
         [](auto info) { return info.State == GameState::Simulation; },
-        std::initializer_list<KeyShortcut> { ImGuiKey_Enter }
+        shortcuts.at(GameAction::Reset)
     );
     m_Buttons.emplace_back(
         "Pause",
         GameAction::Pause,
         bottomRow,
         [](auto info) { return info.State == GameState::Simulation; },
-        std::initializer_list<KeyShortcut> { ImGuiKey_Space },
+        shortcuts.at(GameAction::Pause),
         true
     );
     m_Buttons.emplace_back(
@@ -113,7 +113,7 @@ void gol::GameWindow::CreateButtons()
         GameAction::Resume,
         bottomRow,
         [](auto info) { return info.State == GameState::Paused; },
-        std::initializer_list<KeyShortcut> { ImGuiKey_Space }
+        shortcuts.at(GameAction::Resume)
     );
 }
 

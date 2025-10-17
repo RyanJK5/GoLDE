@@ -1,3 +1,11 @@
+shortcuts:
+    start: [Enter]
+    pause: [Space]
+    resume: [Space]
+    restart: [Ctrl+R]
+    reset: [Enter]
+    clear: [Ctrl+Enter]
+
 colors:
     transparent: [0, 0, 0, 0]
     background: [0.1, 0.1, 0.1, 1]

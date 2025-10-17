@@ -8,16 +8,21 @@ gol::GameActionButton::GameActionButton(
 	GameAction actionReturn,
 	Size2F size,
 	const std::function<bool(const DrawInfo&)>& enabledCheck,
-	std::initializer_list<KeyShortcut> shortcuts,
+	const std::vector<ImGuiKeyChord>& shortcuts,
 	bool lineBreak
 )
 	: m_Label(label)
 	, m_Return(actionReturn)
 	, m_Size(size)
 	, m_Enabled(enabledCheck)
-	, m_Shortcuts(shortcuts)
+	, m_Shortcuts()
 	, m_LineBreak(lineBreak)
-{ }
+{
+	for (auto& chord : shortcuts)
+	{
+		m_Shortcuts.emplace_back(chord);
+	}
+}
 
 gol::GameAction gol::GameActionButton::Update(const DrawInfo& info)
 {

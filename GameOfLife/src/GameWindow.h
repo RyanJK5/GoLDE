@@ -60,7 +60,7 @@ namespace gol
 		static constexpr int32_t DockspaceFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 	private:
 		void InitImGUI();
-		void CreateButtons();
+		void CreateButtons(const std::unordered_map<GameAction, std::vector<ImGuiKeyChord>>& shortcuts);
 
 		void CreateDockspace();
 		void InitDockspace(uint32_t dockspaceID);

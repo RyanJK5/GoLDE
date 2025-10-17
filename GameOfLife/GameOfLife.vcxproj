@@ -52,7 +52,7 @@
     <ClInclude Include="src\Logging.h" />
     <ClInclude Include="src\ShaderManager.h" />
     <ClInclude Include="src\GameActionButton.h" />
-    <ClInclude Include="src\StyleLoader.h" />
+    <ClInclude Include="src\GUILoader.h" />
     <ClInclude Include="src\vendor\imconfig.h" />
     <ClInclude Include="src\vendor\imgui.h" />
     <ClInclude Include="src\vendor\imgui_impl_glfw.h" />

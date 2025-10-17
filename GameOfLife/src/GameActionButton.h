@@ -26,7 +26,7 @@ namespace gol
 			GameAction actionReturn,
 			Size2F size,
 			const std::function<bool(const DrawInfo&)>& enabledCheck,
-			std::initializer_list<KeyShortcut> shortcuts,
+			const std::vector<ImGuiKeyChord>& shortcuts,
 			bool lineBreak = false
 		);
 

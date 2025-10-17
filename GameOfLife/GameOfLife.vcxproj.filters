@@ -131,7 +131,7 @@
     <ClInclude Include="src\GameActionButton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\StyleLoader.h">
+    <ClInclude Include="src\GUILoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
