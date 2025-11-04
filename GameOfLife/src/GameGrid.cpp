@@ -25,7 +25,7 @@ bool gol::GameGrid::Dead() const
 
 void gol::GameGrid::Update()
 {
-	std::unordered_set<uint32_t> updateIndices;
+	std::vector<uint32_t> updateIndices;
 	for (int32_t x = 0; x < m_Width; x++)
 	{
 		for (int32_t y = 0; y < m_Height; y++)
@@ -38,12 +38,16 @@ void gol::GameGrid::Update()
 				!(!m_Grid[index] && neighbors == 3))
 				continue;
 
-			updateIndices.insert(static_cast<uint32_t>(index));
+			updateIndices.push_back(static_cast<uint32_t>(index));
 		}
 	}
 
-	for (auto& index : updateIndices)
+	for (uint32_t index : updateIndices)
+	{
 		m_Grid[index] = !m_Grid[index];
+		m_Population += m_Grid[index] ? 1 : -1;
+	}
+	m_Generation++;
 }
 
 bool gol::GameGrid::Toggle(int32_t x, int32_t y)
@@ -58,8 +62,11 @@ bool gol::GameGrid::Set(int32_t x, int32_t y, bool active)
 {
 	if (x >= m_Width || x < 0 || y >= m_Height || y < 0)
 		return false;
-
-	m_Grid[static_cast<uint32_t>(y * m_Width + x)] = active;
+	
+	uint32_t index = static_cast<uint32_t>(y * m_Width + x);
+	if (active != m_Grid[index])
+		m_Population += active ? 1 : -1;
+	m_Grid[index] = active;
 	return true;
 }
 
@@ -121,10 +128,3 @@ int8_t gol::GameGrid::CountNeighbors(int32_t x, int32_t y)
 
 	return count;
 }
-
-#if 0
-std::vector<float> gol::GameGrid::GenerateGLBuffer() const
-{
-	
-}
-#endif

@@ -81,18 +81,26 @@ gol::GameState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& arg
 void gol::SimulationEditor::DisplaySimulation()
 {
     ImGui::Begin("Simulation");
-    {
-        ImGui::BeginChild("GameRender");
+    ImGui::BeginChild("Render");
 
-        m_WindowBounds = { Vec2F(ImGui::GetWindowPos()), Size2F(ImGui::GetContentRegionAvail()) };
+    ImDrawListSplitter splitter;
+    splitter.Split(ImGui::GetWindowDrawList(), 2);
 
-        ImGui::Image(
-            static_cast<ImTextureID>(m_Graphics.TextureID()),
-            ImGui::GetContentRegionAvail(),
-            ImVec2(0, 1),
-            ImVec2(1, 0)
-        );
-    }
+    splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 0);
+    m_WindowBounds = { Vec2F(ImGui::GetWindowPos()), Size2F(ImGui::GetContentRegionAvail()) };
+    ImGui::Image(
+        static_cast<ImTextureID>(m_Graphics.TextureID()),
+        ImGui::GetContentRegionAvail(),
+        ImVec2(0, 1),
+        ImVec2(1, 0)
+    );
+
+    splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 1);
+    ImGui::SetCursorPos(ImGui::GetWindowContentRegionMin());
+    ImGui::Text(std::format("Generation: {}", m_Grid.Generation()).c_str());
+    ImGui::Text(std::format("Population: {}", m_Grid.Population()).c_str());
+
+    splitter.Merge(ImGui::GetWindowDrawList());
     ImGui::EndChild();
     ImGui::End();
 }
@@ -119,10 +127,10 @@ std::optional<gol::Vec2> gol::SimulationEditor::CursorGridPos()
         return std::nullopt;
 
     glm::vec2 vec = m_Graphics.Camera.ScreenToWorldPos(cursor, ViewportBounds());
-    vec /= glm::vec2 { 
-        (static_cast<float>(ViewportBounds().Width) / m_Grid.Width()), 
-        (static_cast<float>(ViewportBounds().Height) / m_Grid.Height())
-    };
+    glm::vec2 other = m_Graphics.Camera.ScreenToWorldPos(Vec2F{ (float)ViewportBounds().X, (float)ViewportBounds().Y }, ViewportBounds());
+    vec /= glm::vec2 { DefaultCellWidth  , 
+                       DefaultCellHeight };
+
     if (vec.x < 0 || vec.y < 0 || vec.x > m_Grid.Width() || vec.y >= m_Grid.Height())
         return std::nullopt;
 

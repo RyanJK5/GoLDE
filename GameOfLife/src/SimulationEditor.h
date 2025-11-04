@@ -22,6 +22,9 @@ namespace gol
 	class SimulationEditor
 	{
 	public:
+		static constexpr int32_t DefaultCellWidth = 20;
+		static constexpr int32_t DefaultCellHeight = 20;
+	public:
 		SimulationEditor(Size2 windowSize, Size2 gridSize);
 
 		Rect WindowBounds() const;

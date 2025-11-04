@@ -7,7 +7,6 @@ void gol::Camera::ZoomBy(Vec2F screenPos, const RectF& viewBounds, float zoom)
     if (Zoom < MaxZoom)
         Center += (ScreenToWorldPos(screenPos, viewBounds) - Center) * zoom;
     Zoom = std::min(Zoom, MaxZoom);
-    INFO("{}", Zoom);
 }
 
 void gol::Camera::Translate(glm::vec2 delta)
@@ -15,10 +14,8 @@ void gol::Camera::Translate(glm::vec2 delta)
     Center -= delta / Zoom;
 }
 
-glm::vec2 gol::Camera::ScreenToWorldPos(Vec2F pos, const Rect& viewBounds) const
+glm::vec2 gol::Camera::ScreenToWorldPos(Vec2F cursor, const Rect& viewBounds) const
 {
-    Vec2F cursor = ImGui::GetMousePos();
-
     glm::vec2 vec = {
         (cursor.X - viewBounds.X) ,
         (cursor.Y - viewBounds.Y) };

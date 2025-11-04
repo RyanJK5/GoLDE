@@ -22,6 +22,9 @@ namespace gol
 		inline int32_t Height() const { return m_Height; }
 		inline Size2 Size() const { return { m_Width, m_Height }; }
 
+		inline int64_t Generation() const { return m_Generation; }
+		inline int64_t Population() const { return m_Population; }
+
 		bool Dead() const;
 
 		inline bool Enable(int32_t x, int32_t y) { return Set(x, y, true); }
@@ -35,7 +38,6 @@ namespace gol
 		Size2F GLCellDimensions() const;
 
 		const std::vector<bool>& Data() const { return m_Grid; }
-		//std::vector<float> GenerateGLBuffer() const;
 	private:
 		void ParseSeed(const std::vector<unsigned char>& seedBuffer);
 
@@ -44,6 +46,9 @@ namespace gol
 		std::vector<bool> m_Grid;
 		int32_t m_Width;
 		int32_t m_Height;
+
+		int64_t m_Generation = 0;
+		int64_t m_Population = 0;
 	};
 }
 

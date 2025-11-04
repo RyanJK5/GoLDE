@@ -4,6 +4,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include "SimulationEditor.h"
 #include "GraphicsHandler.h"
 #include "Logging.h"
 #include "GLException.h"
@@ -125,8 +126,8 @@ void gol::GraphicsHandler::ClearBackground(const Rect& windowBounds, const Rect&
 
 std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(const std::vector<bool>& grid, const GraphicsHandlerArgs& info) const
 {
-    float width = static_cast<float>(info.ViewportBounds.Width) / info.GridSize.Width;
-    float height = static_cast<float>(info.ViewportBounds.Height) / info.GridSize.Height;
+    float width = SimulationEditor::DefaultCellWidth;
+    float height = SimulationEditor::DefaultCellHeight;
     std::vector<float> result;
     for (int32_t y = 0; y < info.GridSize.Height; y++)
     {
@@ -182,10 +183,10 @@ void gol::GraphicsHandler::DrawGrid(const std::vector<bool>& grid, const Graphic
 
 gol::RectF gol::GraphicsHandler::GridToScreenBounds(Vec2 gridPos, const GraphicsHandlerArgs& info) const
 {
-    float width = static_cast<float>(info.ViewportBounds.Width) / info.GridSize.Width;
-    float height = static_cast<float>(info.ViewportBounds.Height) / info.GridSize.Height;
+    float width = SimulationEditor::DefaultCellWidth;
+    float height = SimulationEditor::DefaultCellHeight;
     return {
-          static_cast<float>(gridPos.X * width), 
+          static_cast<float>(gridPos.X * width),
           static_cast<float>(gridPos.Y * height),
           width,
           height
