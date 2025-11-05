@@ -53,8 +53,8 @@ namespace gol
 		std::vector<GameActionButton> m_Buttons;
 		RectF m_WindowBounds;
 
+		glm::vec2 m_DeltaLast = { 0, 0 };
 		double m_TickDelayMs = DefaultTickDelayMs;
-		glm::vec2 m_DeltaLast;
 		DrawMode m_DrawMode = DrawMode::None;
 	};
 }

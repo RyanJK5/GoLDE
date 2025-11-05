@@ -21,7 +21,7 @@ gol::GraphicsHandler::GraphicsHandler(const std::filesystem::path& shaderFilePat
 
     GL_DEBUG(glGenTextures(1, &m_Texture));
     GL_DEBUG(glBindTexture(GL_TEXTURE_2D, m_Texture));
-    GL_DEBUG(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GL_DEBUG(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL));
     GL_DEBUG(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_DEBUG(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_DEBUG(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture, 0));
@@ -181,15 +181,13 @@ void gol::GraphicsHandler::DrawGrid(const std::vector<bool>& grid, const Graphic
     UnbindFrameBuffer();
 }
 
-gol::RectF gol::GraphicsHandler::GridToScreenBounds(Vec2 gridPos, const GraphicsHandlerArgs& info) const
+gol::RectF gol::GraphicsHandler::GridToScreenBounds(Vec2 gridPos, const GraphicsHandlerArgs&) const
 {
-    float width = SimulationEditor::DefaultCellWidth;
-    float height = SimulationEditor::DefaultCellHeight;
     return {
-          static_cast<float>(gridPos.X * width),
-          static_cast<float>(gridPos.Y * height),
-          width,
-          height
+          static_cast<float>(gridPos.X * SimulationEditor::DefaultCellHeight),
+          static_cast<float>(gridPos.Y * SimulationEditor::DefaultCellHeight),
+          SimulationEditor::DefaultCellWidth,
+          SimulationEditor::DefaultCellHeight
     };
 }
 
@@ -197,10 +195,7 @@ void gol::GraphicsHandler::DrawSelection(Vec2 gridPos, const GraphicsHandlerArgs
 {
     BindFrameBuffer();
 
-    float windowWidth = args.ViewportBounds.Width;
-    float windowHeight = args.ViewportBounds.Height;
-
-    auto rect = GridToScreenBounds(gridPos, args);
+    RectF rect = GridToScreenBounds(gridPos, args);
     float positions[] = 
     { 
         rect.UpperLeft().X, rect.UpperLeft().Y,

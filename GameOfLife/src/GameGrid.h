@@ -33,10 +33,6 @@ namespace gol
 		bool Toggle(int32_t x, int32_t y);
 		std::optional<bool> Get(int32_t x, int32_t y) const;
 
-		Vec2F GLCoords(int32_t x, int32_t y) const;
-
-		Size2F GLCellDimensions() const;
-
 		const std::vector<bool>& Data() const { return m_Grid; }
 	private:
 		void ParseSeed(const std::vector<unsigned char>& seedBuffer);

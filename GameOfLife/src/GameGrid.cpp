@@ -77,17 +77,6 @@ std::optional<bool> gol::GameGrid::Get(int32_t x, int32_t y) const
 	return m_Grid[static_cast<uint32_t>(y * m_Width + x)];
 }
 
-gol::Vec2F gol::GameGrid::GLCoords(int32_t x, int32_t y) const
-{
-	return { (x - m_Width / 2.0f) / (m_Width / 2.0f),
-			 (m_Height / 2.0f - y) / (m_Height / 2.0f) };
-}
-
-gol::Size2F gol::GameGrid::GLCellDimensions() const
-{
-	return { 2.0f / m_Width, 2.0f / m_Height };
-}
-
 void gol::GameGrid::ParseSeed(const std::vector<unsigned char>& seedBuffer)
 {
 	uint8_t charBits = sizeof(char) * 8;

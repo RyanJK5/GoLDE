@@ -25,15 +25,17 @@ gol::GameState gol::SimulationEditor::Update(const SimulationEditorArgs& args)
     {
         switch (state)
         {
-        case GameState::Simulation:
+        using enum GameState;
+        case Simulation:
             return SimulationUpdate(graphicsArgs);
-        case GameState::Paint:
+        case Paint:
             return PaintUpdate(graphicsArgs);
-        case GameState::Paused:
+        case Paused:
             return PauseUpdate(graphicsArgs);
-        case GameState::Empty:
+        case Empty:
             return PaintUpdate(graphicsArgs);
         };
+        std::unreachable();
     }();
 
     DisplaySimulation();
@@ -86,8 +88,10 @@ void gol::SimulationEditor::DisplaySimulation()
     ImDrawListSplitter splitter;
     splitter.Split(ImGui::GetWindowDrawList(), 2);
 
+
     splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 0);
     m_WindowBounds = { Vec2F(ImGui::GetWindowPos()), Size2F(ImGui::GetContentRegionAvail()) };
+
     ImGui::Image(
         static_cast<ImTextureID>(m_Graphics.TextureID()),
         ImGui::GetContentRegionAvail(),
@@ -141,25 +145,25 @@ gol::GameState gol::SimulationEditor::UpdateState(GameAction action)
 {
     switch (action)
     {
-    case GameAction::Start:
+    using enum GameAction;
+    case Start:
         m_InitialGrid = m_Grid;
         return GameState::Simulation;
-    case GameAction::Clear:
+    case Clear:
         m_Grid = GameGrid(m_Grid.Size());
         return GameState::Paint;
-    case GameAction::Reset:
+    case Reset:
         m_Grid = m_InitialGrid;
         return GameState::Paint;
-    case GameAction::Restart:
+    case Restart:
         m_Grid = m_InitialGrid;
         return GameState::Simulation;
-    case GameAction::Pause:
+    case Pause:
         return GameState::Paused;
-    case GameAction::Resume:
+    case Resume:
         return GameState::Simulation;
-    case GameAction::None:
-        throw std::exception("Cannot pass 'None' as action to UpdateState");
     }
+    throw std::exception("Cannot pass 'None' as action to UpdateState");
 }
 
 void gol::SimulationEditor::UpdateMouseState(Vec2 gridPos)
@@ -202,5 +206,5 @@ void gol::SimulationEditor::UpdateViewport()
         }
     }
 
-    glViewport(bounds.X - m_WindowBounds.X, bounds.Y - m_WindowBounds.Y, bounds.Width, bounds.Height);
+    glViewport(static_cast<int32_t>(bounds.X - m_WindowBounds.X), static_cast<int32_t>(bounds.Y - m_WindowBounds.Y), bounds.Width, bounds.Height);
 }

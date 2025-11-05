@@ -69,7 +69,7 @@ void gol::Game::Begin()
 
 void gol::Game::InitImGUI(const std::filesystem::path& stylePath)
 {
-    auto styleInfo = StyleLoader::LoadYAML<ImVec4>(std::filesystem::path("config") / "style.yaml");
+    auto styleInfo = StyleLoader::LoadYAML<ImVec4>(stylePath);
     if (!styleInfo)
         throw StyleLoader::StyleLoaderException(styleInfo.error());
 
@@ -148,7 +148,8 @@ void gol::Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize)
     ImGui::DockBuilderRemoveNode(dockspaceID);
     ImGui::DockBuilderAddNode(
         dockspaceID,
-        ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_DockSpace
+        
+        ImGuiDockNodeFlags_PassthruCentralNode | static_cast<ImGuiDockNodeFlags>(ImGuiDockNodeFlags_DockSpace)
     );
     ImGui::DockBuilderSetNodeSize(dockspaceID, windowSize);
 

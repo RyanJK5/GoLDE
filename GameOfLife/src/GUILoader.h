@@ -305,7 +305,7 @@ namespace gol::StyleLoader
 			const std::string& line,
 			const std::string::const_iterator& firstLetter)
 		{
-			StringConverter<float> toF = [](auto str) { return std::make_optional<float>(std::atof(str.data())); };
+			StringConverter<float> toF = [](auto str) { return std::make_optional<float>(std::strtof(str.data(), nullptr)); };
 			StringConverter<StyleColor> toC = MakeConverter(ColorDefinitions);
 			auto pair = ReadListPair<StyleColor, float>(lineNum, line, firstLetter,
 				toC, toF, 4);
@@ -361,8 +361,8 @@ namespace gol::StyleLoader
 		}
 
 		std::string line = "";
-		int indentWidth = 0;
-		int lineNum = 0;
+		int32_t indentWidth = 0;
+		int32_t lineNum = 0;
 
 		auto section = SectionType::None;
 		auto output = StyleInfo<Vec> { };
@@ -372,15 +372,15 @@ namespace gol::StyleLoader
 			lineNum++;
 
 
-			auto start = std::find_if(line.begin(), line.end(), [](char c) { return std::isalpha(c); });
+			auto start = std::ranges::find_if(line, [](char c) { return std::isalpha(c); });
 			if (start == line.end())
 				continue;
-			if (std::find(line.begin(), line.end(), '#') < start)
+			if (std::ranges::find(line, '#') < start)
 				continue;
 
 			if (indentWidth == 0)
 				indentWidth = std::distance(line.begin(), start);
-			int depth = indentWidth != 0 ? (std::distance(line.begin(), start) / indentWidth) : 0;
+			int32_t depth = indentWidth != 0 ? (std::distance(line.begin(), start) / indentWidth) : 0;
 
 			if (depth == 0)
 				section = SectionType::None;

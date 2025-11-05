@@ -9,7 +9,7 @@
 
 namespace gol
 {
-	template <typename T> requires std::totally_ordered<T>
+	template <std::totally_ordered T>
 	struct GenericVec
 	{
 		T X;
@@ -19,7 +19,7 @@ namespace gol
 		GenericVec(T x, T y) : X(x), Y(y) { }
 	};
 
-	template <typename T> requires std::totally_ordered<T>
+	template <std::totally_ordered T>
 	struct GenericSize
 	{
 		T Width;
@@ -30,7 +30,7 @@ namespace gol
 		GenericSize(T width, T height) : Width(width), Height(height) { }
 	};
 
-	template <typename T> requires std::totally_ordered<T>
+	template <std::totally_ordered T>
 	struct GenericRect
 	{
 		T X;
@@ -77,7 +77,12 @@ namespace gol
 	struct RectF : public GenericRect<float>
 	{
 		RectF() : GenericRect() { }
-		RectF(const GenericRect<int>& rect) : RectF(rect.X, rect.Y, rect.Width, rect.Height) { }
+		RectF(const GenericRect<int>& rect) : RectF(
+			static_cast<float>(rect.X), 
+			static_cast<float>(rect.Y), 
+			static_cast<float>(rect.Width), 
+			static_cast<float>(rect.Height))
+		{}
 		RectF(float x, float y, float width, float height) : GenericRect(x, y, width, height) { }
 		RectF(GenericVec<float> pos, GenericSize<float> size) : GenericRect(pos, size) {}
 
