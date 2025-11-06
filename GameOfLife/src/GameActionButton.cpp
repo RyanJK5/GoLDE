@@ -6,25 +6,18 @@
 gol::GameActionButton::GameActionButton(
 	std::string_view label,
 	GameAction actionReturn,
-	const std::function<Size2F()>& dimensions,
-	const std::function<bool(GameState)>& enabledCheck,
-	const std::vector<ImGuiKeyChord>& shortcuts,
+	std::span<const ImGuiKeyChord> shortcuts,
 	bool lineBreak
 )
 	: m_Label(label)
 	, m_Return(actionReturn)
-	, m_Size(dimensions)
-	, m_Enabled(enabledCheck)
-	, m_Shortcuts()
+	, m_Shortcuts(shortcuts.begin(), shortcuts.end())
 	, m_LineBreak(lineBreak)
-{
-	for (auto& chord : shortcuts)
-		m_Shortcuts.emplace_back(chord);
-}
+{ }
 
 gol::GameAction gol::GameActionButton::Update(GameState state)
 {
-	if (!m_Enabled(state))
+	if (!Enabled(state))
 	{
 		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
@@ -39,12 +32,12 @@ gol::GameAction gol::GameActionButton::Update(GameState state)
 		for (auto& shortcut : m_Shortcuts)
 			active = shortcut.Active() || active;
 
-		if (ImGui::Button(m_Label.c_str(), m_Size()) || (m_Enabled(state) && active))
+		if (ImGui::Button(m_Label.c_str(), Dimensions()) || (Enabled(state) && active))
 			return m_Return;
 		return GameAction::None;
 	}();
 
-	if (!m_Enabled(state))
+	if (!Enabled(state))
 	{
 		ImGui::PopItemFlag();
 		ImGui::PopStyleVar();

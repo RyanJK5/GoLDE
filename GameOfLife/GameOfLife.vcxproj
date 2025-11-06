@@ -62,6 +62,7 @@
     <ClInclude Include="src\GameActionButton.h" />
     <ClInclude Include="src\GUILoader.h" />
     <ClInclude Include="src\SimulationControl.h" />
+    <ClInclude Include="src\SimulationControlButtons.h" />
     <ClInclude Include="src\SimulationEditor.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />

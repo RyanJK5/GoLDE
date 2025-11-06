@@ -1695,7 +1695,7 @@ void ImGui::TableSetupScrollFreeze(int columns, int rows)
 // - TableGetColumnCount()
 // - TableGetColumnName()
 // - TableGetColumnName() [Internal]
-// - TableSetColumnEnabled()
+// - TableSetColumnEnabled(GameState state)
 // - TableGetColumnFlags()
 // - TableGetCellBgRect() [Internal]
 // - TableGetColumnResizeID() [Internal]
