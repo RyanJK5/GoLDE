@@ -62,82 +62,83 @@ namespace gol::StyleLoader
 
 	static const std::unordered_map<std::string_view, StyleColor> ColorDefinitions = {
 		{ "transparent", StyleColor::Transparent },
-		{ "background", StyleColor::Background },
-		{ "contrast", StyleColor::Contrast },
-		{ "hover", StyleColor::Hover },
-		{ "text", StyleColor::Text }
+		{ "background",  StyleColor::Background  },
+		{ "contrast",    StyleColor::Contrast    },
+		{ "hover",       StyleColor::Hover       },
+		{ "text",        StyleColor::Text        }
 	};
 
 	static const std::unordered_map<std::string_view, ImGuiCol_> AttributeDefinitions = {
-		{ "ImGuiCol_WindowBg", ImGuiCol_WindowBg },
-		{ "ImGuiCol_Border", ImGuiCol_Border },
-		{ "ImGuiCol_Text", ImGuiCol_Text },
-		{ "ImGuiCol_Button", ImGuiCol_Button },
-		{ "ImGuiCol_ButtonHovered", ImGuiCol_ButtonHovered },
-		{ "ImGuiCol_Header", ImGuiCol_Header },
-		{ "ImGuiCol_HeaderActive", ImGuiCol_HeaderActive },
-		{ "ImGuiCol_TitleBg", ImGuiCol_TitleBg },
-		{ "ImGuiCol_TitleBgActive", ImGuiCol_TitleBgActive },
-		{ "ImGuiCol_Tab", ImGuiCol_Tab },
-		{ "ImGuiCol_TabSelectedOverline", ImGuiCol_TabSelectedOverline },
-		{ "ImGuiCol_TabDimmedSelected", ImGuiCol_TabDimmedSelected },
-		{ "ImGuiCol_TabHovered", ImGuiCol_TabHovered },
-		{ "ImGuiCol_TabUnfocused", ImGuiCol_TabUnfocused },
-		{ "ImGuiCol_TabDimmed", ImGuiCol_TabDimmed },
-		{ "ImGuiCol_TabSelected", ImGuiCol_TabSelected },
-		{ "ImGuiCol_FrameBg", ImGuiCol_FrameBg }
+		{ "WindowBg",            ImGuiCol_WindowBg            },
+		{ "Border",              ImGuiCol_Border              },
+		{ "Text",                ImGuiCol_Text                },
+		{ "Button",              ImGuiCol_Button              },
+		{ "ButtonHovered",       ImGuiCol_ButtonHovered       },
+		{ "Header",              ImGuiCol_Header              },
+		{ "HeaderActive",        ImGuiCol_HeaderActive        },
+		{ "TitleBg",             ImGuiCol_TitleBg             },
+		{ "TitleBgActive",       ImGuiCol_TitleBgActive       },
+		{ "Tab",                 ImGuiCol_Tab                 },
+		{ "TabSelectedOverline", ImGuiCol_TabSelectedOverline },
+		{ "TabDimmedSelected",   ImGuiCol_TabDimmedSelected   },
+		{ "TabHovered",          ImGuiCol_TabHovered          },
+		{ "TabUnfocused",        ImGuiCol_TabUnfocused        },
+		{ "TabDimmed",           ImGuiCol_TabDimmed           },
+		{ "TabSelected",         ImGuiCol_TabSelected         },
+		{ "FrameBg",             ImGuiCol_FrameBg             }
 	};
 
 	static const std::unordered_map<std::string_view, SectionType> SectionDefinitions = {
-		{ "colors", SectionType::StyleColors },
-		{ "imgui-style", SectionType::ImGUIStyle },
-		{ "shortcuts", SectionType::Shortcuts }
+		{ "colors",      SectionType::StyleColors },
+		{ "imgui-style", SectionType::ImGUIStyle  },
+		{ "shortcuts",   SectionType::Shortcuts   }
 	};
 
 	static const std::unordered_map<std::string_view, ImGuiKey> ShortcutDefinitions = {
-		{ "Ctrl", ImGuiMod_Ctrl },
-		{ "Enter", ImGuiKey_Enter },
-		{ "Space", ImGuiKey_Space },
-		{ "A", ImGuiKey_A },
-		{ "B", ImGuiKey_B },
-		{ "C", ImGuiKey_C },
-		{ "D", ImGuiKey_D },
-		{ "E", ImGuiKey_E },
-		{ "F", ImGuiKey_F },
-		{ "G", ImGuiKey_G },
-		{ "H", ImGuiKey_H },
-		{ "I", ImGuiKey_I },
-		{ "J", ImGuiKey_J },
-		{ "K", ImGuiKey_K },
-		{ "L", ImGuiKey_L },
-		{ "M", ImGuiKey_M },
-		{ "N", ImGuiKey_N },
-		{ "O", ImGuiKey_O },
-		{ "P", ImGuiKey_P },
-		{ "Q", ImGuiKey_Q },
-		{ "R", ImGuiKey_R },
-		{ "S", ImGuiKey_S },
-		{ "T", ImGuiKey_T },
-		{ "U", ImGuiKey_U },
-		{ "V", ImGuiKey_V },
-		{ "W", ImGuiKey_W },
-		{ "X", ImGuiKey_X },
-		{ "Y", ImGuiKey_Y },
-		{ "Z", ImGuiKey_Z },
-		{ "Left", ImGuiKey_LeftArrow },
+		{ "Ctrl",  ImGuiMod_Ctrl       },
+		{ "Enter", ImGuiKey_Enter      },
+		{ "Space", ImGuiKey_Space      },
+		{ "A",     ImGuiKey_A          },
+		{ "B",     ImGuiKey_B          },
+		{ "C",     ImGuiKey_C          },
+		{ "D",     ImGuiKey_D          },
+		{ "E",     ImGuiKey_E          },
+		{ "F",     ImGuiKey_F          },
+		{ "G",     ImGuiKey_G          },
+		{ "H",     ImGuiKey_H          },
+		{ "I",     ImGuiKey_I          },
+		{ "J",     ImGuiKey_J          },
+		{ "K",     ImGuiKey_K          },
+		{ "L",     ImGuiKey_L          },
+		{ "M",     ImGuiKey_M          },
+		{ "N",     ImGuiKey_N          },
+		{ "O",     ImGuiKey_O          },
+		{ "P",     ImGuiKey_P          },
+		{ "Q",     ImGuiKey_Q          },
+		{ "R",     ImGuiKey_R          },
+		{ "S",     ImGuiKey_S          },
+		{ "T",     ImGuiKey_T          },
+		{ "U",     ImGuiKey_U          },
+		{ "V",     ImGuiKey_V          },
+		{ "W",     ImGuiKey_W          },
+		{ "X",     ImGuiKey_X          },
+		{ "Y",     ImGuiKey_Y          },
+		{ "Z",     ImGuiKey_Z          },
+		{ "Left",  ImGuiKey_LeftArrow  },
 		{ "Right", ImGuiKey_RightArrow },
-		{ "Up", ImGuiKey_UpArrow },
-		{ "Down", ImGuiKey_DownArrow },
+		{ "Up",    ImGuiKey_UpArrow    },
+		{ "Down",  ImGuiKey_DownArrow  },
 	};
 
 	static const std::unordered_map<std::string_view, GameAction> ActionDefinitions = {
-		{ "start", GameAction::Start },
-		{ "pause", GameAction::Pause },
-		{ "resume", GameAction::Resume },
+		{ "start",   GameAction::Start   },
+		{ "pause",   GameAction::Pause   },
+		{ "resume",  GameAction::Resume  },
 		{ "restart", GameAction::Restart },
-		{ "reset", GameAction::Reset },
-		{ "clear", GameAction::Clear },
-		{ "step", GameAction::Step }
+		{ "reset",   GameAction::Reset   },
+		{ "clear",   GameAction::Clear   },
+		{ "step",    GameAction::Step    },
+		{ "resize",  GameAction::Resize  }
 	};
 
 	template <typename T>
@@ -235,14 +236,14 @@ namespace gol::StyleLoader
 			{
 				if (c == '[' || std::isspace(c))
 					continue;
-				if (c == ',' || c == ']')
+				if ((c == ',' || c == ']') && token.length() > 0)
 				{
 					auto converted = conversion(token);
 					if (!converted)
 					{
 						return std::unexpected(YAMLError{
 							YAMLErrorType::InvalidArguments,
-							std::format("{} is not a valid value in line {}:\n    {}", token, lineNum, line)
+							std::format("{} is not a valid value in line {} o:\n    {}", token, lineNum, line)
 							});
 					}
 					result.push_back(*converted);

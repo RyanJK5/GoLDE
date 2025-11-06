@@ -82,5 +82,16 @@ namespace gol
         virtual bool Enabled(GameState state) const final { return state == GameState::Paint || state == GameState::Paused; }
     };
 
+    class ResizeButton : public TemplatedButton<"Apply", GameAction::Resize, false>
+    {
+    public:
+        ResizeButton(std::span<const ImGuiKeyChord> shortcuts = {})
+            : HiddenTemplatedButton(shortcuts)
+        {}
+    protected:
+        virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x, GameActionButton::DefaultButtonHeight }; }
+        virtual bool Enabled(GameState state) const final { return state == GameState::Paint || state == GameState::Empty; }
+    };
+
 #endif
 }

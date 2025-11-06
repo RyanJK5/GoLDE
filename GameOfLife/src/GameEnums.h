@@ -10,7 +10,7 @@ namespace gol
 
 	enum class GameAction
 	{
-		None, Start, Pause, Resume, Restart, Reset, Clear, Step
+		None, Start, Pause, Resume, Restart, Reset, Clear, Step, Resize
 	};
 
 	enum class DrawMode

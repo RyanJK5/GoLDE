@@ -12,6 +12,17 @@ gol::GameGrid::GameGrid(Size2 size)
 	: GameGrid(size.Width, size.Height)
 { }
 
+gol::GameGrid::GameGrid(const GameGrid& other, Size2 size)
+	: GameGrid(size)
+{
+	m_Population = other.m_Population;
+	for (const auto& pos : other.Data())
+	{
+		if (InBounds(pos))
+			m_Data.insert(pos);
+	}
+}
+
 bool gol::GameGrid::Dead() const
 {
 	return m_Data.size() == 0;
@@ -20,7 +31,7 @@ bool gol::GameGrid::Dead() const
 void gol::GameGrid::Update()
 {
 	std::map<Vec2, int8_t> neighborCount;
-	for (const Vec2& pos : m_Data)
+	for (const auto& pos : m_Data)
 	{
 		for (int32_t x = pos.X - 1; x <= pos.X + 1; x++)
 		{

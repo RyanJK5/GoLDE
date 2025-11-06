@@ -6,6 +6,7 @@ shortcuts:
     reset: [Enter]
     clear: [Ctrl+Enter]
     step: [Right]
+    resize: []
 
 colors:
     transparent: [0, 0, 0, 0]
@@ -15,25 +16,25 @@ colors:
     text: [0.8, 0.8, 0.8, 1]
 
 imgui-style:
-    ImGuiCol_WindowBg: background
-    ImGuiCol_FrameBg: contrast
-    ImGuiCol_Border: contrast
+    WindowBg: background
+    FrameBg: contrast
+    Border: contrast
     
-    ImGuiCol_Text: text
+    Text: text
     
-    ImGuiCol_Button: contrast
-    ImGuiCol_ButtonHovered: hover
+    Button: contrast
+    ButtonHovered: hover
     
-    ImGuiCol_Header: contrast
-    ImGuiCol_HeaderActive: contrast
+    Header: contrast
+    HeaderActive: contrast
     
-    ImGuiCol_TitleBg: contrast
-    ImGuiCol_TitleBgActive: contrast
+    TitleBg: contrast
+    TitleBgActive: contrast
     
-    ImGuiCol_Tab: transparent
-    ImGuiCol_TabSelectedOverline: transparent
-    ImGuiCol_TabDimmedSelected: transparent
-    ImGuiCol_TabHovered: transparent
-    ImGuiCol_TabUnfocused: transparent
-    ImGuiCol_TabDimmed: transparent
-    ImGuiCol_TabSelected: transparent
+    Tab: transparent
+    TabSelectedOverline: transparent
+    TabDimmedSelected: transparent
+    TabHovered: transparent
+    TabUnfocused: transparent
+    TabDimmed: transparent
+    TabSelected: transparent

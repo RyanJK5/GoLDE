@@ -175,6 +175,11 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
             m_Grid.Update();
         return m_Grid.Dead() ? GameState::Empty : GameState::Paused;
     }
+    case Resize:
+    {
+        m_Grid = GameGrid(m_Grid, result.NewDimensions);
+        return GameState::Paint;
+    }
     }
     throw std::exception("Cannot pass 'None' as action to UpdateState");
 }
