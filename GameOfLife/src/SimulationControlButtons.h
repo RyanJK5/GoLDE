@@ -8,9 +8,7 @@ namespace gol
     class StartButton : public TemplatedButton<"Start", GameAction::Start, true>
     {
     public:
-        StartButton() = default;
-
-        StartButton(std::span<const ImGuiKeyChord> shortcuts)
+        StartButton(std::span<const ImGuiKeyChord> shortcuts = {})
             : HiddenTemplatedButton(shortcuts)
         {}
     protected:
