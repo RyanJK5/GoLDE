@@ -10,12 +10,12 @@ gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
 
 gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args)
 {
-    GraphicsHandlerArgs graphicsArgs = { ViewportBounds(), m_Grid.Size(), 1.f };
+    GraphicsHandlerArgs graphicsArgs = { .ViewportBounds = ViewportBounds(), .GridSize = m_Grid.Size() };
 
     UpdateViewport();
     UpdateDragState();
     m_Graphics.RescaleFrameBuffer(WindowBounds().Size());
-    m_Graphics.ClearBackground(WindowBounds(), graphicsArgs.ViewportBounds);
+    m_Graphics.ClearBackground(graphicsArgs);
 
     GameState state = args.Action == GameAction::None 
         ? args.State 
@@ -142,7 +142,7 @@ std::optional<gol::Vec2> gol::SimulationEditor::CursorGridPos()
     vec /= glm::vec2 { DefaultCellWidth  , 
                        DefaultCellHeight };
     
-    Vec2 result = { static_cast<int32_t>(vec.x), static_cast<int32_t>(vec.y) };
+    Vec2 result = { static_cast<int32_t>(std::floor(vec.x)), static_cast<int32_t>(std::floor(vec.y)) };
     if (!m_Grid.InBounds(result))
         return std::nullopt;
     return result;
@@ -178,6 +178,7 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
     case Resize:
     {
         m_Grid = GameGrid(m_Grid, result.NewDimensions);
+        m_Graphics.Camera.Center = { result.NewDimensions.Width * DefaultCellWidth / 2.f, result.NewDimensions.Height * DefaultCellHeight / 2.f };
         return GameState::Paint;
     }
     }

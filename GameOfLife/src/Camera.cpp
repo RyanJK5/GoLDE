@@ -16,10 +16,20 @@ void gol::Camera::Translate(glm::vec2 delta)
 
 glm::vec2 gol::Camera::ScreenToWorldPos(Vec2F pos, const Rect& viewBounds) const
 {
-    glm::vec2 vec = { pos.X - viewBounds.X, pos.Y - viewBounds.Y };
+    auto vec = glm::vec2 { pos.X - viewBounds.X, pos.Y - viewBounds.Y };
     vec -= glm::vec2 { viewBounds.Width / 2, viewBounds.Height / 2 };
     vec /= Zoom;
     vec += Center;
+    return vec;
+}
+
+glm::vec2 gol::Camera::WorldToScreenPos(Vec2F pos, const Rect& viewBounds, Size2F worldSize) const
+{
+    auto vec = glm::vec2(pos);
+    vec.x -= Center.x;
+    vec.y += Center.y;
+    vec *= Zoom;
+    vec += glm::vec2 { viewBounds.Width / 2.f, viewBounds.Height / 2.f - worldSize.Height * Zoom };
     return vec;
 }
 

@@ -15,7 +15,6 @@ namespace gol
 	{
 		Rect ViewportBounds;
 		Size2 GridSize;
-		float Zoom;
 	};
 
 	class GraphicsHandler
@@ -37,7 +36,7 @@ namespace gol
 
 		void DrawGrid(const std::set<Vec2>& grid, const GraphicsHandlerArgs& info);
 		void DrawSelection(Vec2 gridPos, const GraphicsHandlerArgs& info);
-		void ClearBackground(const Rect& windowBounds, const Rect& viewportBounds) const;
+		void ClearBackground(const GraphicsHandlerArgs& args) const;
 
 		void BindFrameBuffer() const;
 		void UnbindFrameBuffer() const;

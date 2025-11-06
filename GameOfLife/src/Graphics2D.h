@@ -53,7 +53,7 @@ namespace gol
 		GenericRect(GenericVec<T> pos, GenericSize<T> size) : X(pos.X), Y(pos.Y), Width(size.Width), Height(size.Height) {}
 
 		inline bool InBounds(std::totally_ordered auto x, std::totally_ordered auto y) const
-			{ return x > X && x < X + Width && y > Y && y < Y + Height; }
+			{ return x >= X && x < X + Width && y >= Y && y < Y + Height; }
 		
 		inline bool InBounds(GenericVec<T> pos) const { return InBounds(pos.X, pos.Y); }
 	};

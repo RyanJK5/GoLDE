@@ -104,23 +104,40 @@ void gol::GraphicsHandler::UnbindFrameBuffer() const
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
-void gol::GraphicsHandler::ClearBackground(const Rect& windowBounds, const Rect& viewportBounds) const 
+void gol::GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) const
 {
     BindFrameBuffer();
-    GL_DEBUG(glEnable(GL_SCISSOR_TEST));
-    
-    GL_DEBUG(glScissor(0, 0, windowBounds.Width, windowBounds.Height));
-    GL_DEBUG(glClearColor(0.1f, 0.1f, 0.1f, 1));
-    GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
-    
-    GL_DEBUG(glScissor(
-        viewportBounds.X - windowBounds.X, viewportBounds.Y - windowBounds.Y, 
-        viewportBounds.Width, viewportBounds.Height
-    ));
-    GL_DEBUG(glClearColor(0, 0, 0, 1));
-    GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
 
-    GL_DEBUG(glDisable(GL_SCISSOR_TEST));
+    if (args.GridSize.Width == 0 || args.GridSize.Height == 0)
+    {
+        GL_DEBUG(glClearColor(0.f, 0.f, 0.f, 1.f));
+        GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
+    }
+    else
+    {
+        GL_DEBUG(glEnable(GL_SCISSOR_TEST));
+    
+        GL_DEBUG(glScissor(0, 0, args.ViewportBounds.Width, args.ViewportBounds.Height));
+        GL_DEBUG(glClearColor(0.1f, 0.1f, 0.1f, 1));
+        GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
+    
+        Size2F gridScreenDimensions = 
+        { 
+            args.GridSize.Width * SimulationEditor::DefaultCellWidth, 
+            args.GridSize.Height * SimulationEditor::DefaultCellHeight
+        };
+        auto origin = Camera.WorldToScreenPos({ 0, 0 }, args.ViewportBounds, gridScreenDimensions);
+        auto lowerRight = Camera.WorldToScreenPos({ gridScreenDimensions.Width, gridScreenDimensions.Height }, args.ViewportBounds, gridScreenDimensions);
+        GL_DEBUG(glScissor(
+            origin.x, origin.y,
+            lowerRight.x - origin.x, lowerRight.y - origin.y
+        ));
+        GL_DEBUG(glClearColor(0.f, 0.f, 0.f, 1.f));
+        GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
+
+        GL_DEBUG(glDisable(GL_SCISSOR_TEST));
+    }
+
     UnbindFrameBuffer();
 }
 
@@ -150,10 +167,10 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(const std::set<Vec2>& 
     return result;
 }
 
-void gol::GraphicsHandler::DrawGrid(const std::set<Vec2>& grid, const GraphicsHandlerArgs& info)
+void gol::GraphicsHandler::DrawGrid(const std::set<Vec2>& grid, const GraphicsHandlerArgs& args)
 {
     BindFrameBuffer();
-    auto matrix = Camera.OrthographicProjection(info.ViewportBounds.Size());
+    auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
     m_Shader.AttachUniformMatrix4("u_MVP", matrix);
 
     auto positions = GenerateGLBuffer(grid);
