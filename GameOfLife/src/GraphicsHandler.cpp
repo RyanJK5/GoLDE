@@ -124,7 +124,7 @@ void gol::GraphicsHandler::ClearBackground(const Rect& windowBounds, const Rect&
     UnbindFrameBuffer();
 }
 
-std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(const std::set<Vec2>& grid, const GraphicsHandlerArgs&) const
+std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(const std::set<Vec2>& grid, const GraphicsHandlerArgs& info) const
 {
     float width = SimulationEditor::DefaultCellWidth;
     float height = SimulationEditor::DefaultCellHeight;

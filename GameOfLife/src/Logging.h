@@ -46,13 +46,14 @@ namespace gol
 	{
 		if (code < Level)
 			return;
-
+		
 		std::println("{} at {}:{} in {}",
 			logimpl::StringRepresentation(code),
 			logimpl::SimplifyFileName(location.file_name()),
 			location.line(),
 			logimpl::SimplifyFunctionName(location.function_name())
 		);
+
 		if (!str.get().empty())
 			std::println(str, std::forward<Args>(args)...);
 	}

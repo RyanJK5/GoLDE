@@ -103,6 +103,14 @@ void gol::SimulationEditor::DisplaySimulation()
     ImGui::Text(std::format("Generation: {}", m_Grid.Generation()).c_str());
     ImGui::Text(std::format("Population: {}", m_Grid.Population()).c_str());
 
+    auto cursorPos = CursorGridPos();
+    if (cursorPos)
+    {
+        std::string text = std::format("({}, {})", cursorPos->X, cursorPos->Y);
+        ImGui::SetCursorPosY(ImGui::GetContentRegionMax().y - ImGui::CalcTextSize(text.c_str()).y);
+        ImGui::Text(text.c_str());
+    }
+
     splitter.Merge(ImGui::GetWindowDrawList());
     ImGui::EndChild();
     ImGui::End();
