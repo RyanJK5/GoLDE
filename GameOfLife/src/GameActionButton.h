@@ -2,6 +2,7 @@
 #define __GameActionButton_h__
 
 #include <string_view>
+#include <string>
 #include <vector>
 #include <functional>
 
@@ -19,7 +20,7 @@ namespace gol
 		GameActionButton(
 			std::string_view label, 
 			GameAction actionReturn,
-			Size2F size,
+			const std::function<Size2F()>& dimensions,
 			const std::function<bool(GameState)>& enabledCheck,
 			const std::vector<ImGuiKeyChord>& shortcuts,
 			bool lineBreak = false
@@ -27,10 +28,10 @@ namespace gol
 
 		GameAction Update(GameState state);
 	private:
-		std::string_view m_Label;
+		std::string m_Label;
 		GameAction m_Return;
-		Size2F m_Size;
 
+		std::function<Size2F()> m_Size;
 		std::function<bool(GameState)> m_Enabled;
 
 		std::vector<KeyShortcut> m_Shortcuts;

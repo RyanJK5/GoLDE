@@ -74,6 +74,8 @@ namespace gol
 		Size2F() : GenericSize() { }
 		Size2F(ImVec2 vec) : GenericSize(vec.x, vec.y) { }
 		Size2F(float x, float y) : GenericSize(x, y) { }
+
+		operator ImVec2() const { return { Width, Height }; }
 	};
 
 	struct RectF : public GenericRect<float>

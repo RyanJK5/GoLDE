@@ -44,7 +44,7 @@ namespace gol
 
 		inline uint32_t TextureID() const { return m_Texture; }
 	private:
-		std::vector<float> GenerateGLBuffer(const std::set<Vec2>& grid, const GraphicsHandlerArgs& info) const;
+		std::vector<float> GenerateGLBuffer(const std::set<Vec2>& grid) const;
 
 		RectF GridToScreenBounds(Vec2 pos, const GraphicsHandlerArgs& info) const;
 

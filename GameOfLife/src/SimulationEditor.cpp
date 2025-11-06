@@ -8,7 +8,7 @@ gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
     , m_Graphics(std::filesystem::path("resources") / "shader" / "default.shader", windowSize.Width, windowSize.Height)
 { }   
 
-gol::GameState gol::SimulationEditor::Update(const SimulationEditorArgs& args)
+gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args)
 {
     GraphicsHandlerArgs graphicsArgs = { ViewportBounds(), m_Grid.Size(), 1.f };
 
@@ -19,7 +19,7 @@ gol::GameState gol::SimulationEditor::Update(const SimulationEditorArgs& args)
 
     GameState state = args.Action == GameAction::None 
         ? args.State 
-        : UpdateState(args.Action);
+        : UpdateState(args);
 
     state = [&]()
     {
@@ -148,9 +148,9 @@ std::optional<gol::Vec2> gol::SimulationEditor::CursorGridPos()
     return result;
 }
 
-gol::GameState gol::SimulationEditor::UpdateState(GameAction action)
+gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult& result)
 {
-    switch (action)
+    switch (result.Action)
     {
     using enum GameAction;
     case Start:
@@ -169,6 +169,12 @@ gol::GameState gol::SimulationEditor::UpdateState(GameAction action)
         return GameState::Paused;
     case Resume:
         return GameState::Simulation;
+    case Step:
+    {
+        for (int32_t i = 0; i < result.StepCount; i++)
+            m_Grid.Update();
+        return m_Grid.Dead() ? GameState::Empty : GameState::Paused;
+    }
     }
     throw std::exception("Cannot pass 'None' as action to UpdateState");
 }

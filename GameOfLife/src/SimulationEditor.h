@@ -6,6 +6,7 @@
 #include <functional>
 #include <unordered_map>
 
+#include "SimulationControl.h"
 #include "GameGrid.h"
 #include "GraphicsHandler.h"
 #include "Graphics2D.h"
@@ -13,12 +14,6 @@
 
 namespace gol
 {
-	struct SimulationEditorArgs
-	{
-		GameState State;
-		GameAction Action;
-	};
-
 	class SimulationEditor
 	{
 	public:
@@ -30,7 +25,7 @@ namespace gol
 		Rect WindowBounds() const;
 		Rect ViewportBounds() const;
 
-		GameState Update(const SimulationEditorArgs& args);
+		GameState Update(const SimulationControlResult& args);
 	private:
 		GameState SimulationUpdate(const GraphicsHandlerArgs& args);
 		GameState PaintUpdate(const GraphicsHandlerArgs& args);
@@ -38,7 +33,7 @@ namespace gol
 
 		void DisplaySimulation();
 
-		GameState UpdateState(GameAction action);
+		GameState UpdateState(const SimulationControlResult& action);
 		void UpdateViewport();
 		std::optional<Vec2> CursorGridPos();
 		void UpdateMouseState(Vec2 gridPos);

@@ -5,6 +5,7 @@ shortcuts:
     restart: [Ctrl+R]
     reset: [Enter]
     clear: [Ctrl+Enter]
+    step: [Right]
 
 colors:
     transparent: [0, 0, 0, 0]
@@ -15,6 +16,7 @@ colors:
 
 imgui-style:
     ImGuiCol_WindowBg: background
+    ImGuiCol_FrameBg: contrast
     ImGuiCol_Border: contrast
     
     ImGuiCol_Text: text

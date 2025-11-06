@@ -85,6 +85,7 @@ namespace gol::StyleLoader
 		{ "ImGuiCol_TabUnfocused", ImGuiCol_TabUnfocused },
 		{ "ImGuiCol_TabDimmed", ImGuiCol_TabDimmed },
 		{ "ImGuiCol_TabSelected", ImGuiCol_TabSelected },
+		{ "ImGuiCol_FrameBg", ImGuiCol_FrameBg }
 	};
 
 	static const std::unordered_map<std::string_view, SectionType> SectionDefinitions = {
@@ -123,6 +124,10 @@ namespace gol::StyleLoader
 		{ "X", ImGuiKey_X },
 		{ "Y", ImGuiKey_Y },
 		{ "Z", ImGuiKey_Z },
+		{ "Left", ImGuiKey_LeftArrow },
+		{ "Right", ImGuiKey_RightArrow },
+		{ "Up", ImGuiKey_UpArrow },
+		{ "Down", ImGuiKey_DownArrow },
 	};
 
 	static const std::unordered_map<std::string_view, GameAction> ActionDefinitions = {
@@ -131,7 +136,8 @@ namespace gol::StyleLoader
 		{ "resume", GameAction::Resume },
 		{ "restart", GameAction::Restart },
 		{ "reset", GameAction::Reset },
-		{ "clear", GameAction::Clear }
+		{ "clear", GameAction::Clear },
+		{ "step", GameAction::Step }
 	};
 
 	template <typename T>

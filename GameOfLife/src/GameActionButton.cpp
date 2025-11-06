@@ -6,22 +6,20 @@
 gol::GameActionButton::GameActionButton(
 	std::string_view label,
 	GameAction actionReturn,
-	Size2F size,
+	const std::function<Size2F()>& dimensions,
 	const std::function<bool(GameState)>& enabledCheck,
 	const std::vector<ImGuiKeyChord>& shortcuts,
 	bool lineBreak
 )
 	: m_Label(label)
 	, m_Return(actionReturn)
-	, m_Size(size)
+	, m_Size(dimensions)
 	, m_Enabled(enabledCheck)
 	, m_Shortcuts()
 	, m_LineBreak(lineBreak)
 {
 	for (auto& chord : shortcuts)
-	{
 		m_Shortcuts.emplace_back(chord);
-	}
 }
 
 gol::GameAction gol::GameActionButton::Update(GameState state)
@@ -39,11 +37,9 @@ gol::GameAction gol::GameActionButton::Update(GameState state)
 	{
 		bool active = false;
 		for (auto& shortcut : m_Shortcuts)
-		{
 			active = shortcut.Active() || active;
-		}
 
-		if (ImGui::Button(m_Label.data(), {m_Size.Width, m_Size.Height}) || (m_Enabled(state) && active))
+		if (ImGui::Button(m_Label.c_str(), m_Size()) || (m_Enabled(state) && active))
 			return m_Return;
 		return GameAction::None;
 	}();

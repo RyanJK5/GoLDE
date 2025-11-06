@@ -59,10 +59,12 @@ void gol::Game::Begin()
     {
         BeginFrame();
         
-        auto action = m_Control.Update(m_State);
-        m_State = m_Editor.Update({ m_State, action });
+        auto result = m_Control.Update(m_State);
+        m_State = m_Editor.Update(result);
+        
         ImGui::Begin("Presets");
         ImGui::End();
+        
         EndFrame();
     }
 }
@@ -85,6 +87,7 @@ void gol::Game::InitImGUI(const std::filesystem::path& stylePath)
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.WindowMenuButtonPosition = ImGuiDir_None;
+    style.Colors[ImGuiCol_FrameBg] = styleInfo->StyleColors[StyleLoader::StyleColor::Contrast];
 
     for (auto&& pair : styleInfo->AttributeColors)
     {

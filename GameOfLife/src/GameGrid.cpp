@@ -70,6 +70,7 @@ bool gol::GameGrid::Set(int32_t x, int32_t y, bool active)
 		m_Data.erase(itr);
 	}
 
+	m_Generation = 0;
 	return true;
 }
 

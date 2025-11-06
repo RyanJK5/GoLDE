@@ -124,7 +124,7 @@ void gol::GraphicsHandler::ClearBackground(const Rect& windowBounds, const Rect&
     UnbindFrameBuffer();
 }
 
-std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(const std::set<Vec2>& grid, const GraphicsHandlerArgs& info) const
+std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(const std::set<Vec2>& grid) const
 {
     float width = SimulationEditor::DefaultCellWidth;
     float height = SimulationEditor::DefaultCellHeight;
@@ -156,7 +156,7 @@ void gol::GraphicsHandler::DrawGrid(const std::set<Vec2>& grid, const GraphicsHa
     auto matrix = Camera.OrthographicProjection(info.ViewportBounds.Size());
     m_Shader.AttachUniformMatrix4("u_MVP", matrix);
 
-    auto positions = GenerateGLBuffer(grid, info);
+    auto positions = GenerateGLBuffer(grid);
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridBuffer));
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_DYNAMIC_DRAW));
