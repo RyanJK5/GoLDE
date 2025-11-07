@@ -171,14 +171,14 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
         return GameState::Simulation;
     case Step:
     {
-        for (int32_t i = 0; i < result.StepCount; i++)
+        for (int32_t i = 0; i < *result.StepCount; i++)
             m_Grid.Update();
         return m_Grid.Dead() ? GameState::Empty : GameState::Paused;
     }
     case Resize:
     {
-        m_Grid = GameGrid(m_Grid, result.NewDimensions);
-        m_Graphics.Camera.Center = { result.NewDimensions.Width * DefaultCellWidth / 2.f, result.NewDimensions.Height * DefaultCellHeight / 2.f };
+        m_Grid = GameGrid(m_Grid, *result.NewDimensions);
+        m_Graphics.Camera.Center = { result.NewDimensions->Width * DefaultCellWidth / 2.f, result.NewDimensions->Height * DefaultCellHeight / 2.f };
         return GameState::Paint;
     }
     }

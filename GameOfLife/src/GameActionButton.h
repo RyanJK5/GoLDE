@@ -25,7 +25,7 @@ namespace gol
 			bool lineBreak = false
 		);
 
-		GameAction Update(GameState state);
+		virtual GameAction Update(GameState state);
 	protected:
 		virtual Size2F Dimensions() const = 0;
 		virtual	bool Enabled(GameState state) const = 0;
@@ -37,33 +37,30 @@ namespace gol
 		bool m_LineBreak;
 	};
 
-    namespace
+    template <size_t Length>
+    struct StringLiteral
     {
-        template <size_t Length>
-        struct StringLiteral
+        constexpr StringLiteral(const char (&str)[Length])
         {
-            constexpr StringLiteral(const char(&str)[Length])
-            {
-                std::copy_n(str, Length, value);
-            }
+            std::copy_n(str, Length, value);
+        }
 
-            char value[Length];
-        };
+        char value[Length];
+    };
 
-        template <auto Label, GameAction Action, bool LineBreak>
-        class HiddenTemplatedButton : public GameActionButton
-        {
-        public:
-            HiddenTemplatedButton() = default;
+    template <auto Label, GameAction Action, bool LineBreak>
+    class TemplatedButtonInternal : public GameActionButton
+    {
+    public:
+        TemplatedButtonInternal() = default;
 
-            HiddenTemplatedButton(std::span<const ImGuiKeyChord> shortcuts)
-                : GameActionButton(Label, Action, shortcuts, LineBreak)
-            {}
-        };
+        TemplatedButtonInternal(std::span<const ImGuiKeyChord> shortcuts)
+            : GameActionButton(Label, Action, shortcuts, LineBreak)
+        {}
+    };
 
-        template <StringLiteral Label, GameAction Action, bool LineBreak>
-        using TemplatedButton = HiddenTemplatedButton<Label.value, Action, LineBreak>;
-    }
+    template <StringLiteral Label, GameAction Action, bool LineBreak>
+    using TemplatedButton = TemplatedButtonInternal<Label.value, Action, LineBreak>;
 }
 
 #endif

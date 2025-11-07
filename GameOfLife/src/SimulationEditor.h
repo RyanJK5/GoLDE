@@ -39,13 +39,12 @@ namespace gol
 		void UpdateMouseState(Vec2 gridPos);
 		void UpdateDragState();
 	private:
-		static constexpr double DefaultTickDelayMs = 10.;
+		static constexpr double DefaultTickDelayMs = 0.;
 	private:
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
 		GraphicsHandler m_Graphics;
 		
-		std::vector<GameActionButton> m_Buttons;
 		RectF m_WindowBounds;
 
 		glm::vec2 m_DeltaLast = { 0, 0 };

@@ -144,215 +144,213 @@ namespace gol::StyleLoader
 	template <typename T>
 	using StringConverter = std::function<std::optional<T>(std::string_view)>;
 
-	namespace {
-		template <typename T>
-		StringConverter<T> MakeConverter(
-			const std::unordered_map<std::string_view, T>& map)
+	template <typename T>
+	static StringConverter<T> MakeConverter(
+		const std::unordered_map<std::string_view, T>& map)
+	{
+		return StringConverter<T> { [map] (std::string_view str)
 		{
-			return StringConverter<T> { [map] (std::string_view str)
-			{
-				if (map.count(str) == 0)
-					return std::optional<T>(std::nullopt);
-				return std::make_optional<T>(map.at(str));
-			} };
-		}
+			if (map.count(str) == 0)
+				return std::optional<T>(std::nullopt);
+			return std::make_optional<T>(map.at(str));
+		} };
+	}
 
-		template <typename Chord, typename KeyStroke>
-		concept KeyChord = requires(Chord a, KeyStroke b)
+	template <typename Chord, typename KeyStroke>
+	concept KeyChord = requires(Chord a, KeyStroke b)
+	{
+		a | b;
+		a |= b;
+	};
+
+	template <typename KeyStroke, KeyChord<KeyStroke> Chord>
+	static StringConverter<Chord> MakeChordConverter(
+		const std::unordered_map<std::string_view, KeyStroke>& keyMap)
+	{
+		return StringConverter<Chord> { [keyMap](std::string_view str)
 		{
-			a | b;
-			a |= b;
-		};
-
-		template <typename KeyStroke, KeyChord<KeyStroke> Chord>
-		StringConverter<Chord> MakeChordConverter(
-			const std::unordered_map<std::string_view, KeyStroke>& keyMap)
-		{
-			return StringConverter<Chord> { [keyMap](std::string_view str)
-			{
-				std::optional<Chord> chord;
-				std::string token = "";
-				for (char c : str)
-				{
-					if (c == '+')
-					{
-						if (keyMap.count(token) == 0)
-							return std::optional<Chord>(std::nullopt);
-						
-						chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
-						token = "";
-						continue;
-					}
-					token += c;
-				}
-				if (keyMap.count(token) == 0)
-					return std::optional<Chord>(std::nullopt);
-				chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
-				return chord;
-			}};
-		}
-
-		template <typename T>
-		std::expected<T, YAMLError> ReadKey(
-			int lineNum,
-			const std::string& line,
-			const StringConverter<T>& conversion)
-		{
-			auto firstLetter = std::find_if(line.begin(), line.end(), [](char c) { return std::isalpha(c); });
-			auto seperator = std::find(firstLetter, line.end(), ':');
-
-			if (seperator == line.end())
-			{
-				return std::unexpected(YAMLError{
-					YAMLErrorType::ParseError,
-					std::format("Could not find ':' in line {}:\n    {}", lineNum, line)
-					});
-			}
-
-			auto keyStr = std::string(firstLetter, seperator);
-			auto key = conversion(keyStr);
-			if (!key)
-			{
-				return std::unexpected(YAMLError{
-					YAMLErrorType::ParseError,
-					std::format("'{}' is not a valid key in line {}:\n    {}", keyStr, lineNum, line)
-					});
-			}
-			return *key;
-		}
-
-		template <typename T>
-		std::expected<std::vector<T>, YAMLError> ReadList(
-			int lineNum, const std::string& line, std::string_view values,
-			const StringConverter<T>& conversion, int numElements = -1)
-		{
-			std::vector<T> result = {};
-			if (numElements >= 0)
-				result.reserve(numElements);
-
+			std::optional<Chord> chord;
 			std::string token = "";
-			int index = 0;
-			for (char c : values)
+			for (char c : str)
 			{
-				if (c == '[' || std::isspace(c))
-					continue;
-				if ((c == ',' || c == ']') && token.length() > 0)
+				if (c == '+')
 				{
-					auto converted = conversion(token);
-					if (!converted)
-					{
-						return std::unexpected(YAMLError{
-							YAMLErrorType::InvalidArguments,
-							std::format("{} is not a valid value in line {} o:\n    {}", token, lineNum, line)
-							});
-					}
-					result.push_back(*converted);
-					index++;
+					if (keyMap.count(token) == 0)
+						return std::optional<Chord>(std::nullopt);
+						
+					chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
 					token = "";
 					continue;
 				}
 				token += c;
 			}
+			if (keyMap.count(token) == 0)
+				return std::optional<Chord>(std::nullopt);
+			chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
+			return chord;
+		}};
+	}
 
-			if (numElements >= 0 && index != numElements)
-			{
-				return std::unexpected(YAMLError{
-					YAMLErrorType::InvalidArguments,
-					std::format("Expected {} parameters, received {} in line {}:\n    {}", numElements, index, lineNum, line)
-					});
-			}
+	template <typename T>
+	static std::expected<T, YAMLError> ReadKey(
+		int lineNum,
+		const std::string& line,
+		const StringConverter<T>& conversion)
+	{
+		auto firstLetter = std::find_if(line.begin(), line.end(), [](char c) { return std::isalpha(c); });
+		auto seperator = std::find(firstLetter, line.end(), ':');
 
-			return result;
+		if (seperator == line.end())
+		{
+			return std::unexpected(YAMLError{
+				YAMLErrorType::ParseError,
+				std::format("Could not find ':' in line {}:\n    {}", lineNum, line)
+				});
 		}
 
-		template <Vector4 Vec>
-		Vec CreateVector4(const std::vector<float>& elements)
+		auto keyStr = std::string(firstLetter, seperator);
+		auto key = conversion(keyStr);
+		if (!key)
 		{
-			auto result = Vec{};
-			for (size_t i = 0; i < elements.size(); i++)
+			return std::unexpected(YAMLError{
+				YAMLErrorType::ParseError,
+				std::format("'{}' is not a valid key in line {}:\n    {}", keyStr, lineNum, line)
+				});
+		}
+		return *key;
+	}
+
+	template <typename T>
+	static std::expected<std::vector<T>, YAMLError> ReadList(
+		int lineNum, const std::string& line, std::string_view values,
+		const StringConverter<T>& conversion, int numElements = -1)
+	{
+		std::vector<T> result = {};
+		if (numElements >= 0)
+			result.reserve(numElements);
+
+		std::string token = "";
+		int index = 0;
+		for (char c : values)
+		{
+			if (c == '[' || std::isspace(c))
+				continue;
+			if ((c == ',' || c == ']') && token.length() > 0)
 			{
-				switch (i)
+				auto converted = conversion(token);
+				if (!converted)
 				{
-				case 0: result.x = elements[i]; break;
-				case 1: result.y = elements[i]; break;
-				case 2: result.z = elements[i]; break;
-				case 3: result.w = elements[i]; break;
+					return std::unexpected(YAMLError{
+						YAMLErrorType::InvalidArguments,
+						std::format("{} is not a valid value in line {} o:\n    {}", token, lineNum, line)
+						});
 				}
+				result.push_back(*converted);
+				index++;
+				token = "";
+				continue;
 			}
-			return result;
+			token += c;
 		}
 
-		template <typename Key, typename Value>
-		std::expected<std::pair<Key, std::vector<Value>>, YAMLError> ReadListPair(
-			int lineNum,
-			const std::string& line,
-			const std::string::const_iterator& firstLetter,
-			const StringConverter<Key>& keyConversion,
-			const StringConverter<Value>& valueConversion,
-			int numElements = -1
-		)
+		if (numElements >= 0 && index != numElements)
 		{
-			auto seperator = std::find(firstLetter, line.end(), ':');
-
-			auto key = ReadKey<Key>(lineNum, line, keyConversion);
-			if (!key)
-				return std::unexpected(key.error());
-
-			auto values = std::string_view(seperator + 1, line.end());
-			auto valueList = ReadList<Value>(lineNum, line, values, valueConversion, numElements);
-			if (!valueList)
-				return std::unexpected(valueList.error());
-
-			return std::pair<Key, std::vector<Value>> {*key, *valueList};
+			return std::unexpected(YAMLError{
+				YAMLErrorType::InvalidArguments,
+				std::format("Expected {} parameters, received {} in line {}:\n    {}", numElements, index, lineNum, line)
+				});
 		}
 
-		template <Vector4 Vec>
-		std::expected<std::pair<StyleColor, Vec>, YAMLError> ReadColorPair(
-			int lineNum,
-			const std::string& line,
-			const std::string::const_iterator& firstLetter)
+		return result;
+	}
+
+	template <Vector4 Vec>
+	static Vec CreateVector4(const std::vector<float>& elements)
+	{
+		auto result = Vec{};
+		for (size_t i = 0; i < elements.size(); i++)
 		{
-			StringConverter<float> toF = [](auto str) { return std::make_optional<float>(std::strtof(str.data(), nullptr)); };
-			StringConverter<StyleColor> toC = MakeConverter(ColorDefinitions);
-			auto pair = ReadListPair<StyleColor, float>(lineNum, line, firstLetter,
-				toC, toF, 4);
-			if (!pair)
-				return std::unexpected(pair.error());
-			return std::pair<StyleColor, Vec> { pair->first, CreateVector4<Vec>(pair->second) };
-		}
-
-		template <typename Key, typename Value>
-		std::expected<std::pair<Key, Value>, YAMLError> ReadPair(
-			int lineNum,
-			const std::string& line,
-			const std::string::const_iterator& firstLetter,
-			const StringConverter<Key>& keyConverter,
-			const StringConverter<Value>& valueConverter)
-		{
-			auto seperator = std::find(firstLetter, line.end(), ':');
-
-			auto key = ReadKey<Key>(lineNum, line, keyConverter);
-			if (!key)
-				return std::unexpected(key.error());
-
-			std::string valueStr = "";
-			for (auto it = seperator + 1; it != line.end(); it++)
+			switch (i)
 			{
-				if (!std::isspace(*it))
-					valueStr += *it;
+			case 0: result.x = elements[i]; break;
+			case 1: result.y = elements[i]; break;
+			case 2: result.z = elements[i]; break;
+			case 3: result.w = elements[i]; break;
 			}
-
-			auto value = valueConverter(valueStr);
-			if (!value)
-			{
-				return std::unexpected(YAMLError{
-					YAMLErrorType::ParseError,
-					std::format("'{}' is not a valid color in line {}:\n    {}", valueStr, lineNum, line)
-					});
-			}
-
-			return std::pair<Key, Value> { *key, *value };
 		}
+		return result;
+	}
+
+	template <typename Key, typename Value>
+	static std::expected<std::pair<Key, std::vector<Value>>, YAMLError> ReadListPair(
+		int lineNum,
+		const std::string& line,
+		const std::string::const_iterator& firstLetter,
+		const StringConverter<Key>& keyConversion,
+		const StringConverter<Value>& valueConversion,
+		int numElements = -1
+	)
+	{
+		auto seperator = std::find(firstLetter, line.end(), ':');
+
+		auto key = ReadKey<Key>(lineNum, line, keyConversion);
+		if (!key)
+			return std::unexpected(key.error());
+
+		auto values = std::string_view(seperator + 1, line.end());
+		auto valueList = ReadList<Value>(lineNum, line, values, valueConversion, numElements);
+		if (!valueList)
+			return std::unexpected(valueList.error());
+
+		return std::pair<Key, std::vector<Value>> {*key, *valueList};
+	}
+
+	template <Vector4 Vec>
+	static std::expected<std::pair<StyleColor, Vec>, YAMLError> ReadColorPair(
+		int lineNum,
+		const std::string& line,
+		const std::string::const_iterator& firstLetter)
+	{
+		StringConverter<float> toF = [](auto str) { return std::make_optional<float>(std::strtof(str.data(), nullptr)); };
+		StringConverter<StyleColor> toC = MakeConverter(ColorDefinitions);
+		auto pair = ReadListPair<StyleColor, float>(lineNum, line, firstLetter,
+			toC, toF, 4);
+		if (!pair)
+			return std::unexpected(pair.error());
+		return std::pair<StyleColor, Vec> { pair->first, CreateVector4<Vec>(pair->second) };
+	}
+
+	template <typename Key, typename Value>
+	static std::expected<std::pair<Key, Value>, YAMLError> ReadPair(
+		int lineNum,
+		const std::string& line,
+		const std::string::const_iterator& firstLetter,
+		const StringConverter<Key>& keyConverter,
+		const StringConverter<Value>& valueConverter)
+	{
+		auto seperator = std::find(firstLetter, line.end(), ':');
+
+		auto key = ReadKey<Key>(lineNum, line, keyConverter);
+		if (!key)
+			return std::unexpected(key.error());
+
+		std::string valueStr = "";
+		for (auto it = seperator + 1; it != line.end(); it++)
+		{
+			if (!std::isspace(*it))
+				valueStr += *it;
+		}
+
+		auto value = valueConverter(valueStr);
+		if (!value)
+		{
+			return std::unexpected(YAMLError{
+				YAMLErrorType::ParseError,
+				std::format("'{}' is not a valid color in line {}:\n    {}", valueStr, lineNum, line)
+				});
+		}
+
+		return std::pair<Key, Value> { *key, *value };
 	}
 
 	template <Vector4 Vec>

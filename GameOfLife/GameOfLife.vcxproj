@@ -21,15 +21,18 @@
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\ExecutionWidget.cpp" />
     <ClCompile Include="src\GameActionButton.cpp" />
     <ClCompile Include="src\GraphicsHandler.cpp" />
     <ClCompile Include="src\GameGrid.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\KeyShortcut.cpp" />
     <ClCompile Include="src\Logging.cpp" />
+    <ClCompile Include="src\ResizeWidget.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\SimulationControl.cpp" />
     <ClCompile Include="src\SimulationEditor.cpp" />
+    <ClCompile Include="src\StepWidget.cpp" />
     <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
     <ClCompile Include="src\vendor\glm\glm.cppm" />
     <ClCompile Include="src\vendor\imgui.cpp" />
@@ -50,6 +53,7 @@
     <ClInclude Include="..\Dependencies\ImGUI\imgui_impl_opengl3.h" />
     <ClInclude Include="..\Dependencies\ImGUI\imgui_internal.h" />
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\ExecutionWidget.h" />
     <ClInclude Include="src\GameEnums.h" />
     <ClInclude Include="src\GraphicsHandler.h" />
     <ClInclude Include="src\GameGrid.h" />
@@ -58,12 +62,13 @@
     <ClInclude Include="src\Graphics2D.h" />
     <ClInclude Include="src\KeyShortcut.h" />
     <ClInclude Include="src\Logging.h" />
+    <ClInclude Include="src\ResizeWidget.h" />
     <ClInclude Include="src\ShaderManager.h" />
     <ClInclude Include="src\GameActionButton.h" />
     <ClInclude Include="src\GUILoader.h" />
     <ClInclude Include="src\SimulationControl.h" />
-    <ClInclude Include="src\SimulationControlButtons.h" />
     <ClInclude Include="src\SimulationEditor.h" />
+    <ClInclude Include="src\StepWidget.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_vector_decl.hpp" />
@@ -363,6 +368,7 @@
     <ClInclude Include="src\vendor\imstb_rectpack.h" />
     <ClInclude Include="src\vendor\imstb_textedit.h" />
     <ClInclude Include="src\vendor\imstb_truetype.h" />
+    <ClInclude Include="src\SimulationControlResult.h" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\font\arial.ttf" />

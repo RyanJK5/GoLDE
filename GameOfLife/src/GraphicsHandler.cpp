@@ -129,8 +129,8 @@ void gol::GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) cons
         auto origin = Camera.WorldToScreenPos({ 0, 0 }, args.ViewportBounds, gridScreenDimensions);
         auto lowerRight = Camera.WorldToScreenPos({ gridScreenDimensions.Width, gridScreenDimensions.Height }, args.ViewportBounds, gridScreenDimensions);
         GL_DEBUG(glScissor(
-            origin.x, origin.y,
-            lowerRight.x - origin.x, lowerRight.y - origin.y
+            static_cast<int32_t>(origin.x), static_cast<int32_t>(origin.y),
+            static_cast<int32_t>(lowerRight.x - origin.x), static_cast<int32_t>(lowerRight.y - origin.y)
         ));
         GL_DEBUG(glClearColor(0.f, 0.f, 0.f, 1.f));
         GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
