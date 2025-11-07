@@ -3,25 +3,24 @@
 
 #include <memory>
 #include <vector>
-#include <filesystem>
 
 #include "GameEnums.h"
+#include "GUILoader.h"
 #include "StepWidget.h"
 #include "ResizeWidget.h"
 #include "ExecutionWidget.h"
+#include "DelayWidget.h"
 
 namespace gol
 {
 	class SimulationControl
 	{
 	public:
-		SimulationControl(const std::filesystem::path& shortcuts);
+		SimulationControl(const StyleLoader::StyleInfo<ImVec4>& fileInfo);
 
 		SimulationControlResult Update(GameState state);
 	private:
-		void CreateButtons(const std::unordered_map<GameAction, std::vector<ImGuiKeyChord>>& shortcuts);
-
-		void FillResuts(SimulationControlResult& current, const SimulationControlResult& update) const;
+		void FillResults(SimulationControlResult& current, const SimulationControlResult& update) const;
 	private:
 		static constexpr int32_t BigStep = 100;
 		static constexpr int32_t StepWarning = 100;
@@ -29,6 +28,7 @@ namespace gol
 		ExecutionWidget m_ExecutionWidget;
 		ResizeWidget m_ResizeWidget;
 		StepWidget m_StepWidget;
+		DelayWidget m_DelayWidget;
 	};
 }
 

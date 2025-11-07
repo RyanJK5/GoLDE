@@ -17,14 +17,18 @@ colors:
 
 imgui-style:
     WindowBg: background
-    FrameBg: contrast
     Border: contrast
     
+    FrameBg: contrast
+    FrameBgHovered: hover
+
     Text: text
     
     Button: contrast
     ButtonHovered: hover
     
+    SliderGrab: hover
+
     Header: contrast
     HeaderActive: contrast
     

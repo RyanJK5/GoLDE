@@ -17,6 +17,9 @@ gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args
     m_Graphics.RescaleFrameBuffer(WindowBounds().Size());
     m_Graphics.ClearBackground(graphicsArgs);
 
+    if (args.TickDelayMs)
+        m_TickDelayMs = *args.TickDelayMs;
+
     GameState state = args.Action == GameAction::None 
         ? args.State 
         : UpdateState(args);

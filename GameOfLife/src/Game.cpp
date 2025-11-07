@@ -41,7 +41,7 @@ gol::OpenGLWindow::~OpenGLWindow()
 gol::Game::Game()
     : m_Window(DefaultWindowWidth, DefaultWindowHeight)
     , m_Editor({DefaultWindowWidth, DefaultWindowHeight}, {DefaultGridWidth, DefaultGridHeight})
-    , m_Control(std::filesystem::path("config") / "style.yaml")
+    , m_Control(*(StyleLoader::LoadYAML<ImVec4>(std::filesystem::path("config") / "style.yaml")))
 {
     InitImGUI(std::filesystem::path("config") / "style.yaml");
 }
@@ -87,13 +87,10 @@ void gol::Game::InitImGUI(const std::filesystem::path& stylePath)
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.WindowMenuButtonPosition = ImGuiDir_None;
-    style.Colors[ImGuiCol_FrameBg] = styleInfo->StyleColors[StyleLoader::StyleColor::Contrast];
 
     for (auto&& pair : styleInfo->AttributeColors)
-    {
         style.Colors[pair.first] = styleInfo->StyleColors[pair.second];
-    }
-
+    
     ImGui_ImplGlfw_InitForOpenGL(m_Window.Get(), true);
     ImGui_ImplOpenGL3_Init();
 }

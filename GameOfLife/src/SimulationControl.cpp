@@ -1,24 +1,23 @@
 #include "SimulationControl.h"
 
-#include "GUILoader.h"
 #include "Logging.h"
 
-gol::SimulationControl::SimulationControl(const std::filesystem::path& shortcutsPath)
-{
-    auto fileInfo = StyleLoader::LoadYAML<ImVec4>(shortcutsPath);
-    if (!fileInfo)
-        throw std::exception(fileInfo.error().Description.c_str());
-    CreateButtons(fileInfo->Shortcuts);
-}
+gol::SimulationControl::SimulationControl(const StyleLoader::StyleInfo<ImVec4>& fileInfo)
+    : m_ExecutionWidget(fileInfo.Shortcuts)
+    , m_ResizeWidget(fileInfo.Shortcuts.at(GameAction::Resize))
+    , m_StepWidget(fileInfo.Shortcuts.at(GameAction::Step))
+{ }
 
-void gol::SimulationControl::FillResuts(SimulationControlResult& current, const SimulationControlResult& update) const
+void gol::SimulationControl::FillResults(SimulationControlResult& current, const SimulationControlResult& update) const
 {
     if (current.Action == GameAction::None)
         current.Action = update.Action;
-    if (!current.NewDimensions.has_value())
+    if (!current.NewDimensions)
         current.NewDimensions = update.NewDimensions;
-    if (!current.StepCount.has_value())
+    if (!current.StepCount)
         current.StepCount = update.StepCount;
+    if (!current.TickDelayMs)
+        current.TickDelayMs = update.TickDelayMs;
 }
 
 gol::SimulationControlResult gol::SimulationControl::Update(GameState state)
@@ -27,17 +26,11 @@ gol::SimulationControlResult gol::SimulationControl::Update(GameState state)
 
     SimulationControlResult result { .State = state };
     
-    FillResuts(result, m_ExecutionWidget.Update(state));
-    FillResuts(result, m_ResizeWidget.Update(state));
-    FillResuts(result, m_StepWidget.Update(state));
+    FillResults(result, m_ExecutionWidget.Update(state));
+    FillResults(result, m_ResizeWidget.Update(state));
+    FillResults(result, m_StepWidget.Update(state));
+    FillResults(result, m_DelayWidget.Update(state));
 
     ImGui::End();
     return result;
-}
-
-void gol::SimulationControl::CreateButtons(const std::unordered_map<GameAction, std::vector<ImGuiKeyChord>>& shortcuts)
-{
-    m_ExecutionWidget = ExecutionWidget(shortcuts);
-    m_ResizeWidget = ResizeWidget(shortcuts.at(GameAction::Resize));
-    m_StepWidget = StepWidget(shortcuts.at(GameAction::Step));
 }

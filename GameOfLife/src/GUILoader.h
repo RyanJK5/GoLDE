@@ -5,12 +5,14 @@
 #include <unordered_map>
 #include <filesystem>
 #include <cctype>
+#include <functional>
 #include <variant>
 #include <fstream>
 #include <expected>
 #include <exception>
 #include <concepts>
 
+#include "imgui.h"
 #include "GameEnums.h"
 
 namespace gol::StyleLoader
@@ -85,7 +87,9 @@ namespace gol::StyleLoader
 		{ "TabUnfocused",        ImGuiCol_TabUnfocused        },
 		{ "TabDimmed",           ImGuiCol_TabDimmed           },
 		{ "TabSelected",         ImGuiCol_TabSelected         },
-		{ "FrameBg",             ImGuiCol_FrameBg             }
+		{ "SliderGrab",          ImGuiCol_SliderGrab          },
+		{ "FrameBg",             ImGuiCol_FrameBg             },
+		{ "FrameBgHovered",      ImGuiCol_FrameBgHovered      }
 	};
 
 	static const std::unordered_map<std::string_view, SectionType> SectionDefinitions = {
