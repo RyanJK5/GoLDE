@@ -10,7 +10,20 @@ namespace gol
 
 	enum class GameAction
 	{
-		None, Start, Pause, Resume, Restart, Reset, Clear, Step, Resize
+		None, 
+		Start, 
+		Pause, 
+		Resume, 
+		Restart, 
+		Reset, 
+		Clear,
+
+		Step, 
+		Resize,
+		
+		Copy, 
+		Cut, 
+		Paste
 	};
 
 	enum class EditorMode

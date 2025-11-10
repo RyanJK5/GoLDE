@@ -5,8 +5,12 @@ shortcuts:
     restart: [Ctrl+R]
     reset: [Enter]
     clear: [Ctrl+Enter]
-    step: [Right]
+    step: [Ctrl+Right]
     resize: []
+
+    copy: [Ctrl+C]
+    cut: [Ctrl+X]
+    paste: [Ctrl+V]
 
 colors:
     transparent: [0, 0, 0, 0]

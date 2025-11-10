@@ -85,6 +85,18 @@ bool gol::GameGrid::Set(int32_t x, int32_t y, bool active)
 	return true;
 }
 
+void gol::GameGrid::ClearRegion(const Rect& region)
+{
+	std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
+}
+
+void gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
+{
+	ClearRegion({ pos.X, pos.Y, region.Width(), region.Height() });
+	for (auto&& cell : region.m_Data)
+		m_Data.insert({pos.X + cell.X, pos.Y + cell.Y});
+}
+
 std::optional<bool> gol::GameGrid::Get(int32_t x, int32_t y) const
 {
 	if (!InBounds(x, y))

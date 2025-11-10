@@ -142,7 +142,11 @@ namespace gol::StyleLoader
 		{ "reset",   GameAction::Reset   },
 		{ "clear",   GameAction::Clear   },
 		{ "step",    GameAction::Step    },
-		{ "resize",  GameAction::Resize  }
+		{ "resize",  GameAction::Resize  },
+
+		{ "copy",    GameAction::Copy    },
+		{ "cut",     GameAction::Cut     },
+		{ "paste",   GameAction::Paste   }
 	};
 
 	template <typename T>

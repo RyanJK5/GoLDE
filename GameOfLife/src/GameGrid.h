@@ -31,13 +31,15 @@ namespace gol
 
 		bool Dead() const;
 
-		inline bool Enable(int32_t x, int32_t y) { return Set(x, y, true); }
-		inline bool Disable(int32_t x, int32_t y) { return Set(x, y, false); }
 		bool Set(int32_t x, int32_t y, bool active);
 		bool Toggle(int32_t x, int32_t y);
+
+		void ClearRegion(const Rect& region);
+		void InsertGrid(const GameGrid& grid, Vec2 pos);
+
 		std::optional<bool> Get(int32_t x, int32_t y) const;
 
-		const std::set<Vec2>& Data() const { return m_Data; }
+		constexpr const std::set<Vec2>& Data() const { return m_Data; }
 	private:
 		std::set<Vec2> m_Data;
 		int32_t m_Width;

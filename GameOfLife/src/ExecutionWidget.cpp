@@ -3,7 +3,7 @@
 gol::SimulationControlResult gol::ExecutionWidget::Update(GameState state)
 {
 	auto result = GameAction::None;
-	auto updateIfNone = [&result](GameAction update)
+	const auto updateIfNone = [&result](GameAction update)
 	{
 		if (result == GameAction::None)
 			result = update;

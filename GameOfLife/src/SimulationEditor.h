@@ -5,6 +5,7 @@
 #include <optional>
 #include <functional>
 #include <unordered_map>
+#include <bitset>
 
 #include "SimulationControl.h"
 #include "GameGrid.h"
@@ -37,8 +38,11 @@ namespace gol
 		void UpdateViewport();
 		std::optional<Vec2> CursorGridPos();
 		
+		void CopySelection();
+		Rect SelectionBounds() const;
+
 		void UpdateMouseState(Vec2 gridPos);
-		bool SelectionArea(Vec2 gridPos);
+		bool UpdateSelectionArea(Vec2 gridPos);
 		void UpdateDragState();
 
 	private:
@@ -46,6 +50,7 @@ namespace gol
 	private:
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
+
 		GraphicsHandler m_Graphics;
 		RectF m_WindowBounds;
 

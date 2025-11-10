@@ -187,21 +187,21 @@ void gol::GraphicsHandler::DrawGrid(const std::set<Vec2>& grid, const GraphicsHa
     UnbindFrameBuffer();
 }
 
-gol::RectF gol::GraphicsHandler::GridToScreenBounds(Vec2 anchor, Vec2 sentinel, const GraphicsHandlerArgs&) const
+gol::RectF gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs&) const
 {
     return {
-          static_cast<float>(std::min(anchor.X, sentinel.X) * SimulationEditor::DefaultCellHeight),
-          static_cast<float>(std::min(anchor.Y, sentinel.Y) * SimulationEditor::DefaultCellHeight),
-          static_cast<float>(std::abs(sentinel.X - anchor.X + 1) * SimulationEditor::DefaultCellWidth),
-          static_cast<float>(std::abs(sentinel.Y - anchor.Y + 1) * SimulationEditor::DefaultCellHeight),
+          static_cast<float>(region.X      * SimulationEditor::DefaultCellHeight),
+          static_cast<float>(region.Y      * SimulationEditor::DefaultCellHeight),
+          static_cast<float>(region.Width  * SimulationEditor::DefaultCellWidth),
+          static_cast<float>(region.Height * SimulationEditor::DefaultCellHeight),
     };
 }
 
-void gol::GraphicsHandler::DrawSelection(Vec2 anchor, Vec2 sentinel, const GraphicsHandlerArgs& args)
+void gol::GraphicsHandler::DrawSelection(const Rect& region, const GraphicsHandlerArgs& args)
 {
     BindFrameBuffer();
 
-    RectF rect = GridToScreenBounds(anchor, sentinel, args);
+    RectF rect = GridToScreenBounds(region, args);
     float positions[] = 
     { 
         rect.UpperLeft().X, rect.UpperLeft().Y,

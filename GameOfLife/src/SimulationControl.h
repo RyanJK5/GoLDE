@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "GameEnums.h"
+#include "EditorWidget.h"
 #include "GUILoader.h"
 #include "StepWidget.h"
 #include "ResizeWidget.h"
@@ -29,6 +30,7 @@ namespace gol
 		ResizeWidget m_ResizeWidget;
 		StepWidget m_StepWidget;
 		DelayWidget m_DelayWidget;
+		EditorWidget m_EditorWidget;
 	};
 }
 

@@ -6,6 +6,8 @@ gol::SimulationControl::SimulationControl(const StyleLoader::StyleInfo<ImVec4>& 
     : m_ExecutionWidget(fileInfo.Shortcuts)
     , m_ResizeWidget(fileInfo.Shortcuts.at(GameAction::Resize))
     , m_StepWidget(fileInfo.Shortcuts.at(GameAction::Step))
+    , m_DelayWidget()
+    , m_EditorWidget(fileInfo.Shortcuts)
 { }
 
 void gol::SimulationControl::FillResults(SimulationControlResult& current, const SimulationControlResult& update) const
@@ -30,6 +32,7 @@ gol::SimulationControlResult gol::SimulationControl::Update(GameState state)
     FillResults(result, m_ResizeWidget.Update(state));
     FillResults(result, m_StepWidget.Update(state));
     FillResults(result, m_DelayWidget.Update(state));
+    FillResults(result, m_EditorWidget.Update(state));
 
     ImGui::End();
     return result;

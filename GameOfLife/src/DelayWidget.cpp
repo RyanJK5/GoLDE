@@ -1,6 +1,6 @@
 #include "DelayWidget.h"
 
-gol::SimulationControlResult gol::DelayWidget::Update(GameState state)
+gol::SimulationControlResult gol::DelayWidget::Update(GameState)
 {
 	ImGui::Text("Simulation Delay (ms)");
 	ImGui::SetItemTooltip("The delay between each step while the simulation is running.");
