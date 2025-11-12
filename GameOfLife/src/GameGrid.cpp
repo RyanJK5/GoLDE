@@ -106,14 +106,17 @@ void gol::GameGrid::TranslateRegion(const Rect& region, Vec2 translation)
 
 void gol::GameGrid::ClearRegion(const Rect& region)
 {
-	std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
+	m_Population -= std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
 }
 
 void gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
 {
 	ClearRegion({ pos.X, pos.Y, region.Width(), region.Height() });
 	for (auto&& cell : region.m_Data)
+	{
 		m_Data.insert({pos.X + cell.X, pos.Y + cell.Y});
+		m_Population++;
+	}
 }
 
 std::optional<bool> gol::GameGrid::Get(int32_t x, int32_t y) const
