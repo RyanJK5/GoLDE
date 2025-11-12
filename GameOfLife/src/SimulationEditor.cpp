@@ -54,16 +54,18 @@ gol::GameState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs
     {
         glfwSetTime(0);
         m_Grid.Update();
-        if (m_Grid.Dead())
+        if (m_Grid.Dead() && (!m_Selected || m_Selected->Dead()))
             return GameState::Empty;
     }
-    m_Graphics.DrawGrid(m_Grid.Data(), args);
+    m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
     return GameState::Simulation;
 }
 
 gol::GameState gol::SimulationEditor::PaintUpdate(const GraphicsHandlerArgs& args)
 {
-    m_Graphics.DrawGrid(m_Grid.Data(), args);
+    m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
+    if (m_AnchorSelection != m_SentinelSelection && m_Selected)
+        m_Graphics.DrawGrid(std::min(*m_AnchorSelection, *m_SentinelSelection), m_Selected->Data(), args);
 
     auto gridPos = CursorGridPos();
     if (m_AnchorSelection && m_SentinelSelection && (m_AnchorSelection != m_SentinelSelection))
@@ -75,19 +77,21 @@ gol::GameState gol::SimulationEditor::PaintUpdate(const GraphicsHandlerArgs& arg
         UpdateMouseState(*gridPos);
     }
 
-    return m_Grid.Dead() 
+    return (m_Grid.Dead() && (!m_Selected || m_Selected->Dead()))
         ? GameState::Empty 
         : GameState::Paint;
 }
 
 gol::GameState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& args)
 {
-     auto gridPos = CursorGridPos();
+    auto gridPos = CursorGridPos();
     if (gridPos)
         UpdateSelectionArea(*gridPos);
     if (m_AnchorSelection && m_SentinelSelection)
         m_Graphics.DrawSelection(SelectionBounds(), args);
-    m_Graphics.DrawGrid(m_Grid.Data(), args);
+    m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
+    if (m_AnchorSelection != m_SentinelSelection && m_Selected)
+        m_Graphics.DrawGrid(std::min(*m_AnchorSelection, *m_SentinelSelection), m_Selected->Data(), args);
     return GameState::Paused;
 }
 
@@ -112,7 +116,7 @@ void gol::SimulationEditor::DisplaySimulation()
     splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 1);
     ImGui::SetCursorPos(ImGui::GetWindowContentRegionMin());
     ImGui::Text(std::format("Generation: {}", m_Grid.Generation()).c_str());
-    ImGui::Text(std::format("Population: {}", m_Grid.Population()).c_str());
+    ImGui::Text(std::format("Population: {}", m_Grid.Population() + (m_Selected ? m_Selected->Population() : 0)).c_str());
 
     auto cursorPos = CursorGridPos();
     if (cursorPos)
@@ -147,16 +151,19 @@ gol::Rect gol::SimulationEditor::ViewportBounds() const
 
 void gol::SimulationEditor::RemoveSelection()
 {
-    m_AnchorSelection = std::nullopt;
+    if (m_AnchorSelection != m_SentinelSelection && m_Selected)
+        m_Grid.InsertGrid(*m_Selected, *m_AnchorSelection);
+    m_AnchorSelection   = std::nullopt;
     m_SentinelSelection = std::nullopt;
+    m_Selected          = std::nullopt;
 }
 
 void gol::SimulationEditor::CopySelection(bool cut) {
-    if (!m_AnchorSelection)
+    if (!m_Selected)
         return;
     ImGui::SetClipboardText(
         reinterpret_cast<const char*>(
-            RLEEncoder::EncodeRegion<uint32_t>(m_Grid, SelectionBounds()).data()
+            RLEEncoder::EncodeRegion<uint32_t>(*m_Selected, {0, 0, m_Selected->Width(), m_Selected->Height()}).data()
         )
     );
     if (!cut)
@@ -168,8 +175,9 @@ void gol::SimulationEditor::CutSelection()
     if (!m_AnchorSelection)
         return;
     CopySelection(true);
-    m_Grid.ClearRegion(SelectionBounds());
+    auto toClear = SelectionBounds();
     RemoveSelection();
+    m_Grid.ClearRegion(toClear);
 }
 
 void gol::SimulationEditor::PasteSelection()
@@ -179,29 +187,29 @@ void gol::SimulationEditor::PasteSelection()
         gridPos = m_AnchorSelection;
     if (!gridPos)
         return;
-    
-    GameGrid insert = RLEEncoder::DecodeRegion<uint32_t>(ImGui::GetClipboardText());
-    m_Grid.InsertGrid(insert, *gridPos);
+    RemoveSelection();
+    m_Selected = RLEEncoder::DecodeRegion<uint32_t>(ImGui::GetClipboardText());
     m_AnchorSelection = gridPos;
-    m_SentinelSelection = { gridPos->X + insert.Width(), gridPos->Y + insert.Height() };
+    m_SentinelSelection = { gridPos->X + m_Selected->Width(), gridPos->Y + m_Selected->Height() };
 }
 
 void gol::SimulationEditor::NudgeSelection(Vec2 direction)
 {
     if (!m_AnchorSelection || (m_AnchorSelection == m_SentinelSelection))
         return;
-    m_Grid.TranslateRegion(SelectionBounds(), direction);
+    //m_Grid.TranslateRegion(SelectionBounds(), direction);
     *m_AnchorSelection += direction;
     *m_SentinelSelection += direction;
 }
 
 gol::Rect gol::SimulationEditor::SelectionBounds() const
 {
-    return {
-            std::min(m_AnchorSelection->X, m_SentinelSelection->X),
-            std::min(m_AnchorSelection->Y, m_SentinelSelection->Y),
-            std::abs(m_SentinelSelection->X - m_AnchorSelection->X) + 1,
-            std::abs(m_SentinelSelection->Y - m_AnchorSelection->Y) + 1
+    return 
+    {
+        std::min(m_AnchorSelection->X, m_SentinelSelection->X),
+        std::min(m_AnchorSelection->Y, m_SentinelSelection->Y),
+        std::abs(m_SentinelSelection->X - m_AnchorSelection->X) + 1,
+        std::abs(m_SentinelSelection->Y - m_AnchorSelection->Y) + 1
     };
 }
 
@@ -263,8 +271,8 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
         PasteSelection();
         return result.State;
     case Delete:
-        if (m_AnchorSelection)
-            m_Grid.ClearRegion(SelectionBounds());
+        m_Selected = std::nullopt;
+        RemoveSelection();
         return result.State;
     case Deselect:
         RemoveSelection();
@@ -321,9 +329,15 @@ bool gol::SimulationEditor::UpdateSelectionArea(Vec2 gridPos)
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && (m_AnchorSelection != m_SentinelSelection))
     {
+        if (!m_Selected)
+        {
+    		m_Selected = m_Grid.ExtractRegion(SelectionBounds());
+            m_Grid.ClearRegion(SelectionBounds());
+        }
         return false;
     }
 
+    RemoveSelection();
     m_AnchorSelection = gridPos;
     m_SentinelSelection = gridPos;
     return false;

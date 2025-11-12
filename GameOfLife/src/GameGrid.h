@@ -35,7 +35,7 @@ namespace gol
 		bool Toggle(int32_t x, int32_t y);
 		
 		void TranslateRegion(const Rect& region, Vec2 translation);
-
+		GameGrid ExtractRegion(const Rect& region) const;
 		void ClearRegion(const Rect& region);
 		void InsertGrid(const GameGrid& grid, Vec2 pos);
 

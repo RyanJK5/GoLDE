@@ -33,7 +33,7 @@ bool gol::GameGrid::Dead() const
 void gol::GameGrid::Update()
 {
 	std::map<Vec2, int8_t> neighborCount;
-	for (const auto& pos : m_Data)
+	for (auto&& pos : m_Data)
 	{
 		for (int32_t x = pos.X - 1; x <= pos.X + 1; x++)
 		{
@@ -104,6 +104,21 @@ void gol::GameGrid::TranslateRegion(const Rect& region, Vec2 translation)
 	m_Data.insert_range(newCells);
 }
 
+gol::GameGrid gol::GameGrid::ExtractRegion(const Rect& region) const
+{
+	auto result = GameGrid { region.Width, region.Height };
+	for (auto&& pos : m_Data)
+	{
+		if (region.InBounds(pos))
+		{
+			result.m_Population++;
+			result.m_Data.insert(pos - region.Pos());
+		}
+	}
+	return result;
+}
+
+
 void gol::GameGrid::ClearRegion(const Rect& region)
 {
 	m_Population -= std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
@@ -111,9 +126,10 @@ void gol::GameGrid::ClearRegion(const Rect& region)
 
 void gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
 {
-	ClearRegion({ pos.X, pos.Y, region.Width(), region.Height() });
 	for (auto&& cell : region.m_Data)
 	{
+		if (m_Data.find({pos.X + cell.X, pos.Y + cell.Y}) != m_Data.end())
+			continue;
 		m_Data.insert({pos.X + cell.X, pos.Y + cell.Y});
 		m_Population++;
 	}

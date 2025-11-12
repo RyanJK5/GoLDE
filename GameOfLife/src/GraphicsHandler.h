@@ -34,7 +34,7 @@ namespace gol
 
 		void RescaleFrameBuffer(Size2 windowSize);
 
-		void DrawGrid(const std::set<Vec2>& grid, const GraphicsHandlerArgs& info);
+		void DrawGrid(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& info);
 		void DrawSelection(const Rect& region, const GraphicsHandlerArgs& info);
 		void ClearBackground(const GraphicsHandlerArgs& args) const;
 
@@ -43,7 +43,7 @@ namespace gol
 
 		inline uint32_t TextureID() const { return m_Texture; }
 	private:
-		std::vector<float> GenerateGLBuffer(const std::set<Vec2>& grid) const;
+		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid) const;
 
 		RectF GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& info) const;
 

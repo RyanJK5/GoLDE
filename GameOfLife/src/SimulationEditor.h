@@ -55,6 +55,7 @@ namespace gol
 	private:
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
+		std::optional<GameGrid> m_Selected;
 
 		GraphicsHandler m_Graphics;
 		RectF m_WindowBounds;
