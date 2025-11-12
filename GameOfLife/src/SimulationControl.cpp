@@ -2,21 +2,24 @@
 
 #include "Logging.h"
 
-gol::SimulationControlResult gol::SelectionShortcuts::Update(GameState)
+gol::SimulationControlResult gol::SelectionShortcuts::Update(GameState state)
 {
 	SimulationControlResult result { .Action = GameAction::None, .NudgeSize = 1 };
 
     for (auto&& [action, actionShortcuts] : Shortcuts)
     {
-        bool active = false;
+        if (action != GameAction::Deselect && state != GameState::Paint)
+            continue;
+
+        bool resultActive = false;
         for (auto& shortcut : actionShortcuts)
         {
-            bool test = shortcut.Active();
-            if (test && ((shortcut.Shortcut() & ImGuiMod_Shift) != 0))
+            bool shortcutActive = shortcut.Active();
+            if (shortcutActive && ((shortcut.Shortcut() & ImGuiMod_Shift) != 0))
                 result.NudgeSize = 10;
-            active = test || active;
+            resultActive = shortcutActive || resultActive;
         }
-        if (active && result.Action == GameAction::None)
+        if (resultActive && result.Action == GameAction::None)
             result.Action = action;
     }
     return result;
