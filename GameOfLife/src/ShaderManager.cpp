@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <format>
 #include <GL/glew.h>
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <optional>
 #include <string>
 #include <string_view>

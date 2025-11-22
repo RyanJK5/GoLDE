@@ -9,57 +9,53 @@
 constexpr std::array<std::string_view, 4> TermBlacklist = { "class", "__cdecl", "__thiscall", "std::" };
 constexpr std::array<std::string_view, 1> TemplateBlacklist = { "basic_string" };
 
-namespace
+static bool SkipAngleBrackets(const std::string& expression, size_t& pos, const std::array<std::string_view, TemplateBlacklist.size()>& skip)
 {
-	bool SkipAngleBrackets(const std::string& expression, size_t& pos, const std::array<std::string_view, TemplateBlacklist.size()>& skip)
-	{
-		if (expression[pos] != '<')
-			return false;
-
-		bool inSkip = false;
-		for (auto& token : skip)
-		{
-			size_t tokenBegin = pos - token.size();
-			if (expression.find(token, tokenBegin) == tokenBegin)
-			{
-				inSkip = true;
-				break;
-			}
-		}
-		if (!inSkip)
-			return false;
-
-		int openAngles = 1;
-		while (pos < expression.length())
-		{
-			pos++;
-			if (expression[pos] == '<')
-				openAngles++;
-			else if (expression[pos] == '>')
-				openAngles--;
-
-			if (openAngles == 0)
-				break;
-		}
-
-		return true;
-	}
-
-	bool SkipTokens(const std::string& expression, size_t& pos, const std::array<std::string_view, TermBlacklist.size()>& skip)
-	{
-		for (auto& token : skip)
-		{
-			if (expression.find(token, pos) == pos)
-			{
-				pos += token.length();
-				if (expression[pos] != ' ')
-					pos--;
-				return true;
-			}
-		}
+	if (expression[pos] != '<')
 		return false;
+
+	bool inSkip = false;
+	for (auto& token : skip)
+	{
+		size_t tokenBegin = pos - token.size();
+		if (expression.find(token, tokenBegin) == tokenBegin)
+		{
+			inSkip = true;
+			break;
+		}
+	}
+	if (!inSkip)
+		return false;
+
+	int openAngles = 1;
+	while (pos < expression.length())
+	{
+		pos++;
+		if (expression[pos] == '<')
+			openAngles++;
+		else if (expression[pos] == '>')
+			openAngles--;
+
+		if (openAngles == 0)
+			break;
 	}
 
+	return true;
+}
+
+static bool SkipTokens(const std::string& expression, size_t& pos, const std::array<std::string_view, TermBlacklist.size()>& skip)
+{
+	for (auto& token : skip)
+	{
+		if (expression.find(token, pos) == pos)
+		{
+			pos += token.length();
+			if (expression[pos] != ' ')
+				pos--;
+			return true;
+		}
+	}
+	return false;
 }
 
 std::string gol::logimpl::SimplifyFileName(const std::string& fileName)

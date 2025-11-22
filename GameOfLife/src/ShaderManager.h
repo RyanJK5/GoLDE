@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <filesystem>
-#include "glm/fwd.hpp"
+#include <glm/glm.hpp>
 #include <optional>
 #include <string_view>
 #include <unordered_map>

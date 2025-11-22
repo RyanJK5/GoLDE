@@ -1,10 +1,9 @@
 #ifndef __KeyShortcut_h__
 #define __KeyShortcut_h__
 
+#include <imgui/imgui.h>
 #include <ranges>
 #include <vector>
-
-#include "imgui.h"
 
 namespace gol
 {

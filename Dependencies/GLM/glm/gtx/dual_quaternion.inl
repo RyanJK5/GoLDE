@@ -246,7 +246,8 @@ namespace glm
 	{
 		const glm::qua<T, Q> real = conjugate(q.real);
 		const glm::qua<T, Q> dual = conjugate(q.dual);
-		return tdualquat<T, Q>(real, dual + (real * (-2.0f * dot(real,dual))));
+		return tdualquat<T, Q>(real, dual + (real * (-2
+			* dot(real,dual))));
 	}
 
 	template<typename T, qualifier Q>

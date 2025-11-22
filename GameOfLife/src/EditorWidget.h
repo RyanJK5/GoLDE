@@ -1,7 +1,7 @@
 #ifndef __EditorWidget_h__
 #define __EditorWidget_h__
 
-#include "imgui.h"
+#include <imgui/imgui.h>
 #include <span>
 #include <unordered_map>
 #include <vector>

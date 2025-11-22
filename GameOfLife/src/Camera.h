@@ -1,7 +1,7 @@
 #ifndef __Camera_h__
 #define __Camera_h__
 
-#include "glm/fwd.hpp"
+#include <glm/glm.hpp>
 
 #include "Graphics2D.h"
 

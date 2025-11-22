@@ -4,8 +4,8 @@
 #include <format>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "glm/glm.hpp"
-#include "imgui.h"
+#include <glm/glm.hpp>
+#include <imgui/imgui.h>
 #include <optional>
 #include <string>
 #include <utility>

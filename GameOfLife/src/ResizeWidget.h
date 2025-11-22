@@ -1,7 +1,7 @@
 #ifndef __ResizeWidget_h__
 #define __ResizeWidget_h__
 
-#include "imgui.h"
+#include <imgui/imgui.h>
 #include <span>
 
 #include "GameActionButton.h"

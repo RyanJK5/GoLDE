@@ -1,7 +1,7 @@
 #ifndef __SimulationEditor_h__
 #define __SimulationEditor_h__
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <optional>
 
 #include "GameEnums.h"

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <filesystem>
-#include "imgui.h"
+#include <imgui/imgui.h>
 #include <GLFW/glfw3.h>
 
 #include "GameEnums.h"
