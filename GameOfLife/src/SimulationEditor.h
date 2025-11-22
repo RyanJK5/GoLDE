@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <bitset>
 
+#include "SelectionManager.h"
 #include "VersionManager.h"
 #include "SimulationControl.h"
 #include "GameGrid.h"
@@ -34,28 +35,14 @@ namespace gol
 		GameState PauseUpdate(const GraphicsHandlerArgs& args);
 
 		void UpdateVersion(const SimulationControlResult& args);
-		void RestoreGridVersion(GameAction undoRedo, GameGrid& grid, const VersionChange& versionChanges);
 
 		void DisplaySimulation();
 
 		GameState UpdateState(const SimulationControlResult& action);
 		void UpdateViewport();
 		std::optional<Vec2> CursorGridPos();
-		
-		void RemoveSelection(bool updateVersion = true);
-		void CopySelection();
-		void PasteSelection();
-		void DeleteSelection(bool cut);
-
-		Vec2 RotatePoint(Vec2F center, Vec2F point, bool clockwise);
-		void RotateSelection(bool clockwise = true, bool updateVersion = true);
-		
-		void NudgeSelection(GameAction nudgeType, Vec2 direction, bool updateVersion = true);
-		Rect SelectionBounds() const;
-		void SetSelectionBounds(const Rect& bounds);
 
 		void UpdateMouseState(Vec2 gridPos);
-		bool UpdateSelectionArea(Vec2 gridPos);
 		void UpdateDragState();
 
 	private:
@@ -63,17 +50,13 @@ namespace gol
 	private:
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
-		std::optional<GameGrid> m_Selected;
 
+		SelectionManager m_SelectionManager;
 		VersionManager m_VersionManager;
 
 		GraphicsHandler m_Graphics;
 		RectF m_WindowBounds;
 
-		std::optional<Vec2> m_AnchorSelection;
-		std::optional<Vec2> m_SentinelSelection;
-
-		bool m_RotationParity = false;
 		glm::vec2 m_DeltaLast = { 0, 0 };
 		double m_TickDelayMs = DefaultTickDelayMs;
 		EditorMode m_EditorMode = EditorMode::None;

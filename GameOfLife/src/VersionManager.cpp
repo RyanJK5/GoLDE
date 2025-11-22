@@ -67,6 +67,14 @@ void gol::VersionManager::AddActionsChange(GameAction action)
 	ClearRedos();
 }
 
+void gol::VersionManager::TryPushChange(std::optional<VersionChange> change)
+{
+	if (!change)
+		return;
+	m_UndoStack.push(*change);
+	ClearRedos();
+}
+
 void gol::VersionManager::AddSelectionChange(const VersionChange& change)
 {
 	m_UndoStack.push(change);

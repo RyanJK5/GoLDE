@@ -1,15 +1,14 @@
 #ifndef __RLEEncoder_h__
 #define __RLEEncoder_h__
 
-#include <iostream>
-#include <cstddef>
-#include <span>
 #include <concepts>
-#include <bitset>
-#include <cmath>
 
-#include "Logging.h"
 #include "GameGrid.h"
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+#include <vector>
+#include "Graphics2D.h"
 
 namespace gol::RLEEncoder
 {

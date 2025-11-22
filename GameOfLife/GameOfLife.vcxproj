@@ -31,6 +31,7 @@
     <ClCompile Include="src\KeyShortcut.cpp" />
     <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\ResizeWidget.cpp" />
+    <ClCompile Include="src\SelectionManager.cpp" />
     <ClCompile Include="src\ShaderManager.cpp" />
     <ClCompile Include="src\SimulationControl.cpp" />
     <ClCompile Include="src\SimulationEditor.cpp" />
@@ -69,6 +70,7 @@
     <ClInclude Include="src\Logging.h" />
     <ClInclude Include="src\ResizeWidget.h" />
     <ClInclude Include="src\RLEEncoder.h" />
+    <ClInclude Include="src\SelectionManager.h" />
     <ClInclude Include="src\ShaderManager.h" />
     <ClInclude Include="src\GameActionButton.h" />
     <ClInclude Include="src\GUILoader.h" />

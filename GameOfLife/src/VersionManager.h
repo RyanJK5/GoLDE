@@ -50,6 +50,7 @@ namespace gol
 		void AddPaintChange(Vec2 pos);
 		void AddBatchChange(const std::set<Vec2>& positions, GameAction action, bool insert);
 
+		void TryPushChange(std::optional<VersionChange> change);
 		void AddSelectionChange(const VersionChange& change);
 		const VersionChange* PastChange() const;
 		
