@@ -48,13 +48,8 @@ namespace gol
 	public:
 		void BeginPaintChange(Vec2 pos, bool insert);
 		void AddPaintChange(Vec2 pos);
-		void AddBatchChange(const std::set<Vec2>& positions, GameAction action, bool insert);
 
 		void TryPushChange(std::optional<VersionChange> change);
-		void AddSelectionChange(const VersionChange& change);
-		const VersionChange* PastChange() const;
-		
-		void AddActionsChange(GameAction action);
 
 		std::optional<VersionChange> Undo();
 		std::optional<VersionChange> Redo();

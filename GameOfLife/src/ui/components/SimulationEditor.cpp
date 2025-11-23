@@ -198,7 +198,7 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
 {
     switch (result.Action)
     {
-    using enum GameAction;
+        using enum GameAction;
     case Start:
         m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
         m_InitialGrid = m_Grid;
@@ -219,13 +219,23 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
         m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
         return GameState::Simulation;
     case Step:
+        m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
         for (int32_t i = 0; i < *result.StepCount; i++)
             m_Grid.Update();
         return m_Grid.Dead() ? GameState::Empty : GameState::Paused;
     case Resize:
+    {
         m_Grid = GameGrid(m_Grid, *result.NewDimensions);
+        if (m_SelectionManager.CanDrawSelection())
+        {
+            auto selection = m_SelectionManager.SelectionBounds();
+            if (!m_Grid.InBounds(selection.UpperLeft()) || !m_Grid.InBounds(selection.UpperRight()) ||
+                    !m_Grid.InBounds(selection.LowerLeft()) || !m_Grid.InBounds(selection.LowerRight()))
+			    m_SelectionManager.Deselect(m_Grid);
+        }
         m_Graphics.Camera.Center = { result.NewDimensions->Width * DefaultCellWidth / 2.f, result.NewDimensions->Height * DefaultCellHeight / 2.f };
         return GameState::Paint;
+    }
     case Copy:
         m_VersionManager.TryPushChange(m_SelectionManager.Copy(m_Grid));
         return result.State;

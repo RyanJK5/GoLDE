@@ -52,41 +52,12 @@ void gol::VersionManager::AddPaintChange(Vec2 pos)
 		m_UndoStack.top().CellsDeleted.insert(pos);
 }
 
-void gol::VersionManager::AddBatchChange(const std::set<Vec2>& positions, GameAction action, bool insert)
-{
-	m_UndoStack.push({ .Action = action });
-	if (insert)
-		m_UndoStack.top().CellsInserted = positions;
-	else
-		m_UndoStack.top().CellsDeleted = positions;
-	ClearRedos();
-}
-
-void gol::VersionManager::AddActionsChange(GameAction action)
-{
-	m_UndoStack.push({ .Action = action });
-	ClearRedos();
-}
-
 void gol::VersionManager::TryPushChange(std::optional<VersionChange> change)
 {
 	if (!change)
 		return;
 	m_UndoStack.push(*change);
 	ClearRedos();
-}
-
-void gol::VersionManager::AddSelectionChange(const VersionChange& change)
-{
-	m_UndoStack.push(change);
-	ClearRedos();
-}
-
-const gol::VersionChange* gol::VersionManager::PastChange() const
-{
-	if (m_UndoStack.empty())
-		return nullptr;
-	return &m_UndoStack.top();
 }
 
 std::optional<gol::VersionChange> gol::VersionManager::Undo()
