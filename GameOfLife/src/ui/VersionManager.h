@@ -7,9 +7,11 @@
 #include <set>
 #include <span>
 #include <stack>
+#include <utility>
 #include <vector>
 
 #include "GameEnums.h"
+#include "GameGrid.h"
 #include "Graphics2D.h"
 #include "KeyShortcut.h"
 #include "SimulationControlResult.h"
@@ -19,6 +21,7 @@ namespace gol
 	struct VersionChange
 	{
 		std::optional<ActionVariant> Action;
+		std::optional<std::pair<GameGrid, Size2>> GridResize;
 		std::optional<Rect> SelectionBounds;
 		std::set<Vec2> CellsInserted;
 		std::set<Vec2> CellsDeleted;
@@ -49,6 +52,7 @@ namespace gol
 		void BeginPaintChange(Vec2 pos, bool insert);
 		void AddPaintChange(Vec2 pos);
 
+		void PushChange(const VersionChange& change);
 		void TryPushChange(std::optional<VersionChange> change);
 
 		std::optional<VersionChange> Undo();

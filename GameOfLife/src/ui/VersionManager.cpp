@@ -56,6 +56,12 @@ void gol::VersionManager::AddPaintChange(Vec2 pos)
 		m_UndoStack.top().CellsDeleted.insert(pos);
 }
 
+void gol::VersionManager::PushChange(const VersionChange& change)
+{
+	m_UndoStack.push(change);
+	ClearRedos();
+}
+
 void gol::VersionManager::TryPushChange(std::optional<VersionChange> change)
 {
 	if (!change)

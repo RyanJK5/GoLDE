@@ -4,6 +4,7 @@
 #include <imgui/imgui.h>
 #include <optional>
 #include <set>
+#include <utility>
 #include <variant>
 
 #include "GameEnums.h"
@@ -194,6 +195,7 @@ std::optional<gol::VersionChange> gol::SelectionManager::HandleAction(SelectionA
     case SelectionAction::Rotate:
         return Rotate(true);
     }
+    std::unreachable();
 }
 
 void gol::SelectionManager::HandleVersionChange(EditorAction undoRedo, GameGrid& grid, const VersionChange& change)
@@ -202,6 +204,22 @@ void gol::SelectionManager::HandleVersionChange(EditorAction undoRedo, GameGrid&
     {
         RestoreGridVersion(undoRedo, grid, change);
         return;
+    }
+
+    if (auto* editorAction = std::get_if<EditorAction>(&*change.Action))
+    {
+        if (!change.GridResize)
+            return;
+
+        switch (*editorAction)
+        {
+        case EditorAction::Resize:
+            if (undoRedo == EditorAction::Undo)
+                grid = change.GridResize->first;
+            else
+                grid = GameGrid(grid, change.GridResize->second);
+            return;
+        }
     }
 
     auto* action = std::get_if<SelectionAction>(&*change.Action);

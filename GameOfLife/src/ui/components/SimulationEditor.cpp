@@ -1,10 +1,8 @@
 #include <cstdint>
-#include <exception>
 #include <filesystem>
 #include <format>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 #include <imgui/imgui.h>
 #include <optional>
 #include <string>
@@ -19,6 +17,8 @@
 #include "SimulationEditor.h"
 #include "VersionManager.h"
 #include "Logging.h"
+#include <cmath>
+#include <glm/fwd.hpp>
 
 gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
     : m_Grid(gridSize)
@@ -238,15 +238,25 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
         using enum EditorAction;
         case Resize:
         {
-            m_Grid = GameGrid(m_Grid, *result.NewDimensions);
+            m_VersionManager.PushChange
+            ({
+                .Action = Resize,
+                .GridResize = {{ m_Grid, *result.NewDimensions }}
+            });
+            
+            m_Grid = GameGrid(std::move(m_Grid), *result.NewDimensions);
             if (m_SelectionManager.CanDrawSelection())
             {
                 auto selection = m_SelectionManager.SelectionBounds();
                 if (!m_Grid.InBounds(selection.UpperLeft()) || !m_Grid.InBounds(selection.UpperRight()) ||
-                    !m_Grid.InBounds(selection.LowerLeft()) || !m_Grid.InBounds(selection.LowerRight()))
-                    m_SelectionManager.Deselect(m_Grid);
+                        !m_Grid.InBounds(selection.LowerLeft()) || !m_Grid.InBounds(selection.LowerRight()))
+                    m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             }
-            m_Graphics.Camera.Center = { result.NewDimensions->Width * DefaultCellWidth / 2.f, result.NewDimensions->Height * DefaultCellHeight / 2.f };
+            m_Graphics.Camera.Center = 
+            { 
+                result.NewDimensions->Width  * DefaultCellWidth  / 2.f, 
+                result.NewDimensions->Height * DefaultCellHeight / 2.f 
+            };
             return GameState::Paint;
         }
         case Undo:
