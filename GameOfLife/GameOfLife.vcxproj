@@ -26,6 +26,7 @@
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\GameEnums.cpp" />
     <ClCompile Include="src\graphics\Camera.cpp" />
     <ClCompile Include="src\ui\widgets\DelayWidget.cpp" />
     <ClCompile Include="src\ui\widgets\EditorWidget.cpp" />

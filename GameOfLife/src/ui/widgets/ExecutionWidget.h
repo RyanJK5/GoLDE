@@ -56,7 +56,7 @@ namespace gol
         virtual bool Enabled(GameState state) const override final;
     };
 
-    class RestartButton : public ActionButton<GameAction, true>
+    class RestartButton : public ActionButton<GameAction, false>
     {
     public:
         RestartButton(std::span<const ImGuiKeyChord> shortcuts = {})

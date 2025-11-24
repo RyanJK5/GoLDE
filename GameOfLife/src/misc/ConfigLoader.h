@@ -16,8 +16,8 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "GameEnums.h"
@@ -143,35 +143,6 @@ namespace gol::StyleLoader
 		{ "Down",      ImGuiKey_DownArrow  },
 		{ "Backspace", ImGuiKey_Backspace  },
 		{ "Delete",    ImGuiKey_Delete     }
-	};
-
-	static const std::unordered_map<std::string_view, GameAction> GameActionDefinitions = {
-		{ "start",       GameAction::Start      },
-		{ "pause",       GameAction::Pause      },
-		{ "resume",      GameAction::Resume     },
-		{ "restart",     GameAction::Restart    },
-		{ "reset",       GameAction::Reset      },
-		{ "clear",       GameAction::Clear      },
-		{ "step",        GameAction::Step       },
-	};
-	static const std::unordered_map<std::string_view, EditorAction> EditorActionDefinitions = {
-		{ "resize",      EditorAction::Resize     },
-		{ "undo",        EditorAction::Undo       },
-		{ "redo",        EditorAction::Redo       }
-	};
-	static const std::unordered_map<std::string_view, SelectionAction> SelectionActionDefinitions = {
-		{ "rotate",      SelectionAction::Rotate     },
-		{ "deselect",    SelectionAction::Deselect   },
-		{ "delete",      SelectionAction::Delete     },
-		{ "copy",        SelectionAction::Copy       },
-		{ "cut",         SelectionAction::Cut        },
-		{ "paste",       SelectionAction::Paste      },
-
-		{ "nudge_left",  SelectionAction::NudgeLeft  },
-		{ "nudge_right", SelectionAction::NudgeRight },
-		{ "nudge_up",    SelectionAction::NudgeUp    },
-		{ "nudge_down",  SelectionAction::NudgeDown  },
-
 	};
 
 	template <typename T>
@@ -448,7 +419,7 @@ namespace gol::StyleLoader
 				{
 					auto result = ReadListPair<GameAction, ImGuiKeyChord>(
 						lineNum, line, start, 
-						MakeConverter(GameActionDefinitions), 
+						MakeConverter(Actions::GameActionDefinitions),
 						MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
 					);
 					if (result)
@@ -459,7 +430,7 @@ namespace gol::StyleLoader
 				} {
 					auto result = ReadListPair<EditorAction, ImGuiKeyChord>(
 						lineNum, line, start,
-						MakeConverter(EditorActionDefinitions),
+						MakeConverter(Actions::EditorActionDefinitions),
 						MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
 					);
 					if (result)
@@ -470,7 +441,7 @@ namespace gol::StyleLoader
 				} {
 					auto result = ReadListPair<SelectionAction, ImGuiKeyChord>(
 						lineNum, line, start,
-						MakeConverter(SelectionActionDefinitions),
+						MakeConverter(Actions::SelectionActionDefinitions),
 						MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
 					);
 					if (result)

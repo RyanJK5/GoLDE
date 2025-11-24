@@ -1,13 +1,17 @@
 #ifndef __GameActionButton_h__
 #define __GameActionButton_h__
 
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <optional>
 #include <span>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "GameEnums.h"
@@ -26,7 +30,7 @@ namespace gol
 			: m_Shortcuts(shortcuts)
 		{ }
 
-		virtual std::optional<ActType> Update(GameState state)
+		std::optional<ActType> Update(GameState state)
 		{
 			if (!Enabled(state))
 			{
@@ -37,17 +41,17 @@ namespace gol
 			if (!m_LineBreak)
 				ImGui::SameLine();
 
-			std::optional<ActType> result = [this, state]()
-				{
-					bool active = false;
-					if (Enabled(state))
-						for (auto& shortcut : m_Shortcuts.at(Action(state)))
-							active = shortcut.Active() || active;
+			auto result = [this, state]()
+			{
+				bool active = false;
+				if (Enabled(state))
+					for (auto& shortcut : m_Shortcuts.at(Action(state)))
+						active = shortcut.Active() || active;
 
-					if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
-						return std::optional<ActType> { Action(state) };
-					return std::optional<ActType> {};
-				}();
+				if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
+					return std::optional<ActType> { Action(state) };
+				return std::optional<ActType> {};
+			}();
 			
 			if (!Enabled(state))
 			{
@@ -55,7 +59,11 @@ namespace gol
 				ImGui::PopStyleVar();
 			}
 			else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-				ImGui::SetTooltip(KeyShortcut::StringRepresentation(m_Shortcuts.at(Action(state))).c_str());
+			{
+				auto tooltip = Actions::ToString(Action(state)) + ": " + 
+					KeyShortcut::StringRepresentation(m_Shortcuts.at(Action(state)));
+				ImGui::SetTooltip(tooltip.c_str());
+			}
 
 			return result;
 		}
