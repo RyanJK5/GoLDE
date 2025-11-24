@@ -60,8 +60,10 @@ namespace gol
 			}
 			else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
 			{
-				auto tooltip = Actions::ToString(Action(state)) + ": " + 
-					KeyShortcut::StringRepresentation(m_Shortcuts.at(Action(state)));
+				auto tooltip = Actions::ToString(Action(state));
+				const auto& shortcuts = m_Shortcuts.at(Action(state));
+				if (!shortcuts.empty())
+					tooltip += ": " + KeyShortcut::StringRepresentation(m_Shortcuts.at(Action(state)));
 				ImGui::SetTooltip(tooltip.c_str());
 			}
 
