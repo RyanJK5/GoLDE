@@ -1,40 +1,8 @@
 #include <optional>
-#include <set>
-#include <span>
 #include <utility>
-#include <variant>
 
-#include "GameEnums.h"
 #include "Graphics2D.h"
-#include "KeyShortcut.h"
-#include "SimulationControlResult.h"
 #include "VersionManager.h"
-
-gol::SimulationControlResult gol::VersionShortcutManager::Update(SimulationState state)
-{
-	if (state != SimulationState::Paint && state != SimulationState::Empty)
-		return { };
-	auto result = CheckShortcuts(m_UndoShortcuts, EditorAction::Undo);
-	auto redoShortcuts = CheckShortcuts(m_RedoShortcuts, EditorAction::Redo);
-	if (!result)
-		result = redoShortcuts;
-	return { .Action = result };
-}
-
-std::optional<gol::EditorAction> gol::VersionShortcutManager::CheckShortcuts(std::span<KeyShortcut> shortcuts, EditorAction targetAction)
-{
-	auto result = std::optional<EditorAction> {};
-	for (auto&& shortcut : shortcuts)
-	{
-		auto active = shortcut.Active();
-		if (!active)
-			continue;
-		
-		if (!result)
-			result = targetAction;
-	}
-	return result;
-}
 
 void gol::VersionManager::BeginPaintChange(Vec2 pos, bool insert)
 {

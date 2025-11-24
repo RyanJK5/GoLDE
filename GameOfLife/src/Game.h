@@ -67,7 +67,7 @@ namespace gol
 		void InitDockspace(uint32_t dockspaceID, ImVec2 windowSize);
 
 	private:
-		SimulationState m_State = SimulationState::Paint;
+		EditorState m_State = { .State = SimulationState::Paint };
 
 		OpenGLWindow m_Window;
 		SimulationEditor m_Editor;

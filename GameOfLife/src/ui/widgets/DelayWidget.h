@@ -14,7 +14,7 @@ namespace gol
 	{
 	public:
 		DelayWidget(std::span<const ImGuiKeyChord> = {}) { }
-		SimulationControlResult Update(SimulationState state);
+		SimulationControlResult Update(EditorState state);
 	private:
 		int32_t m_TickDelayMs = 0;
 	};

@@ -28,7 +28,7 @@ namespace gol
 		Rect WindowBounds() const;
 		Rect ViewportBounds() const;
 
-		SimulationState Update(const SimulationControlResult& args);
+		EditorState Update(const SimulationControlResult& args);
 	private:
 		SimulationState SimulationUpdate(const GraphicsHandlerArgs& args);
 		SimulationState PaintUpdate(const GraphicsHandlerArgs& args);

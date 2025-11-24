@@ -12,27 +12,23 @@ gol::SelectionShortcuts::SelectionShortcuts(
     const std::vector<ImGuiKeyChord>& left,
     const std::vector<ImGuiKeyChord>& right,
     const std::vector<ImGuiKeyChord>& up,
-    const std::vector<ImGuiKeyChord>& down,
-    const std::vector<ImGuiKeyChord>& deselect,
-    const std::vector<ImGuiKeyChord>& rotate
+    const std::vector<ImGuiKeyChord>& down
 )
     : Shortcuts({
         { SelectionAction::NudgeLeft,  left | KeyShortcut::MapChordsToVector },
         { SelectionAction::NudgeRight, right | KeyShortcut::MapChordsToVector },
         { SelectionAction::NudgeUp,    up | KeyShortcut::MapChordsToVector },
-        { SelectionAction::NudgeDown,  down | KeyShortcut::MapChordsToVector },
-        { SelectionAction::Deselect,   deselect | KeyShortcut::MapChordsToVector },
-        { SelectionAction::Rotate,     rotate | KeyShortcut::MapChordsToVector },
+        { SelectionAction::NudgeDown,  down | KeyShortcut::MapChordsToVector }
     })
 { }
 
-gol::SimulationControlResult gol::SelectionShortcuts::Update(SimulationState state)
+gol::SimulationControlResult gol::SelectionShortcuts::Update(EditorState state)
 {
 	SimulationControlResult result { .NudgeSize = 1 };
 
     for (auto&& [action, actionShortcuts] : Shortcuts)
     {
-        if (action != SelectionAction::Deselect && state != SimulationState::Paint)
+        if (action != SelectionAction::Deselect && state.State != SimulationState::Paint)
             continue;
 
         bool resultActive = false;
@@ -54,13 +50,7 @@ gol::SimulationControl::SimulationControl(const StyleLoader::StyleInfo<ImVec4>& 
         fileInfo.Shortcuts.at(SelectionAction::NudgeLeft),
         fileInfo.Shortcuts.at(SelectionAction::NudgeRight),
         fileInfo.Shortcuts.at(SelectionAction::NudgeUp),
-        fileInfo.Shortcuts.at(SelectionAction::NudgeDown),
-        fileInfo.Shortcuts.at(SelectionAction::Deselect),
-        fileInfo.Shortcuts.at(SelectionAction::Rotate)
-    )
-    , m_VersionManager(
-        fileInfo.Shortcuts.at(EditorAction::Undo),
-        fileInfo.Shortcuts.at(EditorAction::Redo)
+        fileInfo.Shortcuts.at(SelectionAction::NudgeDown)
     )
     , m_ExecutionWidget(fileInfo.Shortcuts)
     , m_ResizeWidget(fileInfo.Shortcuts.at(EditorAction::Resize))
@@ -83,13 +73,12 @@ void gol::SimulationControl::FillResults(SimulationControlResult& current, const
 		current.NudgeSize = update.NudgeSize;
 }
 
-gol::SimulationControlResult gol::SimulationControl::Update(SimulationState state)
+gol::SimulationControlResult gol::SimulationControl::Update(EditorState state)
 {
     ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNavInputs);
 
-    SimulationControlResult result { .State = state };
+    SimulationControlResult result { .State = state.State };
     
-    FillResults(result, m_VersionManager.Update(state));
     FillResults(result, m_ExecutionWidget.Update(state));
     FillResults(result, m_EditorWidget.Update(state));
     FillResults(result, m_StepWidget.Update(state));

@@ -27,12 +27,10 @@ namespace gol
 			const std::vector<ImGuiKeyChord>& left,
 			const std::vector<ImGuiKeyChord>& right,
 			const std::vector<ImGuiKeyChord>& up,
-			const std::vector<ImGuiKeyChord>& down,
-			const std::vector<ImGuiKeyChord>& deselect,
-			const std::vector<ImGuiKeyChord>& rotate
+			const std::vector<ImGuiKeyChord>& down
 		);
 
-		SimulationControlResult Update(SimulationState state);
+		SimulationControlResult Update(EditorState state);
 	};
 
 	class SimulationControl
@@ -40,7 +38,7 @@ namespace gol
 	public:
 		SimulationControl(const StyleLoader::StyleInfo<ImVec4>& fileInfo);
 
-		SimulationControlResult Update(SimulationState state);
+		SimulationControlResult Update(EditorState state);
 	private:
 		void FillResults(SimulationControlResult& current, const SimulationControlResult& update) const;
 	private:
@@ -48,7 +46,6 @@ namespace gol
 		static constexpr int32_t StepWarning = 100;
 	private:
 		SelectionShortcuts m_SelectionShortcuts;
-		VersionShortcutManager m_VersionManager;
 
 		ExecutionWidget m_ExecutionWidget;
 		ResizeWidget m_ResizeWidget;

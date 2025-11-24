@@ -28,7 +28,7 @@ gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
     , m_PasteWarning("Paste Warning")
 { }   
 
-gol::SimulationState gol::SimulationEditor::Update(const SimulationControlResult& args)
+gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& args)
 {
     auto graphicsArgs = GraphicsHandlerArgs { .ViewportBounds = ViewportBounds(), .GridSize = m_Grid.Size() };
 
@@ -73,7 +73,13 @@ gol::SimulationState gol::SimulationEditor::Update(const SimulationControlResult
     }();
 
     DisplaySimulation();
-    return state;
+    return 
+    { 
+        .State = state, 
+        .SelectionActive = m_SelectionManager.CanDrawGrid(),
+		.UndosAvailable = m_VersionManager.UndosAvailable(),
+		.RedosAvailable = m_VersionManager.RedosAvailable()
+    };
 }
 
 gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args)
@@ -298,11 +304,17 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
 
 gol::SimulationState gol::SimulationEditor::ResizeGrid(const gol::SimulationControlResult& result)
 {
+	if (result.NewDimensions->Width == m_Grid.Width() && result.NewDimensions->Height == m_Grid.Height())
+        return SimulationState::Paint;
+    if ((result.NewDimensions->Width == 0 || result.NewDimensions->Height == 0) &&
+            (m_Grid.Width() == 0 || m_Grid.Height() == 0))
+        return SimulationState::Paint;
+
     m_VersionManager.PushChange
     ({
         .Action = EditorAction::Resize,
         .GridResize = { { m_Grid, *result.NewDimensions } }
-        });
+    });
 
     m_Grid = GameGrid(std::move(m_Grid), *result.NewDimensions);
     if (m_SelectionManager.CanDrawSelection())

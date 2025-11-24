@@ -30,22 +30,6 @@ namespace gol
 		bool InsertedIntoSelection() const { return SelectionBounds.has_value(); }
 	};
 
-	class VersionShortcutManager
-	{
-	public:
-		SimulationControlResult Update(SimulationState state);
-		
-		VersionShortcutManager(std::span<const ImGuiKeyChord> undoShortcuts, std::span<const ImGuiKeyChord> redoShortcuts)
-			: m_UndoShortcuts(undoShortcuts | KeyShortcut::MapChordsToVector)
-			, m_RedoShortcuts(redoShortcuts | KeyShortcut::MapChordsToVector)
-		{ }
-	private:
-		std::optional<EditorAction> CheckShortcuts(std::span<KeyShortcut> shortcuts, EditorAction targetAction);
-	private:
-		std::vector<KeyShortcut> m_UndoShortcuts;
-		std::vector<KeyShortcut> m_RedoShortcuts;
-	};
-
 	class VersionManager
 	{
 	public:
@@ -57,6 +41,9 @@ namespace gol
 
 		std::optional<VersionChange> Undo();
 		std::optional<VersionChange> Redo();
+
+		bool UndosAvailable() const { return !m_UndoStack.empty(); }
+		bool RedosAvailable() const { return !m_RedoStack.empty(); }
 	private:
 		void ClearRedos();
 	private:

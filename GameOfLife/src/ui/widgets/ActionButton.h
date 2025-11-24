@@ -28,7 +28,7 @@ namespace gol
 			: m_Shortcuts(shortcuts)
 		{ }
 
-		std::optional<ActType> Update(SimulationState state)
+		std::optional<ActType> Update(EditorState state)
 		{
 			if (!Enabled(state))
 			{
@@ -68,11 +68,11 @@ namespace gol
 			return result;
 		}
 	protected:
-		virtual ActType Action(SimulationState state) const = 0;
+		virtual ActType Action(EditorState state) const = 0;
 		
 		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(SimulationState state) const = 0;
-		virtual	bool Enabled(SimulationState state) const = 0;
+		virtual std::string Label(EditorState state) const = 0;
+		virtual	bool Enabled(EditorState state) const = 0;
 	private:
 		bool m_LineBreak = LineBreak;
 
@@ -87,11 +87,11 @@ namespace gol
 			: MultiActionButton<ActType, LineBreak>({{action, shortcuts | KeyShortcut::MapChordsToVector}}), m_Action(action)
 		{ }
 	protected:
-		virtual ActType Action(SimulationState) const override final { return m_Action; }
+		virtual ActType Action(EditorState) const override final { return m_Action; }
 		
 		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(SimulationState state) const = 0;
-		virtual	bool Enabled(SimulationState state) const = 0;
+		virtual std::string Label(EditorState state) const = 0;
+		virtual	bool Enabled(EditorState state) const = 0;
 	private:
 		ActType m_Action;
 	};

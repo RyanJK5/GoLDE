@@ -14,6 +14,14 @@ namespace gol
 		Paint, Simulation, Paused, Empty
 	};
 
+	struct EditorState
+	{
+		SimulationState State = SimulationState::Empty;
+		bool SelectionActive = false;
+		bool UndosAvailable = false;
+		bool RedosAvailable = false;
+	};
+
 	enum class GameAction
 	{
 		None,
