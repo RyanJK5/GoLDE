@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\font\arial.ttf" />
+    <Font Include="resources\font\fontawesome7.otf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\style.yaml" />
@@ -139,7 +140,7 @@
       <LanguageStandard>stdcpp23</LanguageStandard>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -5,9 +5,9 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <optional>
-#include <string_view>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "GameEnums.h"
@@ -16,14 +16,14 @@
 
 namespace gol
 {
-	template <ActionType ActType, auto Label, ActType Action, bool LineBreak>
-	class ActionButtonInternal
+	template <ActionType ActType, bool LineBreak>
+	class MultiActionButton
 	{
 	public:
 		static constexpr int32_t DefaultButtonHeight = 50;
-	
-		ActionButtonInternal(std::span<const ImGuiKeyChord> shortcuts)
-			: m_Shortcuts(shortcuts | KeyShortcut::MapChordsToVector)
+
+		MultiActionButton(const std::unordered_map<ActType, std::vector<KeyShortcut>>& shortcuts)
+			: m_Shortcuts(shortcuts)
 		{ }
 
 		virtual std::optional<ActType> Update(GameState state)
@@ -40,11 +40,12 @@ namespace gol
 			std::optional<ActType> result = [this, state]()
 				{
 					bool active = false;
-					for (auto& shortcut : m_Shortcuts)
-						active = shortcut.Active() || active;
+					if (Enabled(state))
+						for (auto& shortcut : m_Shortcuts.at(Action(state)))
+							active = shortcut.Active() || active;
 
-					if (ImGui::Button(m_Label.c_str(), Dimensions()) || (Enabled(state) && active))
-						return std::optional<ActType> { m_Return };
+					if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
+						return std::optional<ActType> { Action(state) };
 					return std::optional<ActType> {};
 				}();
 			
@@ -54,34 +55,38 @@ namespace gol
 				ImGui::PopStyleVar();
 			}
 			else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-				ImGui::SetTooltip(KeyShortcut::StringRepresentation(m_Shortcuts).c_str());
+				ImGui::SetTooltip(KeyShortcut::StringRepresentation(m_Shortcuts.at(Action(state))).c_str());
 
 			return result;
 		}
 	protected:
+		virtual ActType Action(GameState state) const = 0;
+		
 		virtual Size2F Dimensions() const = 0;
+		virtual std::string Label(GameState state) const = 0;
 		virtual	bool Enabled(GameState state) const = 0;
 	private:
-		std::string m_Label = Label;
-		ActType m_Return = Action;
 		bool m_LineBreak = LineBreak;
 
-		std::vector<KeyShortcut> m_Shortcuts;
+		std::unordered_map<ActType, std::vector<KeyShortcut>> m_Shortcuts;
 	};
 
-    template <size_t Length>
-    struct StringLiteral
-    {
-        constexpr StringLiteral(const char (&str)[Length])
-        {
-            std::copy_n(str, Length, value);
-        }
-
-        char value[Length];
-    };
-
-    template <ActionType ActType, StringLiteral Label, ActType Action, bool LineBreak>
-    using ActionButton = ActionButtonInternal<ActType, Label.value, Action, LineBreak>;
+	template <ActionType ActType, bool LineBreak>
+	class ActionButton : public MultiActionButton<ActType, LineBreak>
+	{
+	public:
+		ActionButton(ActType action, std::span<const ImGuiKeyChord> shortcuts) 
+			: MultiActionButton<ActType, LineBreak>({{action, shortcuts | KeyShortcut::MapChordsToVector}}), m_Action(action)
+		{ }
+	protected:
+		virtual ActType Action(GameState) const override final { return m_Action; }
+		
+		virtual Size2F Dimensions() const = 0;
+		virtual std::string Label(GameState state) const = 0;
+		virtual	bool Enabled(GameState state) const = 0;
+	private:
+		ActType m_Action;
+	};
 }
 
 #endif

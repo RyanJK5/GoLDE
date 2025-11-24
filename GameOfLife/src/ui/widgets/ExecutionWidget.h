@@ -2,81 +2,70 @@
 #define __ExecutionWidget_h__
 
 #include <imgui/imgui.h>
+#include <font-awesome/IconsFontAwesome7.h>
 #include <span>
 #include <unordered_map>
 #include <vector>
 
 #include "ActionButton.h"
+#include "KeyShortcut.h"
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
 
 namespace gol
 {
-    class StartButton : public ActionButton<GameAction, "Start", GameAction::Start, true>
+    class StartButton : public MultiActionButton<GameAction, true>
     {
     public:
-        StartButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
+        StartButton(const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>& shortcuts)
+            : MultiActionButton({
+				{ GameAction::Start,  shortcuts.at(GameAction::Start)  | KeyShortcut::MapChordsToVector },
+                { GameAction::Pause,  shortcuts.at(GameAction::Pause)  | KeyShortcut::MapChordsToVector },
+                { GameAction::Resume, shortcuts.at(GameAction::Resume) | KeyShortcut::MapChordsToVector }
+            })
         {}
     protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButtonInternal::DefaultButtonHeight }; }
-        virtual bool Enabled(GameState state) const override final { return state == GameState::Paint; }
+        virtual Size2F Dimensions() const override final;
+        virtual GameAction Action(GameState state) const override final;
+        virtual std::string Label(GameState state) const override final;
+        virtual bool Enabled(GameState state) const override final;
     };
 
-    class ClearButton : public ActionButton<GameAction, "Clear", GameAction::Clear, false>
+    class ClearButton : public ActionButton<GameAction, false>
     {
     public:
         ClearButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
+            : ActionButton(GameAction::Clear, shortcuts)
         {}
     protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButtonInternal::DefaultButtonHeight }; }
-        virtual bool Enabled(GameState state) const override final { return state != GameState::Empty; }
+        virtual Size2F Dimensions() const override final;
+        virtual std::string Label(GameState state) const override final;
+        virtual bool Enabled(GameState state) const override final;
     };
 
-    class ResetButton : public ActionButton<GameAction, "Reset", GameAction::Reset, false>
+    class ResetButton : public ActionButton<GameAction, false>
     {
     public:
         ResetButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
+            : ActionButton(GameAction::Reset, shortcuts)
         {}
     protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x, ActionButtonInternal::DefaultButtonHeight }; }
-        virtual bool Enabled(GameState state) const override final { return state == GameState::Simulation || state == GameState::Paused; }
+        virtual Size2F Dimensions() const override final;
+        virtual std::string Label(GameState state) const override final;
+        virtual bool Enabled(GameState state) const override final;
     };
 
-    class PauseButton : public ActionButton<GameAction, "Pause", GameAction::Pause, true>
-    {
-    public:
-        PauseButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
-        {}
-    protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButtonInternal::DefaultButtonHeight }; }
-        virtual bool Enabled(GameState state) const override final { return state == GameState::Simulation; }
-    };
-
-    class ResumeButton : public ActionButton<GameAction, "Resume", GameAction::Resume, false>
-    {
-    public:
-        ResumeButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
-        {}
-    protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButtonInternal::DefaultButtonHeight }; }
-        virtual bool Enabled(GameState state) const override final { return state == GameState::Paused; }
-    };
-
-    class RestartButton : public ActionButton<GameAction, "Restart", GameAction::Restart, false>
+    class RestartButton : public ActionButton<GameAction, true>
     {
     public:
         RestartButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
+            : ActionButton(GameAction::Restart, shortcuts)
         {}
     protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x, ActionButtonInternal::DefaultButtonHeight }; }
-        virtual bool Enabled(GameState state) const override final { return state == GameState::Simulation || state == GameState::Paused; }
+        virtual Size2F Dimensions() const override final;
+        virtual std::string Label(GameState state) const override final;
+        virtual bool Enabled(GameState state) const override final;
     };
 
 	class ExecutionWidget
@@ -85,11 +74,9 @@ namespace gol
         ExecutionWidget() = default;
 
         ExecutionWidget(const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>& shortcuts)
-            : m_StartButton   (shortcuts.at(GameAction::Start   ))
+            : m_StartButton   (shortcuts)
             , m_ClearButton   (shortcuts.at(GameAction::Clear   ))
             , m_ResetButton   (shortcuts.at(GameAction::Reset   ))
-            , m_PauseButton   (shortcuts.at(GameAction::Pause   ))
-            , m_ResumeButton  (shortcuts.at(GameAction::Resume  ))
             , m_RestartButton (shortcuts.at(GameAction::Restart ))
         { }
 
@@ -98,8 +85,6 @@ namespace gol
         StartButton m_StartButton;
         ClearButton m_ClearButton;
         ResetButton m_ResetButton;
-        PauseButton m_PauseButton;
-        ResumeButton m_ResumeButton;
         RestartButton m_RestartButton;
 	};
 }

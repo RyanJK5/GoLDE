@@ -2,8 +2,10 @@
 #define __StepWidget_h__
 
 #include <cstdint>
+#include <font-awesome/IconsFontAwesome7.h>
 #include <imgui/imgui.h>
 #include <span>
+#include <string>
 
 #include "ActionButton.h"
 #include "GameEnums.h"
@@ -12,14 +14,15 @@
 
 namespace gol
 {
-    class StepButton : public ActionButton<GameAction, "Step", GameAction::Step, false>
+    class StepButton : public ActionButton<GameAction, false>
     {
     public:
         StepButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButtonInternal(shortcuts)
+            : ActionButton(GameAction::Step, shortcuts)
         { }
     protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x, ActionButtonInternal::DefaultButtonHeight }; }
+        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
+        virtual std::string Label(GameState) const override final { return ICON_FA_FORWARD_STEP; }
         virtual bool Enabled(GameState state) const override final { return state == GameState::Paint || state == GameState::Paused; }
     };
 

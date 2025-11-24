@@ -164,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\font\arial.ttf" />
+    <Font Include="resources\font\fontawesome7.otf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\style.yaml" />

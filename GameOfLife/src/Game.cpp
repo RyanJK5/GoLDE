@@ -83,6 +83,11 @@ void gol::Game::InitImGUI(const std::filesystem::path& stylePath)
     auto path = std::filesystem::path("resources") / "font" / "arial.ttf";
     m_Font = io.Fonts->AddFontFromFileTTF(path.string().c_str(), 30.0f);
 
+	auto iconPath = std::filesystem::path("resources") / "font" / "fontawesome7.otf";
+    auto config = ImFontConfig {};
+    config.MergeMode = true;
+    io.Fonts->AddFontFromFileTTF(iconPath.string().c_str(), 30.0f, &config);
+
     ImGuiStyle& style = ImGui::GetStyle();
     style.WindowMenuButtonPosition = ImGuiDir_None;
 

@@ -72,9 +72,9 @@ namespace gol
 		OpenGLWindow m_Window;
 		SimulationEditor m_Editor;
 		SimulationControl m_Control;
+		ImFont* m_Font;
 
 		bool m_Startup = true;
-		ImFont* m_Font;
 	};
 }
 
