@@ -26,18 +26,18 @@ namespace gol
 		Rect WindowBounds() const;
 		Rect ViewportBounds() const;
 
-		GameState Update(const SimulationControlResult& args);
+		SimulationState Update(const SimulationControlResult& args);
 	private:
-		GameState SimulationUpdate(const GraphicsHandlerArgs& args);
-		GameState PaintUpdate(const GraphicsHandlerArgs& args);
-		GameState PauseUpdate(const GraphicsHandlerArgs& args);
+		SimulationState SimulationUpdate(const GraphicsHandlerArgs& args);
+		SimulationState PaintUpdate(const GraphicsHandlerArgs& args);
+		SimulationState PauseUpdate(const GraphicsHandlerArgs& args);
 
 		void UpdateVersion(const SimulationControlResult& args);
 
 		void DisplaySimulation();
 
-		GameState UpdateState(const SimulationControlResult& action);
-		gol::GameState ResizeGrid(const gol::SimulationControlResult& result);
+		SimulationState UpdateState(const SimulationControlResult& action);
+		gol::SimulationState ResizeGrid(const gol::SimulationControlResult& result);
 		void UpdateViewport();
 		std::optional<Vec2> CursorGridPos();
 

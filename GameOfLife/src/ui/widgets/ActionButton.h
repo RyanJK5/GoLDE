@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <print>
+
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "KeyShortcut.h"
@@ -26,7 +28,7 @@ namespace gol
 			: m_Shortcuts(shortcuts)
 		{ }
 
-		std::optional<ActType> Update(GameState state)
+		std::optional<ActType> Update(SimulationState state)
 		{
 			if (!Enabled(state))
 			{
@@ -37,7 +39,7 @@ namespace gol
 			if (!m_LineBreak)
 				ImGui::SameLine();
 
-			auto result = [this, state]()
+			auto result = [this, state]() -> std::optional<ActType>
 			{
 				bool active = false;
 				if (Enabled(state))
@@ -45,8 +47,8 @@ namespace gol
 						active = shortcut.Active() || active;
 
 				if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
-					return std::optional<ActType> { Action(state) };
-				return std::optional<ActType> {};
+					return Action(state);
+				return std::nullopt;
 			}();
 			
 			if (!Enabled(state))
@@ -66,11 +68,11 @@ namespace gol
 			return result;
 		}
 	protected:
-		virtual ActType Action(GameState state) const = 0;
+		virtual ActType Action(SimulationState state) const = 0;
 		
 		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(GameState state) const = 0;
-		virtual	bool Enabled(GameState state) const = 0;
+		virtual std::string Label(SimulationState state) const = 0;
+		virtual	bool Enabled(SimulationState state) const = 0;
 	private:
 		bool m_LineBreak = LineBreak;
 
@@ -85,11 +87,11 @@ namespace gol
 			: MultiActionButton<ActType, LineBreak>({{action, shortcuts | KeyShortcut::MapChordsToVector}}), m_Action(action)
 		{ }
 	protected:
-		virtual ActType Action(GameState) const override final { return m_Action; }
+		virtual ActType Action(SimulationState) const override final { return m_Action; }
 		
 		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(GameState state) const = 0;
-		virtual	bool Enabled(GameState state) const = 0;
+		virtual std::string Label(SimulationState state) const = 0;
+		virtual	bool Enabled(SimulationState state) const = 0;
 	private:
 		ActType m_Action;
 	};

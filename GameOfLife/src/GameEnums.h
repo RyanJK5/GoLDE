@@ -9,7 +9,7 @@
 
 namespace gol
 {
-	enum class GameState
+	enum class SimulationState
 	{
 		Paint, Simulation, Paused, Empty
 	};

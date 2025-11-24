@@ -50,6 +50,16 @@ gol::SelectionUpdateResult gol::SelectionManager::UpdateSelectionArea(GameGrid& 
     return { .BeginSelection = false };
 }
 
+bool gol::SelectionManager::TryResetSelection()
+{
+    if (CanDrawGrid())
+        return false;
+    m_AnchorSelection = std::nullopt;
+    m_SentinelSelection = std::nullopt;
+    m_Selected = std::nullopt;
+    return true;
+}
+
 std::optional<gol::VersionChange> gol::SelectionManager::Deselect(GameGrid& grid)
 {
     const auto retValue = [this, &grid]()
@@ -93,7 +103,7 @@ std::expected<gol::VersionChange, int32_t> gol::SelectionManager::Paste(std::opt
     if (!gridPos)
         gridPos = m_AnchorSelection;
     if (!gridPos)
-        return std::unexpected { 0 };
+        gridPos = { 0, 0 };
     
     auto decodeResult = RLEEncoder::DecodeRegion<uint32_t>(ImGui::GetClipboardText(), warnThreshold);
     if (!decodeResult)

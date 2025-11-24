@@ -10,9 +10,9 @@
 #include "SimulationControlResult.h"
 #include "VersionManager.h"
 
-gol::SimulationControlResult gol::VersionShortcutManager::Update(GameState state)
+gol::SimulationControlResult gol::VersionShortcutManager::Update(SimulationState state)
 {
-	if (state != GameState::Paint && state != GameState::Empty)
+	if (state != SimulationState::Paint && state != SimulationState::Empty)
 		return { };
 	auto result = CheckShortcuts(m_UndoShortcuts, EditorAction::Undo);
 	auto redoShortcuts = CheckShortcuts(m_RedoShortcuts, EditorAction::Redo);

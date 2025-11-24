@@ -5,7 +5,7 @@
 #include "GameEnums.h"
 #include "SimulationControlResult.h"
 
-gol::SimulationControlResult gol::DelayWidget::Update(GameState)
+gol::SimulationControlResult gol::DelayWidget::Update(SimulationState)
 {
 	ImGui::Text("Simulation Delay (ms)");
 	ImGui::SetItemTooltip("The delay between each step while the simulation is running.");

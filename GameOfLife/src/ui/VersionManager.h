@@ -33,7 +33,7 @@ namespace gol
 	class VersionShortcutManager
 	{
 	public:
-		SimulationControlResult Update(GameState state);
+		SimulationControlResult Update(SimulationState state);
 		
 		VersionShortcutManager(std::span<const ImGuiKeyChord> undoShortcuts, std::span<const ImGuiKeyChord> redoShortcuts)
 			: m_UndoShortcuts(undoShortcuts | KeyShortcut::MapChordsToVector)

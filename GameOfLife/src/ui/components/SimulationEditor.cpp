@@ -28,7 +28,7 @@ gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
     , m_PasteWarning("Warning")
 { }   
 
-gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args)
+gol::SimulationState gol::SimulationEditor::Update(const SimulationControlResult& args)
 {
     auto graphicsArgs = GraphicsHandlerArgs { .ViewportBounds = ViewportBounds(), .GridSize = m_Grid.Size() };
 
@@ -51,7 +51,7 @@ gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args
     if (args.TickDelayMs)
         m_TickDelayMs = *args.TickDelayMs;
 
-    GameState state = !args.Action
+    SimulationState state = !args.Action
         ? args.State 
         : UpdateState(args);
 
@@ -59,7 +59,7 @@ gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args
     {
         switch (state)
         {
-        using enum GameState;
+        using enum SimulationState;
         case Simulation:
             return SimulationUpdate(graphicsArgs);
         case Paint:
@@ -76,7 +76,7 @@ gol::GameState gol::SimulationEditor::Update(const SimulationControlResult& args
     return state;
 }
 
-gol::GameState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args)
+gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args)
 {
     GL_DEBUG(const bool success = glfwGetTime() * 1000 >= m_TickDelayMs);
     if (success)
@@ -84,13 +84,13 @@ gol::GameState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs
         GL_DEBUG(glfwSetTime(0));
         m_Grid.Update();
         if (m_Grid.Dead() && !m_SelectionManager.GridAlive())
-            return GameState::Empty;
+            return SimulationState::Empty;
     }
     m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
-    return GameState::Simulation;
+    return SimulationState::Simulation;
 }
 
-gol::GameState gol::SimulationEditor::PaintUpdate(const GraphicsHandlerArgs& args)
+gol::SimulationState gol::SimulationEditor::PaintUpdate(const GraphicsHandlerArgs& args)
 {
     auto gridPos = CursorGridPos();
     if (m_SelectionManager.CanDrawGrid())
@@ -106,13 +106,17 @@ gol::GameState gol::SimulationEditor::PaintUpdate(const GraphicsHandlerArgs& arg
             m_Graphics.DrawSelection(m_SelectionManager.SelectionBounds(), args);
         UpdateMouseState(*gridPos);
     }
+    else
+    {
+        m_SelectionManager.TryResetSelection();
+    }
 
     return (m_Grid.Dead() && !m_SelectionManager.GridAlive())
-        ? GameState::Empty 
-        : GameState::Paint;
+        ? SimulationState::Empty 
+        : SimulationState::Paint;
 }
 
-gol::GameState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& args)
+gol::SimulationState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& args)
 {
     auto gridPos = CursorGridPos();
     if (gridPos)
@@ -122,7 +126,7 @@ gol::GameState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& arg
     m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
     if (m_SelectionManager.CanDrawGrid())
         m_Graphics.DrawGrid(m_SelectionManager.SelectionBounds().UpperLeft(), m_SelectionManager.GridData(), args);
-    return GameState::Paused;
+    return SimulationState::Paused;
 }
 
 void gol::SimulationEditor::DisplaySimulation()
@@ -211,7 +215,7 @@ void gol::SimulationEditor::UpdateVersion(const SimulationControlResult& args)
 	m_SelectionManager.HandleVersionChange(action, m_Grid, *versionChanges);
 }
 
-gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult& result)
+gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlResult& result)
 {
     if (auto* action = std::get_if<GameAction>(&*result.Action))
     {
@@ -221,29 +225,29 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
         case Start:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_InitialGrid = m_Grid;
-            return GameState::Simulation;
+            return SimulationState::Simulation;
         case Clear:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_Grid = GameGrid(m_Grid.Size());
-            return GameState::Paint;
+            return SimulationState::Paint;
         case Reset:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_Grid = m_InitialGrid;
-            return GameState::Paint;
+            return SimulationState::Paint;
         case Restart:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_Grid = m_InitialGrid;
-            return GameState::Simulation;
+            return SimulationState::Simulation;
         case Pause:
-            return GameState::Paused;
+            return SimulationState::Paused;
         case Resume:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
-            return GameState::Simulation;
+            return SimulationState::Simulation;
         case Step:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             for (int32_t i = 0; i < *result.StepCount; i++)
                 m_Grid.Update();
-            return m_Grid.Dead() ? GameState::Empty : GameState::Paused;
+            return m_Grid.Dead() ? SimulationState::Empty : SimulationState::Paused;
         }
     }
 
@@ -267,8 +271,10 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
     {
         if (*action == SelectionAction::Paste)
         {
-            m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
-            auto pasteResult = m_SelectionManager.Paste(CursorGridPos(), 100000U);
+            auto gridPos = CursorGridPos();
+            if (gridPos)
+                m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
+            auto pasteResult = m_SelectionManager.Paste(gridPos, 100000U);
             if (pasteResult)
 				m_VersionManager.TryPushChange(*pasteResult);
             else if (pasteResult.error() != 0)
@@ -290,7 +296,7 @@ gol::GameState gol::SimulationEditor::UpdateState(const SimulationControlResult&
     return result.State;
 }
 
-gol::GameState gol::SimulationEditor::ResizeGrid(const gol::SimulationControlResult& result)
+gol::SimulationState gol::SimulationEditor::ResizeGrid(const gol::SimulationControlResult& result)
 {
     m_VersionManager.PushChange
     ({
@@ -311,7 +317,7 @@ gol::GameState gol::SimulationEditor::ResizeGrid(const gol::SimulationControlRes
         result.NewDimensions->Width * DefaultCellWidth / 2.f,
         result.NewDimensions->Height * DefaultCellHeight / 2.f
     };
-    return GameState::Paint;
+    return SimulationState::Paint;
 }
 
 void gol::SimulationEditor::UpdateMouseState(Vec2 gridPos)

@@ -5,7 +5,7 @@
 #include "SimulationControlResult.h"
 #include "StepWidget.h"
 
-gol::SimulationControlResult gol::StepWidget::Update(GameState state)
+gol::SimulationControlResult gol::StepWidget::Update(SimulationState state)
 {
     ImGui::Text("Step Count");
 
@@ -19,9 +19,14 @@ gol::SimulationControlResult gol::StepWidget::Update(GameState state)
     if (m_StepCount >= StepWarning)
         ImGui::SetItemTooltip("Stepping with large values may cause lag!");
 
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    auto action = m_Button.Update(state);
+    ImGui::Separator();
+    ImGui::PopStyleVar();
+
     return 
     {
-        .Action = m_Button.Update(state),
+        .Action = action,
         .StepCount = m_StepCount
     };
 }

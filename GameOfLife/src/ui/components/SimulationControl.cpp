@@ -26,13 +26,13 @@ gol::SelectionShortcuts::SelectionShortcuts(
     })
 { }
 
-gol::SimulationControlResult gol::SelectionShortcuts::Update(GameState state)
+gol::SimulationControlResult gol::SelectionShortcuts::Update(SimulationState state)
 {
 	SimulationControlResult result { .NudgeSize = 1 };
 
     for (auto&& [action, actionShortcuts] : Shortcuts)
     {
-        if (action != SelectionAction::Deselect && state != GameState::Paint)
+        if (action != SelectionAction::Deselect && state != SimulationState::Paint)
             continue;
 
         bool resultActive = false;
@@ -83,17 +83,17 @@ void gol::SimulationControl::FillResults(SimulationControlResult& current, const
 		current.NudgeSize = update.NudgeSize;
 }
 
-gol::SimulationControlResult gol::SimulationControl::Update(GameState state)
+gol::SimulationControlResult gol::SimulationControl::Update(SimulationState state)
 {
-    ImGui::Begin("Simulation Control");
+    ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNavInputs);
 
     SimulationControlResult result { .State = state };
     
     FillResults(result, m_VersionManager.Update(state));
     FillResults(result, m_ExecutionWidget.Update(state));
     FillResults(result, m_EditorWidget.Update(state));
-    FillResults(result, m_ResizeWidget.Update(state));
     FillResults(result, m_StepWidget.Update(state));
+    FillResults(result, m_ResizeWidget.Update(state));
     FillResults(result, m_DelayWidget.Update(state));
     FillResults(result, m_SelectionShortcuts.Update(state));
 

@@ -8,9 +8,11 @@
 
 gol::WarnWindowState gol::WarnWindow::Update()
 {
+	if (!Active)
+		return WarnWindowState::None;
+
 	ImGui::OpenPopup(m_Title.c_str());
-	if (!ImGui::BeginPopupModal(m_Title.c_str(), &Active, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize))
-		return WarnWindowState::Failure;
+	ImGui::BeginPopupModal(m_Title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 
 	constexpr int32_t height = ActionButton<EditorAction, false>::DefaultButtonHeight;
 	ImGui::Text(Message.c_str());

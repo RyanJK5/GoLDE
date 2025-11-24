@@ -24,6 +24,8 @@ namespace gol
 	public:
 		SelectionUpdateResult UpdateSelectionArea(GameGrid& grid, Vec2 gridPos);
 
+		bool TryResetSelection();
+
 		std::optional<VersionChange> Deselect(GameGrid& grid);
 
 		std::optional<VersionChange> Copy(GameGrid& grid);

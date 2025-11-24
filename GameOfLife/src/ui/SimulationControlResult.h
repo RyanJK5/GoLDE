@@ -12,7 +12,7 @@ namespace gol
 {
 	struct SimulationControlResult
 	{
-		GameState State = GameState::Empty;
+		SimulationState State = SimulationState::Empty;
 		std::optional<ActionVariant> Action;
 
 		std::optional<int32_t> StepCount;
