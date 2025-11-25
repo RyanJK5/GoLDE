@@ -7,6 +7,7 @@
 
 #include "GameGrid.h"
 #include "Graphics2D.h"
+#include <functional>
 
 gol::GameGrid::GameGrid(int32_t width, int32_t height)
 	: m_Width(width), m_Height(height)
@@ -32,9 +33,17 @@ bool gol::GameGrid::Dead() const
 	return m_Data.size() == 0;
 }
 
+struct Vec2Hash
+{
+	size_t operator()(gol::Vec2 vec) const
+	{
+		return std::hash<int32_t>{}(vec.X) ^ std::hash<int32_t>{}(vec.Y);
+	}
+};
+
 void gol::GameGrid::Update()
 {
-	std::map<Vec2, int8_t> neighborCount;
+	std::unordered_map<Vec2, int8_t, Vec2Hash> neighborCount;
 	for (auto&& pos : m_Data)
 	{
 		for (int32_t x = pos.X - 1; x <= pos.X + 1; x++)

@@ -251,6 +251,8 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             return SimulationState::Simulation;
         case Step:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
+            if (result.State == SimulationState::Paint)
+                m_InitialGrid = m_Grid;
             for (int32_t i = 0; i < *result.StepCount; i++)
                 m_Grid.Update();
             return m_Grid.Dead() ? SimulationState::Empty : SimulationState::Paused;
