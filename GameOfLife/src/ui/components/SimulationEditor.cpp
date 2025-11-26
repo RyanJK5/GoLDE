@@ -402,8 +402,6 @@ void gol::SimulationEditor::UpdateMouseState(Vec2 gridPos)
             m_VersionManager.BeginPaintChange(gridPos, m_EditorMode == EditorMode::Insert);
             m_LeftDeltaLast = {};
         }
-        if (*m_Grid.Get(gridPos.X, gridPos.Y) != (m_EditorMode == EditorMode::Insert))
-			m_VersionManager.AddPaintChange(gridPos);
 		
         FillCells();
         return;
@@ -426,6 +424,9 @@ void gol::SimulationEditor::FillCells()
         auto gridPos = ConvertToGridPos(pos);
         if (!gridPos)
 			break;
+
+        if (*m_Grid.Get(gridPos->X, gridPos->Y) != (m_EditorMode == EditorMode::Insert))
+            m_VersionManager.AddPaintChange(*gridPos);
 		m_Grid.Set(gridPos->X, gridPos->Y, m_EditorMode == EditorMode::Insert);
     }
 }
