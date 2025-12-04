@@ -16,6 +16,7 @@ namespace gol
 	{
 		Rect ViewportBounds;
 		Size2 GridSize;
+		bool ShowGridLines = false;
 	};
 
 	class GraphicsHandler
@@ -44,6 +45,8 @@ namespace gol
 
 		inline uint32_t TextureID() const { return m_Texture; }
 	private:
+		void DrawGridLines(Vec2 offfset, const GraphicsHandlerArgs& info);
+
 		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid) const;
 
 		RectF GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& info) const;

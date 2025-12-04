@@ -72,6 +72,8 @@ void gol::SimulationControl::FillResults(SimulationControlResult& current, const
 		current.NudgeSize = update.NudgeSize;
     if (!current.FilePath)
 		current.FilePath = update.FilePath;
+    if (!current.GridLines)
+        current.GridLines = update.GridLines;
 }
 
 gol::SimulationControlResult gol::SimulationControl::Update(EditorState state)

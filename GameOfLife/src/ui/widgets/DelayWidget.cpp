@@ -12,5 +12,7 @@ gol::SimulationControlResult gol::DelayWidget::Update(EditorState)
 	ImGui::SliderInt("##label test", &m_TickDelayMs, 0, 1000);
 	ImGui::SetItemTooltip("Ctrl + Click to input value");
 	m_TickDelayMs = std::max(m_TickDelayMs, 0);
-	return { .TickDelayMs = m_TickDelayMs };
+
+	ImGui::Checkbox("Show Grid Lines", &m_GridLines); // Just to have another item for tooltip testing
+	return { .TickDelayMs = m_TickDelayMs, .GridLines = m_GridLines };
 }

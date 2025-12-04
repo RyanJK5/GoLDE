@@ -146,6 +146,11 @@ std::optional<gol::ShaderManager::IDPair> gol::ShaderManager::ParseShader(const 
     return std::make_pair(id1.value(), id2.value());
 }
 
+void gol::ShaderManager::AttachUniformVec4(std::string_view label, const glm::vec4& vec)
+{
+	GL_DEBUG(glUniform4f(UniformLocation(label), vec.x, vec.y, vec.z, vec.w));
+}
+
 void gol::ShaderManager::AttachUniformMatrix4(std::string_view label, const glm::mat4& matrix)
 {
     GL_DEBUG(glUniformMatrix4fv(UniformLocation(label), 1, GL_FALSE, &matrix[0][0]));
@@ -153,7 +158,7 @@ void gol::ShaderManager::AttachUniformMatrix4(std::string_view label, const glm:
 
 int32_t gol::ShaderManager::UniformLocation(std::string_view label)
 {
-    if (m_Uniforms.count(label) > 0)
+    if (m_Uniforms.find(label) != m_Uniforms.end())
         return m_Uniforms[label];
 
     GL_DEBUG(int location = glGetUniformLocation(m_ProgramID, label.data()));

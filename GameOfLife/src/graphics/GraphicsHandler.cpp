@@ -146,6 +146,49 @@ void gol::GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) cons
     UnbindFrameBuffer();
 }
 
+void gol::GraphicsHandler::DrawGridLines(Vec2 offset, const GraphicsHandlerArgs& info)
+{
+    auto cameraCorner = Vec2F
+    { 
+        Camera.Center.x - info.ViewportBounds.Width  / 2.f / Camera.Zoom,
+        Camera.Center.y - info.ViewportBounds.Height / 2.f / Camera.Zoom
+    };
+    auto upperLeft = Vec2F
+    {
+        std::floor(cameraCorner.X / SimulationEditor::DefaultCellWidth) * SimulationEditor::DefaultCellWidth,
+        std::floor(cameraCorner.Y / SimulationEditor::DefaultCellHeight) * SimulationEditor::DefaultCellHeight
+    };
+
+    auto positions = std::vector<float>{};
+    int32_t rowCount = std::ceil(info.ViewportBounds.Height / Camera.Zoom / SimulationEditor::DefaultCellHeight);
+    for (int32_t i = 0; i <= rowCount + 1; i++)
+    {
+        positions.push_back(upperLeft.X);
+        positions.push_back(upperLeft.Y + SimulationEditor::DefaultCellHeight * i);
+        positions.push_back(cameraCorner.X + info.ViewportBounds.Width / Camera.Zoom);
+        positions.push_back(upperLeft.Y + SimulationEditor::DefaultCellHeight * i);
+    }
+
+    int32_t colCount = std::ceil(info.ViewportBounds.Width / Camera.Zoom / SimulationEditor::DefaultCellWidth);
+    for (int32_t i = 0; i <= colCount; i++)
+    {
+        positions.push_back(upperLeft.X + SimulationEditor::DefaultCellWidth * i);
+        positions.push_back(upperLeft.Y);
+        positions.push_back(upperLeft.X + SimulationEditor::DefaultCellWidth * i);
+        positions.push_back(cameraCorner.Y + info.ViewportBounds.Height / Camera.Zoom);
+    }
+
+    uint32_t buffer;
+    GL_DEBUG(glGenBuffers(1, &buffer));
+    GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, buffer));
+    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_DYNAMIC_DRAW));
+    GL_DEBUG(glEnableVertexAttribArray(0));
+    GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
+    GL_DEBUG(glDrawArrays(GL_LINES, 0, positions.size() / 2));
+    GL_DEBUG(glDeleteBuffers(1, &buffer));
+}
+
+
 std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid) const
 {
     float width = SimulationEditor::DefaultCellWidth;
@@ -178,6 +221,13 @@ void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::set<Vec2>& grid, con
     auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
     m_Shader.AttachUniformMatrix4("u_MVP", matrix);
 
+    if (args.ShowGridLines)
+    {
+        m_Shader.AttachUniformVec4("u_Color", { 0.2f, 0.2f, 0.2f, 1.f });
+        DrawGridLines(offset, args);
+    }
+
+    m_Shader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
     auto positions = GenerateGLBuffer(offset, grid);
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridBuffer));
@@ -194,8 +244,9 @@ void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::set<Vec2>& grid, con
 
 gol::RectF gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs&) const
 {
-    return {
-          static_cast<float>(region.X      * SimulationEditor::DefaultCellHeight),
+    return RectF 
+    {
+          static_cast<float>(region.X      * SimulationEditor::DefaultCellWidth),
           static_cast<float>(region.Y      * SimulationEditor::DefaultCellHeight),
           static_cast<float>(region.Width  * SimulationEditor::DefaultCellWidth),
           static_cast<float>(region.Height * SimulationEditor::DefaultCellHeight),
@@ -234,4 +285,4 @@ void gol::GraphicsHandler::DrawSelection(const Rect& region, const GraphicsHandl
     GL_DEBUG(glDrawElements(GL_LINES, 8, GL_UNSIGNED_BYTE, nullptr));
 
     UnbindFrameBuffer();
-}////////////////////////////////////////////////////////////////
+}

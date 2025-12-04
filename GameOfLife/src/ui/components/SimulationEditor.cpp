@@ -31,7 +31,12 @@ gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
 
 gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& args)
 {
-    auto graphicsArgs = GraphicsHandlerArgs { .ViewportBounds = ViewportBounds(), .GridSize = m_Grid.Size() };
+    auto graphicsArgs = GraphicsHandlerArgs
+    { 
+        .ViewportBounds = ViewportBounds(), 
+        .GridSize = m_Grid.Size(),
+		.ShowGridLines = args.GridLines
+    };
 
     auto pasteWarnResult = m_PasteWarning.Update();
     if (pasteWarnResult == PopupWindowState::Success)

@@ -17,6 +17,7 @@ namespace gol
 		SimulationControlResult Update(EditorState state);
 	private:
 		int32_t m_TickDelayMs = 0;
+		bool m_GridLines = false;
 	};
 }
 
