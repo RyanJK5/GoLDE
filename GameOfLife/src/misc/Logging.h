@@ -3,6 +3,7 @@
 
 #include <format>
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <print>
 #include <source_location>
 #include <string>

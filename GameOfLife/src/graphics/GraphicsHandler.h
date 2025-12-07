@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Camera.h"
+#include "GLBuffer.h"
 #include "Graphics2D.h"
 #include "ShaderManager.h"
 
@@ -16,6 +17,7 @@ namespace gol
 	{
 		Rect ViewportBounds;
 		Size2 GridSize;
+		Size2F CellSize;
 		bool ShowGridLines = false;
 	};
 
@@ -24,45 +26,53 @@ namespace gol
 	public:
 		Camera Camera;
 	public:
-		GraphicsHandler(const std::filesystem::path& shaderFilePath, int32_t windowWidth, int32_t windowHeight);
+		GraphicsHandler(
+			const std::filesystem::path& shaderFilePath, 
+			int32_t windowWidth, int32_t windowHeight
+		);
 
 		GraphicsHandler(const GraphicsHandler& other) = delete;
 		GraphicsHandler& operator=(const GraphicsHandler& other) = delete;
 
-		GraphicsHandler(GraphicsHandler&& other) noexcept;
-		GraphicsHandler& operator=(GraphicsHandler&& other) noexcept;
-		
-		~GraphicsHandler();
+		GraphicsHandler(GraphicsHandler&& other) noexcept = default;
+		GraphicsHandler& operator=(GraphicsHandler&& other) noexcept = default;
+		~GraphicsHandler() = default;
 
-		void RescaleFrameBuffer(Size2 windowSize);
+		void RescaleFrameBuffer(const Rect& windowBounds, const Rect& viewportBounds);
 
-		void DrawGrid(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& info);
+		void DrawGrid(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args);
 		void DrawSelection(const Rect& region, const GraphicsHandlerArgs& info);
-		void ClearBackground(const GraphicsHandlerArgs& args) const;
+		void ClearBackground(const GraphicsHandlerArgs& args);
 
+		void CenterCamera(const GraphicsHandlerArgs& viewportBounds);
+
+		uint32_t TextureID() const { return m_Texture.ID(); }
+	private:
 		void BindFrameBuffer() const;
 		void UnbindFrameBuffer() const;
 
-		inline uint32_t TextureID() const { return m_Texture; }
+		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args) const;
+
+		RectF GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const;
 	private:
-		void DrawGridLines(Vec2 offfset, const GraphicsHandlerArgs& info);
-
-		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid) const;
-
-		RectF GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& info) const;
-
-		void Move(GraphicsHandler&& other) noexcept;
-		void Destroy();
+		struct GridLineInfo
+		{
+			Vec2F UpperLeft;
+			Vec2F LowerRight;
+			Size2 GridSize;
+		};
+		GridLineInfo CalculateGridLineInfo(Vec2 offset, const GraphicsHandlerArgs& args) const;
+		
+		void DrawGridLines(Vec2 offset, const GraphicsHandlerArgs& args);
 	private:
 		ShaderManager m_Shader;
 		
-		uint32_t m_GridBuffer;
-		uint32_t m_SelectionBuffer;
-		uint32_t m_SelectionIndexBuffer;
+		GLBuffer m_GridBuffer;
+		GLIndexBuffer m_SelectionIndexBuffer;
 
-		uint32_t m_FrameBuffer;
-		uint32_t m_Texture;
-		uint32_t m_renderBuffer;
+		GLFrameBuffer m_FrameBuffer;
+		GLTexture m_Texture;
+		GLRenderBuffer m_renderBuffer;
 	};
 }
 

@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <filesystem>
 #include <imgui/imgui.h>
-#include <GLFW/glfw3.h>
 
 #include "GameEnums.h"
 #include "Graphics2D.h"
+#include "PresetSelection.h"
 #include "SimulationControl.h"
 #include "SimulationEditor.h"
 
@@ -68,7 +68,8 @@ namespace gol
 		OpenGLWindow m_Window;
 		SimulationEditor m_Editor;
 		SimulationControl m_Control;
-		ImFont* m_Font;
+		PresetSelection m_PresetSelection;
+		ImFont* m_Font = nullptr;
 
 		bool m_Startup = true;
 	};

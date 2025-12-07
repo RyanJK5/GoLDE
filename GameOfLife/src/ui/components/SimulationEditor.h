@@ -21,8 +21,6 @@ namespace gol
 	public:
 		static constexpr float DefaultCellWidth = 20.f;
 		static constexpr float DefaultCellHeight = 20.f;
-
-		using EncodingType = uint32_t;
 	public:
 		SimulationEditor(Size2 windowSize, Size2 gridSize);
 

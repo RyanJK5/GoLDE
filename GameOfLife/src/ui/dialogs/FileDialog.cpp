@@ -2,11 +2,9 @@
 #include <filesystem>
 #include <functional>
 #include <string>
-#include <string_view>
 #include <nfd.h>
 
 #include "FileDialog.h"
-#include "Logging.h"
 
 using namespace gol;
 
@@ -63,4 +61,15 @@ std::expected<std::filesystem::path, gol::FileDialogFailure> gol::FileDialog::Sa
 			*result += "gol";
 	}
 	return result;
+}
+
+std::expected<std::filesystem::path, FileDialogFailure> gol::FileDialog::SelectFolderDialog(
+	const std::string& defaultPath)
+{
+	auto pickFolder = [](const nfdchar_t*, const nfdchar_t* defaultPath, nfdchar_t** outPath)
+	{
+		return NFD_PickFolder(defaultPath, outPath);
+	};
+
+	return CallNFDFunction(pickFolder, "", defaultPath);
 }

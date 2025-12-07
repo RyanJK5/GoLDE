@@ -29,6 +29,7 @@
     <ClCompile Include="src\GameEnums.cpp" />
     <ClCompile Include="src\graphics\Camera.cpp" />
     <ClCompile Include="src\misc\RLEEncoder.cpp" />
+    <ClCompile Include="src\ui\components\PresetSelection.cpp" />
     <ClCompile Include="src\ui\dialogs\ErrorWindow.cpp" />
     <ClCompile Include="src\ui\dialogs\FileDialog.cpp" />
     <ClCompile Include="src\ui\dialogs\PopupWindow.cpp" />
@@ -57,6 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\graphics\Camera.h" />
+    <ClInclude Include="src\graphics\GLBuffer.h" />
+    <ClInclude Include="src\ui\components\PresetSelection.h" />
     <ClInclude Include="src\ui\dialogs\ErrorWindow.h" />
     <ClInclude Include="src\ui\dialogs\FileDialog.h" />
     <ClInclude Include="src\ui\dialogs\PopupWindow.h" />
@@ -71,6 +74,7 @@
     <ClInclude Include="src\Graphics2D.h" />
     <ClInclude Include="src\ui\KeyShortcut.h" />
     <ClInclude Include="src\misc\Logging.h" />
+    <ClInclude Include="src\ui\PresetSelectionResult.h" />
     <ClInclude Include="src\ui\widgets\ResizeWidget.h" />
     <ClInclude Include="src\misc\RLEEncoder.h" />
     <ClInclude Include="src\ui\SelectionManager.h" />

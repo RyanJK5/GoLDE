@@ -26,6 +26,9 @@ namespace gol
 
 		std::expected<std::filesystem::path, FileDialogFailure> SaveFileDialog(
 			const std::string& filters, const std::string& defaultPath);
+
+		std::expected<std::filesystem::path, FileDialogFailure> SelectFolderDialog(
+			const std::string& defaultPath);
 	};
 }
 

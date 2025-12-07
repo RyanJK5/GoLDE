@@ -20,11 +20,13 @@
 #include "SimulationControlResult.h"
 #include "SimulationEditor.h"
 #include "VersionManager.h"
-#include "WarnWindow.h"
 
 gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
     : m_Grid(gridSize)
-    , m_Graphics(std::filesystem::path("resources") / "shader" / "default.shader", windowSize.Width, windowSize.Height)
+    , m_Graphics(
+        std::filesystem::path("resources") / "shader" / "default.shader", 
+        windowSize.Width, windowSize.Height
+    )
     , m_PasteWarning("Paste Warning")
     , m_FileErrorWindow("File Error")
 { }   
@@ -35,6 +37,7 @@ gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& ar
     { 
         .ViewportBounds = ViewportBounds(), 
         .GridSize = m_Grid.Size(),
+		.CellSize = { SimulationEditor::DefaultCellWidth, SimulationEditor::DefaultCellHeight },
 		.ShowGridLines = args.GridLines
     };
 
@@ -49,7 +52,7 @@ gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& ar
 
     UpdateViewport();
     UpdateDragState();
-    m_Graphics.RescaleFrameBuffer(WindowBounds().Size());
+    m_Graphics.RescaleFrameBuffer(WindowBounds(), ViewportBounds());
     m_Graphics.ClearBackground(graphicsArgs);
     
     if (args.TickDelayMs)
@@ -142,7 +145,6 @@ gol::SimulationState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArg
 
 void gol::SimulationEditor::DisplaySimulation()
 {
-    ImGui::SetNextFrameWantCaptureMouse(false);
     ImGui::Begin("Simulation", nullptr);
     ImGui::BeginChild("Render");
 
@@ -245,7 +247,7 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             return SimulationState::Simulation;
         case Clear:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
-            m_Grid = GameGrid(m_Grid.Size());
+            m_Grid = GameGrid { m_Grid.Size() };
             return SimulationState::Paint;
         case Reset:
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
@@ -456,6 +458,4 @@ void gol::SimulationEditor::UpdateViewport()
     auto mousePos = ImGui::GetIO().MousePos;
     if (bounds.InBounds(mousePos.x, mousePos.y) && ImGui::GetIO().MouseWheel != 0)
         m_Graphics.Camera.ZoomBy(mousePos, bounds, ImGui::GetIO().MouseWheel / 10.f);
-
-    glViewport(static_cast<int32_t>(bounds.X - m_WindowBounds.X), static_cast<int32_t>(bounds.Y - m_WindowBounds.Y), bounds.Width, bounds.Height);
 }

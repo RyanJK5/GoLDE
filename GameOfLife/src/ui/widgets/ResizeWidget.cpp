@@ -19,7 +19,7 @@ gol::SimulationControlResult gol::ResizeWidget::Update(EditorState state)
 
     int32_t wrapper[2] = { m_Dimensions.Width, m_Dimensions.Height };
     ImGui::InputInt2("##label", wrapper);
-    m_Dimensions = { wrapper[0], wrapper[1] };
+    m_Dimensions = { std::max(0, wrapper[0]), std::max(0, wrapper[1]) };
 
     ImGui::PopStyleVar();
 

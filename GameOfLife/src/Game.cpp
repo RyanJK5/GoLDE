@@ -40,6 +40,7 @@ gol::Game::Game()
     : m_Window(DefaultWindowWidth, DefaultWindowHeight)
     , m_Editor({DefaultWindowWidth, DefaultWindowHeight}, {DefaultGridWidth, DefaultGridHeight})
     , m_Control(*(StyleLoader::LoadYAML<ImVec4>(std::filesystem::path("config") / "style.yaml")))
+    , m_PresetSelection(std::filesystem::current_path() / "templates", {DefaultWindowWidth, DefaultWindowHeight})
 {
     InitImGUI(std::filesystem::path("config") / "style.yaml");
 }
@@ -59,10 +60,8 @@ void gol::Game::Begin()
         
         auto result = m_Control.Update(m_State);
         m_State = m_Editor.Update(result);
-        
-        ImGui::Begin("Presets");
-        ImGui::End();
-        
+		m_PresetSelection.Update();
+
         EndFrame();
     }
 }
@@ -136,7 +135,6 @@ void gol::Game::CreateDockspace()
     const ImVec2 windowSize = { static_cast<float>(windowWidth), static_cast<float>(windowHeight) };
     ImGui::SetNextWindowSize(windowSize);
 
-    auto flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
     ImGuiID dockspaceID = ImGui::GetID("DockSpace");
     ImGui::DockSpaceOverViewport(dockspaceID, ImGui::GetMainViewport());
     if (m_Startup)
