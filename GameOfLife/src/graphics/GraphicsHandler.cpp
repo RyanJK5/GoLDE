@@ -12,6 +12,28 @@
 #include "Logging.h"
 #include "ShaderManager.h"
 
+struct FrameBufferBinder
+{
+    FrameBufferBinder(const gol::GLFrameBuffer& buffer) : m_ID(buffer.ID()) 
+    {
+        GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, m_ID));
+    }
+
+    ~FrameBufferBinder() 
+    {
+        GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    }
+
+    FrameBufferBinder(const FrameBufferBinder&) = delete;
+    auto& operator=(const FrameBufferBinder&) = delete;
+
+    FrameBufferBinder(FrameBufferBinder&&) = delete;
+    auto& operator=(const FrameBufferBinder&&) = delete;
+
+private:
+    uint32_t m_ID;
+};
+
 gol::GraphicsHandler::GraphicsHandler(
     const std::filesystem::path& shaderFilePath, 
     int32_t windowWidth, int32_t windowHeight
@@ -48,7 +70,9 @@ void gol::GraphicsHandler::RescaleFrameBuffer(const Rect& windowBounds, const Re
     GL_DEBUG(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowBounds.Width, windowBounds.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
     GL_DEBUG(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_DEBUG(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    BindFrameBuffer();
+
+    FrameBufferBinder binder { m_FrameBuffer };
+    
     glViewport(
         viewportBounds.X - windowBounds.X, viewportBounds.Y - windowBounds.Y, 
         viewportBounds.Width, viewportBounds.Height
@@ -57,30 +81,17 @@ void gol::GraphicsHandler::RescaleFrameBuffer(const Rect& windowBounds, const Re
     GL_DEBUG(glBindRenderbuffer(GL_RENDERBUFFER, m_renderBuffer.ID()));
     GL_DEBUG(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, windowBounds.Width, windowBounds.Height));
     GL_DEBUG(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_renderBuffer.ID()));
-
-    UnbindFrameBuffer();
-}
-
-void gol::GraphicsHandler::BindFrameBuffer() const
-{
-    GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer.ID()));
-}
-
-void gol::GraphicsHandler::UnbindFrameBuffer() const
-{
-    GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
 void gol::GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args)
 {
-    BindFrameBuffer();
+    FrameBufferBinder binder { m_FrameBuffer };
 
     GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
     if (args.GridSize.Width == 0 || args.GridSize.Height == 0)
     {
         GL_DEBUG(glClearColor(0.f, 0.f, 0.f, 1.f));
         GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
-        UnbindFrameBuffer();
         return;
     }
 
@@ -106,8 +117,6 @@ void gol::GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args)
     GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
 
     GL_DEBUG(glDisable(GL_SCISSOR_TEST));
-
-    UnbindFrameBuffer();
 }
 
 gol::GraphicsHandler::GridLineInfo gol::GraphicsHandler::CalculateGridLineInfo(Vec2, const GraphicsHandlerArgs& args) const
@@ -242,7 +251,7 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std
 
 void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args)
 {
-    BindFrameBuffer();
+    FrameBufferBinder binder{ m_FrameBuffer };
 
     auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
     m_Shader.AttachUniformMatrix4("u_MVP", matrix);
@@ -263,8 +272,6 @@ void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::set<Vec2>& grid, con
     GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
 
     GL_DEBUG(glDrawArrays(GL_QUADS, 0, positions.size() / 2));
-    
-    UnbindFrameBuffer();
 }
 
 gol::RectF gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const
@@ -280,7 +287,7 @@ gol::RectF gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const Gr
 
 void gol::GraphicsHandler::DrawSelection(const Rect& region, const GraphicsHandlerArgs& args)
 {
-    BindFrameBuffer();
+    FrameBufferBinder binder{ m_FrameBuffer };
 
     auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
     m_Shader.AttachUniformMatrix4("u_MVP", matrix);
@@ -311,8 +318,6 @@ void gol::GraphicsHandler::DrawSelection(const Rect& region, const GraphicsHandl
     GL_DEBUG(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 4 * sizeof(uint8_t), indices, GL_DYNAMIC_DRAW));
 
     GL_DEBUG(glDrawElements(GL_LINES, 8, GL_UNSIGNED_BYTE, nullptr));
-
-    UnbindFrameBuffer();
 }
 
 void gol::GraphicsHandler::CenterCamera(const GraphicsHandlerArgs& args)
