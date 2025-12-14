@@ -29,7 +29,6 @@
     <ClCompile Include="src\GameEnums.cpp" />
     <ClCompile Include="src\graphics\Camera.cpp" />
     <ClCompile Include="src\misc\RLEEncoder.cpp" />
-    <ClCompile Include="src\Quadtree.cpp" />
     <ClCompile Include="src\ui\components\PresetSelection.cpp" />
     <ClCompile Include="src\ui\dialogs\ErrorWindow.cpp" />
     <ClCompile Include="src\ui\dialogs\FileDialog.cpp" />
@@ -60,7 +59,6 @@
   <ItemGroup>
     <ClInclude Include="src\graphics\Camera.h" />
     <ClInclude Include="src\graphics\GLBuffer.h" />
-    <ClInclude Include="src\Quadtree.h" />
     <ClInclude Include="src\ui\components\PresetSelection.h" />
     <ClInclude Include="src\ui\dialogs\ErrorWindow.h" />
     <ClInclude Include="src\ui\dialogs\FileDialog.h" />
