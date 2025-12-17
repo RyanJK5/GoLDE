@@ -209,6 +209,9 @@
     <ClInclude Include="src\graphics\GLBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\widgets\Widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\font\arial.ttf" />

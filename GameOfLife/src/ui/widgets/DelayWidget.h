@@ -7,14 +7,17 @@
 
 #include "GameEnums.h"
 #include "SimulationControlResult.h"
+#include "Widget.h"
 
 namespace gol
 {
-	class DelayWidget
+	class DelayWidget : public Widget
 	{
 	public:
 		DelayWidget(std::span<const ImGuiKeyChord> = {}) { }
-		SimulationControlResult Update(const EditorState& state);
+		friend Widget;
+	private:
+		SimulationControlResult UpdateImpl(const EditorResult& state);
 	private:
 		int32_t m_TickDelayMs = 0;
 		bool m_GridLines = false;

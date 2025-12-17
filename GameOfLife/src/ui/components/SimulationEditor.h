@@ -1,6 +1,7 @@
 #ifndef __SimulationEditor_h__
 #define __SimulationEditor_h__
 
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <optional>
 
@@ -23,12 +24,21 @@ namespace gol
 		static constexpr float DefaultCellWidth = 20.f;
 		static constexpr float DefaultCellHeight = 20.f;
 	public:
-		SimulationEditor(Size2 windowSize, Size2 gridSize);
+		SimulationEditor(uint32_t id, const std::filesystem::path& path, Size2 windowSize, Size2 gridSize);
 
 		Rect WindowBounds() const;
 		Rect ViewportBounds() const;
+		const std::filesystem::path& CurrentFilePath() const { return m_CurrentFilePath; }
 
-		EditorState Update(const SimulationControlResult& controlArgs, const PresetSelectionResult& presetArgs);
+		EditorResult Update(std::optional<bool> activeOverride, const SimulationControlResult& controlArgs, const PresetSelectionResult& presetArgs);
+	
+	private:
+		struct DisplayResult
+		{
+			bool Visible = false;
+			bool Selected = false;
+			bool Closing = false;
+		};
 	private:
 		SimulationState SimulationUpdate(const GraphicsHandlerArgs& args);
 		SimulationState PaintUpdate(const GraphicsHandlerArgs& args);
@@ -36,7 +46,7 @@ namespace gol
 
 		void UpdateVersion(const SimulationControlResult& args);
 
-		void DisplaySimulation(const std::filesystem::path& path);
+		DisplayResult DisplaySimulation(bool grabFocus);
 
 		SimulationState UpdateState(const SimulationControlResult& action);
 		void PasteSelection();
@@ -49,10 +59,14 @@ namespace gol
 		void UpdateMouseState(Vec2 gridPos);
 		void FillCells();
 		void UpdateDragState();
-
 	private:
 		static constexpr double DefaultTickDelayMs = 0.;
 	private:
+		uint32_t m_EditorID;
+		std::filesystem::path m_CurrentFilePath;
+
+		SimulationState m_State = SimulationState::Paint;
+
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
 
@@ -64,11 +78,16 @@ namespace gol
 
 		ErrorWindow m_FileErrorWindow;
 		WarnWindow m_PasteWarning;
-
+		
+		bool m_TakeKeyboardInput = false;
 		bool m_TakeMouseInput = false;
+
 		Vec2F m_LeftDeltaLast;
 		Vec2F m_RightDeltaLast;
+		
 		double m_TickDelayMs = DefaultTickDelayMs;
+		double m_LastTime = 0;
+
 		EditorMode m_EditorMode = EditorMode::None;
 	};
 }

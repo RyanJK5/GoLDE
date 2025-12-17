@@ -44,8 +44,16 @@ namespace gol
 
         void Destroy();
     private:
-        uint32_t m_ProgramID;
-        std::unordered_map<std::string_view, int32_t> m_Uniforms;
+        struct ShaderControlBlock
+        {
+            int32_t RefCount = 0;
+            uint32_t ProgramID = 0;
+			std::unordered_map<std::string_view, int32_t> Uniforms;
+        };
+
+        inline static std::unordered_map<std::filesystem::path, ShaderControlBlock> s_Shaders = {};
+    private:
+		ShaderControlBlock* m_ControlBlock;
     };
 }
 

@@ -12,6 +12,7 @@
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
+#include "Widget.h"
 
 namespace gol
 {
@@ -27,9 +28,9 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const override final;
-        virtual GameAction Action(const EditorState& state) const override final;
-        virtual std::string Label(const EditorState& state) const override final;
-        virtual bool Enabled(const EditorState& state) const override final;
+        virtual GameAction Action(const EditorResult& state) const override final;
+        virtual std::string Label(const EditorResult& state) const override final;
+        virtual bool Enabled(const EditorResult& state) const override final;
     };
 
     class ClearButton : public ActionButton<GameAction, false>
@@ -40,8 +41,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const override final;
-        virtual std::string Label(const EditorState& state) const override final;
-        virtual bool Enabled(const EditorState& state) const override final;
+        virtual std::string Label(const EditorResult& state) const override final;
+        virtual bool Enabled(const EditorResult& state) const override final;
     };
 
     class ResetButton : public ActionButton<GameAction, false>
@@ -52,8 +53,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const override final;
-        virtual std::string Label(const EditorState& state) const override final;
-        virtual bool Enabled(const EditorState& state) const override final;
+        virtual std::string Label(const EditorResult& state) const override final;
+        virtual bool Enabled(const EditorResult& state) const override final;
     };
 
     class RestartButton : public ActionButton<GameAction, false>
@@ -64,11 +65,11 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const override final;
-        virtual std::string Label(const EditorState& state) const override final;
-        virtual bool Enabled(const EditorState& state) const override final;
+        virtual std::string Label(const EditorResult& state) const override final;
+        virtual bool Enabled(const EditorResult& state) const override final;
     };
 
-	class ExecutionWidget
+	class ExecutionWidget : public Widget
 	{
 	public:
         ExecutionWidget() = default;
@@ -79,8 +80,9 @@ namespace gol
             , m_ResetButton   (shortcuts.at(GameAction::Reset   ))
             , m_RestartButton (shortcuts.at(GameAction::Restart ))
         { }
-
-        SimulationControlResult Update(const EditorState& state);
+        friend Widget;
+    private:
+        SimulationControlResult UpdateImpl(const EditorResult& state);
 	private:
         StartButton m_StartButton;
         ClearButton m_ClearButton;

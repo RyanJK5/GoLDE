@@ -21,6 +21,7 @@ namespace gol
 		std::optional<std::filesystem::path> FilePath;
 		int32_t NudgeSize = 0;
 		bool GridLines = false;
+		bool FromShortcut = false;
 	};
 }
 

@@ -24,8 +24,10 @@
 #include "PopupWindow.h"
 #include "PresetSelectionResult.h"
 
-gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
-    : m_Grid(gridSize)
+gol::SimulationEditor::SimulationEditor(uint32_t id, const std::filesystem::path& path, Size2 windowSize, Size2 gridSize)
+    : m_EditorID(id)
+    , m_CurrentFilePath(path)
+    , m_Grid(gridSize)
     , m_Graphics(
         std::filesystem::path("resources") / "shader" / "default.shader", 
         windowSize.Width, windowSize.Height,
@@ -35,8 +37,12 @@ gol::SimulationEditor::SimulationEditor(Size2 windowSize, Size2 gridSize)
     , m_FileErrorWindow("File Error")
 { }   
 
-gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& controlArgs, const PresetSelectionResult& presetArgs)
+gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverride, const SimulationControlResult& controlArgs, const PresetSelectionResult& presetArgs)
 {
+    auto displayResult = DisplaySimulation(controlArgs.Action && activeOverride && (*activeOverride));
+    if (!displayResult.Visible || (activeOverride && !(*activeOverride)))
+        return { .Active = false, .Closing = displayResult.Closing };
+
     const auto graphicsArgs = GraphicsHandlerArgs
     { 
         .ViewportBounds = ViewportBounds(), 
@@ -70,13 +76,12 @@ gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& co
     if (controlArgs.TickDelayMs)
         m_TickDelayMs = *controlArgs.TickDelayMs;
 
-    SimulationState state = !controlArgs.Action
-        ? controlArgs.State 
-        : UpdateState(controlArgs);
+    if (controlArgs.Action && ((activeOverride && *activeOverride) || displayResult.Selected))
+        m_State = UpdateState(controlArgs);
 
-    state = [this, state, &graphicsArgs]()
+    m_State = [this, &graphicsArgs]()
     {
-        switch (state)
+        switch (m_State)
         {
         using enum SimulationState;
         case Simulation:
@@ -91,23 +96,24 @@ gol::EditorState gol::SimulationEditor::Update(const SimulationControlResult& co
         std::unreachable();
     }();
 
-    DisplaySimulation(controlArgs.FilePath ? *controlArgs.FilePath : std::filesystem::path { });
     return 
     { 
-        .State = state,
-        .EditingPath = controlArgs.FilePath ? *controlArgs.FilePath : std::filesystem::path { },
+        .CurrentFilePath = m_CurrentFilePath,
+        .State = m_State,
+        .Active = (activeOverride && *activeOverride) || displayResult.Selected,
+		.Closing = displayResult.Closing,
         .SelectionActive = m_SelectionManager.CanDrawGrid(),
 		.UndosAvailable = m_VersionManager.UndosAvailable(),
-		.RedosAvailable = m_VersionManager.RedosAvailable()
+		.RedosAvailable = m_VersionManager.RedosAvailable(),
     };
 }
 
 gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args)
 {
-    GL_DEBUG(const bool success = glfwGetTime() * 1000 >= m_TickDelayMs);
-    if (success)
+    GL_DEBUG(auto elapsed = (glfwGetTime() - m_LastTime) * 1000);
+    if (elapsed >= m_TickDelayMs)
     {
-        GL_DEBUG(glfwSetTime(0));
+        GL_DEBUG(m_LastTime = glfwGetTime());
         m_Grid.Update();
         if (m_Grid.Dead() && !m_SelectionManager.GridAlive())
             return SimulationState::Empty;
@@ -156,12 +162,21 @@ gol::SimulationState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArg
     return SimulationState::Paused;
 }
 
-void gol::SimulationEditor::DisplaySimulation(const std::filesystem::path& path)
+gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bool grabFocus)
 {
-    ImGui::Begin(std::format("{}{}###Simulation", 
-        path.empty() ? "(untitled)" : path.string().c_str(),
-        (!path.empty() && !m_VersionManager.IsSaved()) ? "*" : ""
-        ).c_str(), nullptr);
+    auto label = std::format("{}{}###Simulation{}",
+        m_CurrentFilePath.empty() ? "(untitled)" : m_CurrentFilePath.string().c_str(),
+        (!m_CurrentFilePath.empty() && !m_VersionManager.IsSaved()) ? "*" : "",
+        m_EditorID
+    );
+    
+    bool stayOpen;
+    if (!ImGui::Begin(label.c_str(), &stayOpen))
+    {
+        ImGui::End();
+        return { .Visible = false, .Closing = !stayOpen };
+    }
+    bool windowFocused = ImGui::IsWindowFocused();
     ImGui::BeginChild("Render");
 
     ImDrawListSplitter splitter {};
@@ -178,6 +193,11 @@ void gol::SimulationEditor::DisplaySimulation(const std::filesystem::path& path)
     );
     ImGui::SetCursorPosY(0);
     ImGui::InvisibleButton("##SimulationViewport", ImGui::GetContentRegionAvail());
+    
+    if (grabFocus || (m_TakeKeyboardInput && !ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Escape)))
+        ImGui::SetKeyboardFocusHere(-1);
+
+    m_TakeKeyboardInput = ImGui::IsItemFocused() || windowFocused;
     m_TakeMouseInput = ImGui::IsItemHovered();
 
     splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 1);
@@ -201,6 +221,8 @@ void gol::SimulationEditor::DisplaySimulation(const std::filesystem::path& path)
     splitter.Merge(ImGui::GetWindowDrawList());
     ImGui::EndChild();
     ImGui::End();
+
+    return { .Visible = true, .Selected = m_TakeKeyboardInput, .Closing = !stayOpen };
 }
 
 gol::Rect gol::SimulationEditor::WindowBounds() const
@@ -255,6 +277,9 @@ void gol::SimulationEditor::UpdateVersion(const SimulationControlResult& args)
 
 gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlResult& result)
 {
+    if (result.FromShortcut && !m_TakeKeyboardInput)
+        return result.State;
+
     if (auto* action = std::get_if<GameAction>(&*result.Action))
     {
         switch(*action)
@@ -319,7 +344,6 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
                     "Failed to save file to \n{}"
                     , result.FilePath->string()
                 );
-                
             }
             else
             {
@@ -466,7 +490,7 @@ void gol::SimulationEditor::FillCells()
 
 void gol::SimulationEditor::UpdateDragState()
 {
-    if (!ImGui::IsMouseDragging(ImGuiMouseButton_Right))
+    if (!m_TakeMouseInput || !ImGui::IsMouseDragging(ImGuiMouseButton_Right))
     {
         m_RightDeltaLast = { 0.f, 0.f };
         return;

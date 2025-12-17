@@ -11,7 +11,7 @@
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
-
+#include "Widget.h"
 
 namespace gol
 {
@@ -23,8 +23,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x / 4.f, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_COPY; }
-        virtual bool Enabled(const EditorState& state) const final { return state.SelectionActive; }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_COPY; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.SelectionActive; }
     };
 
     class CutButton : public ActionButton<SelectionAction, false>
@@ -35,8 +35,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_SCISSORS; }
-        virtual bool Enabled(const EditorState& state) const final { return state.SelectionActive && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_SCISSORS; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.SelectionActive && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
     };
 
     class PasteButton : public ActionButton<SelectionAction, false>
@@ -47,8 +47,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_PASTE; }
-        virtual bool Enabled(const EditorState& state) const final { return ImGui::GetClipboardText() && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_PASTE; }
+        virtual bool Enabled(const EditorResult& state) const final { return ImGui::GetClipboardText() && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
     };
 
     class DeleteButton : public ActionButton<SelectionAction, false>
@@ -59,8 +59,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_DELETE_LEFT; }
-        virtual bool Enabled(const EditorState& state) const final { return state.SelectionActive && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_DELETE_LEFT; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.SelectionActive && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
     };
 
     class DeselectButton : public ActionButton<SelectionAction, true>
@@ -71,8 +71,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x / 4.f, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_OBJECT_UNGROUP; }
-        virtual bool Enabled(const EditorState& state) const final { return state.SelectionActive; }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_OBJECT_UNGROUP; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.SelectionActive; }
     };
 
     class RotateButton : public ActionButton<SelectionAction, false>
@@ -83,8 +83,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_ROTATE; }
-        virtual bool Enabled(const EditorState& state) const final { return state.SelectionActive && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_ROTATE; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.SelectionActive && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
     };
 
     class UndoButton : public ActionButton<EditorAction, false>
@@ -95,8 +95,8 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_ARROW_ROTATE_LEFT; }
-        virtual bool Enabled(const EditorState& state) const final { return state.UndosAvailable && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_ARROW_ROTATE_LEFT; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.UndosAvailable && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
     };
 
     class RedoButton : public ActionButton<EditorAction, false>
@@ -107,11 +107,11 @@ namespace gol
         {}
     protected:
         virtual Size2F Dimensions() const final { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_ARROW_ROTATE_RIGHT; }
-        virtual bool Enabled(const EditorState& state) const final { return state.RedosAvailable && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_ARROW_ROTATE_RIGHT; }
+        virtual bool Enabled(const EditorResult& state) const final { return state.RedosAvailable && (state.State == SimulationState::Paint || state.State == SimulationState::Empty); }
     };
 
-    class EditorWidget
+    class EditorWidget : public Widget
     {
     public:
         EditorWidget(const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>& shortcuts = {})
@@ -124,8 +124,9 @@ namespace gol
 			, m_UndoButton    (shortcuts.at(EditorAction   ::Undo    ))
 			, m_RedoButton    (shortcuts.at(EditorAction   ::Redo    ))
         {}
-
-        SimulationControlResult Update(const EditorState& state);
+        friend Widget;
+    public:
+        SimulationControlResult UpdateImpl(const EditorResult& state);
     private:
         CopyButton m_CopyButton;
         CutButton m_CutButton;

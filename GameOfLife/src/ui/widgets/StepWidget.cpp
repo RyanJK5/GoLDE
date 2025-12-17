@@ -5,7 +5,7 @@
 #include "SimulationControlResult.h"
 #include "StepWidget.h"
 
-gol::SimulationControlResult gol::StepWidget::Update(const EditorState& state)
+gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& state)
 {
     ImGui::Text("Step Count");
 
@@ -20,13 +20,14 @@ gol::SimulationControlResult gol::StepWidget::Update(const EditorState& state)
         ImGui::SetItemTooltip("Stepping with large values may cause lag!");
 
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
-    auto action = m_Button.Update(state);
+    auto result = m_Button.Update(state);
     ImGui::Separator();
     ImGui::PopStyleVar();
 
     return 
     {
-        .Action = action,
-        .StepCount = m_StepCount
+        .Action = result.Action,
+        .StepCount = m_StepCount,
+        .FromShortcut = result.FromShortcut
     };
 }

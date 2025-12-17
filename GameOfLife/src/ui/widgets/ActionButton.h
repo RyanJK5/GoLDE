@@ -10,14 +10,19 @@
 #include <unordered_map>
 #include <vector>
 
-#include <print>
-
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "KeyShortcut.h"
 
 namespace gol
 {
+	template <ActionType ActType>
+	struct ActionButtonResult
+	{
+		std::optional<ActType> Action;
+		bool FromShortcut = false;
+	};
+
 	template <ActionType ActType, bool LineBreak>
 	class MultiActionButton
 	{
@@ -28,7 +33,7 @@ namespace gol
 			: m_Shortcuts(shortcuts)
 		{ }
 
-		std::optional<ActType> Update(const EditorState& state)
+		ActionButtonResult<ActType> Update(const EditorResult& state)
 		{
 			if (!Enabled(state))
 			{
@@ -39,7 +44,7 @@ namespace gol
 			if (!m_LineBreak)
 				ImGui::SameLine();
 
-			auto result = [this, state]() -> std::optional<ActType>
+			auto result = [this, state]()
 			{
 				bool active = false;
 				if (Enabled(state))
@@ -47,8 +52,8 @@ namespace gol
 						active = shortcut.Active() || active;
 
 				if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
-					return Action(state);
-				return std::nullopt;
+					return ActionButtonResult<ActType> { Action(state), active };
+				return ActionButtonResult<ActType> { };
 			}();
 			
 			if (!Enabled(state))
@@ -68,11 +73,11 @@ namespace gol
 			return result;
 		}
 	protected:
-		virtual ActType Action(const EditorState& state) const = 0;
+		virtual ActType Action(const EditorResult& state) const = 0;
 		
 		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(const EditorState& state) const = 0;
-		virtual	bool Enabled(const EditorState& state) const = 0;
+		virtual std::string Label(const EditorResult& state) const = 0;
+		virtual	bool Enabled(const EditorResult& state) const = 0;
 	private:
 		bool m_LineBreak = LineBreak;
 
@@ -87,11 +92,11 @@ namespace gol
 			: MultiActionButton<ActType, LineBreak>({{action, shortcuts | KeyShortcut::MapChordsToVector}}), m_Action(action)
 		{ }
 	protected:
-		virtual ActType Action(const EditorState&) const override final { return m_Action; }
+		virtual ActType Action(const EditorResult&) const override final { return m_Action; }
 		
 		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(const EditorState& state) const = 0;
-		virtual	bool Enabled(const EditorState& state) const = 0;
+		virtual std::string Label(const EditorResult& state) const = 0;
+		virtual	bool Enabled(const EditorResult& state) const = 0;
 	private:
 		ActType m_Action;
 	};

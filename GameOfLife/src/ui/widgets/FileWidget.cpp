@@ -15,18 +15,18 @@
 
 gol::UpdateFileButton::UpdateFileButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::UpdateFile, shortcuts) { }
 gol::Size2F     gol::UpdateFileButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 4.f, ActionButton::DefaultButtonHeight }; }
-std::string     gol::UpdateFileButton::Label(const EditorState&) const { return ICON_FA_FILE_ARROW_UP; }
-bool            gol::UpdateFileButton::Enabled(const EditorState& state) const { return state.State != SimulationState::Simulation; }
+std::string     gol::UpdateFileButton::Label(const EditorResult&) const { return ICON_FA_FILE_ARROW_UP; }
+bool            gol::UpdateFileButton::Enabled(const EditorResult& state) const { return state.State != SimulationState::Simulation; }
 
 gol::SaveButton::SaveButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::Save, shortcuts) { }
 gol::Size2F     gol::SaveButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButton::DefaultButtonHeight }; }
-std::string     gol::SaveButton::Label(const EditorState&) const { return ICON_FA_FLOPPY_DISK; }
-bool            gol::SaveButton::Enabled(const EditorState& state) const { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
+std::string     gol::SaveButton::Label(const EditorResult&) const { return ICON_FA_FLOPPY_DISK; }
+bool            gol::SaveButton::Enabled(const EditorResult& state) const { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
 
 gol::LoadButton::LoadButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::Load, shortcuts) {}
 gol::Size2F     gol::LoadButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButton::DefaultButtonHeight }; }
-std::string     gol::LoadButton::Label(const EditorState&) const { return ICON_FA_FOLDER_OPEN; }
-bool            gol::LoadButton::Enabled(const EditorState& state) const { return state.State != SimulationState::Simulation; }
+std::string     gol::LoadButton::Label(const EditorResult&) const { return ICON_FA_FOLDER_OPEN; }
+bool            gol::LoadButton::Enabled(const EditorResult& state) const { return state.State != SimulationState::Simulation; }
 
 gol::FileWidget::FileWidget(std::span<const ImGuiKeyChord> updateFileShortcuts, 
 		std::span<const ImGuiKeyChord> saveShortcuts, std::span<const ImGuiKeyChord> loadShortcuts)
@@ -36,7 +36,7 @@ gol::FileWidget::FileWidget(std::span<const ImGuiKeyChord> updateFileShortcuts,
 	, m_FileNotOpened("File Not Opened")
 { }
 
-gol::SimulationControlResult gol::FileWidget::Update(const EditorState& state)
+gol::SimulationControlResult gol::FileWidget::UpdateImpl(const EditorResult& state)
 {
 	auto popupState = m_FileNotOpened.Update();
 	if (popupState == PopupWindowState::Success)
@@ -45,7 +45,7 @@ gol::SimulationControlResult gol::FileWidget::Update(const EditorState& state)
 	auto result = m_UpdateFileButton.Update(state);
 
 	auto saveResult = m_SaveButton.Update(state);
-	if (!result)
+	if (!result.Action)
 		result = saveResult;
 
 	ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
@@ -53,22 +53,22 @@ gol::SimulationControlResult gol::FileWidget::Update(const EditorState& state)
 	ImGui::Separator();
 	ImGui::PopStyleVar();
 
-	if (!result)
+	if (!result.Action)
 		result = loadResult;
-	if (!result)
-		return { .FilePath = m_WorkingPath };
+	if (!result.Action)
+		return { .FilePath = state.CurrentFilePath };
 	
-	auto filePath = [&result, this] -> std::expected<std::filesystem::path, FileDialogFailure>
+	auto filePath = [&result, state] -> std::expected<std::filesystem::path, FileDialogFailure>
 	{
-		switch (*result)
+		switch (*result.Action)
 		{
 		using enum EditorAction;
 		case UpdateFile:
-			if (!m_WorkingPath.empty())
-				return m_WorkingPath;
+			if (!state.CurrentFilePath.empty())
+				return state.CurrentFilePath;
 			return FileDialog::SaveFileDialog("gol", "");
 		case Save:
-			return FileDialog::SaveFileDialog("gol", m_WorkingPath.string());
+			return FileDialog::SaveFileDialog("gol", state.CurrentFilePath.string());
 		case Load:
 			return FileDialog::OpenFileDialog("gol", "");
 		}
@@ -82,9 +82,8 @@ gol::SimulationControlResult gol::FileWidget::Update(const EditorState& state)
 			m_FileNotOpened.Active = true;
 			m_FileNotOpened.Message = filePath.error().Message;
 		}
-		return { .FilePath = m_WorkingPath };
+		return { .FilePath = state.CurrentFilePath };
 	}
 
-	m_WorkingPath = *filePath;
-	return { .Action = result, .FilePath = *filePath };
+	return { .Action = result.Action, .FilePath = *filePath, .FromShortcut = result.FromShortcut };
 }

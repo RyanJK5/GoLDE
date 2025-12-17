@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <memory>
 #include <set>
 #include <vector>
 

@@ -243,7 +243,6 @@ std::expected<gol::VersionChange, std::string> gol::SelectionManager::Load(const
     if (!result)
         return std::unexpected { std::move(result.error()) };
 
-	m_LockSelection = result->Offset != Vec2{ 0, 0 };
     m_Selected = std::move(result->Grid);
 	m_AnchorSelection = result->Offset;
 	m_SentinelSelection = result->Offset + Vec2 { m_Selected->Width() - 1, m_Selected->Height() - 1 };

@@ -15,7 +15,16 @@
 
 gol::ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath)
 {
-    GL_DEBUG(m_ProgramID = glCreateProgram());
+    auto itr = s_Shaders.find(shaderFilePath);
+    if (itr != s_Shaders.end())
+    {
+        itr->second.RefCount++;
+        m_ControlBlock = &itr->second;
+        return;
+    }
+
+	auto controlBlock = ShaderControlBlock { .RefCount = 1 };
+    GL_DEBUG(controlBlock.ProgramID = glCreateProgram());
     try
     {
         std::optional<IDPair> shaderIds = ParseShader(shaderFilePath);
@@ -23,22 +32,25 @@ gol::ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath)
         if (!shaderIds)
             throw GLException(std::format("File '{}' could not be read", shaderFilePath.string()));
 
-        CreateShader(m_ProgramID, shaderIds.value().first);
-        CreateShader(m_ProgramID, shaderIds.value().second);
+        CreateShader(controlBlock.ProgramID, shaderIds.value().first);
+        CreateShader(controlBlock.ProgramID, shaderIds.value().second);
 
-        GL_DEBUG(glLinkProgram(m_ProgramID));
-        GL_DEBUG(glValidateProgram(m_ProgramID));
+        GL_DEBUG(glLinkProgram(controlBlock.ProgramID));
+        GL_DEBUG(glValidateProgram(controlBlock.ProgramID));
     }
     catch (GLException e)
     {
-        GL_DEBUG(glDeleteProgram(m_ProgramID));
+        GL_DEBUG(glDeleteProgram(controlBlock.ProgramID));
         throw e;
     }
+
+    s_Shaders[shaderFilePath] = controlBlock;
+	m_ControlBlock = &s_Shaders[shaderFilePath];
 }
 
 gol::ShaderManager::ShaderManager(ShaderManager&& other) noexcept
 {
-    m_ProgramID = std::exchange(other.m_ProgramID, 0);
+    m_ControlBlock = std::exchange(other.m_ControlBlock, nullptr);
 }
 
 gol::ShaderManager& gol::ShaderManager::operator=(ShaderManager&& other) noexcept
@@ -46,7 +58,7 @@ gol::ShaderManager& gol::ShaderManager::operator=(ShaderManager&& other) noexcep
     if (this != &other)
     {
         Destroy();
-        m_ProgramID = std::exchange(other.m_ProgramID, 0);
+        m_ControlBlock = std::exchange(other.m_ControlBlock, nullptr);
     }
     return *this;
 }
@@ -56,11 +68,29 @@ gol::ShaderManager::~ShaderManager()
     Destroy();
 }
 
-void gol::ShaderManager::Destroy() { GL_DEBUG(glDeleteProgram(m_ProgramID)); }
+void gol::ShaderManager::Destroy() 
+{ 
+    if (!m_ControlBlock)
+        return;
+
+    m_ControlBlock->RefCount--;
+    if (m_ControlBlock->RefCount != 0)
+        return;
+
+    GL_DEBUG(glDeleteProgram(m_ControlBlock->ProgramID));
+    for (auto itr = s_Shaders.begin(); itr != s_Shaders.end(); ++itr)
+    {
+        if (&itr->second == m_ControlBlock)
+        {
+            s_Shaders.erase(itr);
+            break;
+        }
+    }
+}
 
 uint32_t gol::ShaderManager::Program() const
 {
-	return m_ProgramID;
+	return !m_ControlBlock ? 0 : m_ControlBlock->ProgramID;
 }
 
 uint32_t gol::ShaderManager::CompileShader(uint32_t type, std::string_view source) const
@@ -148,7 +178,8 @@ std::optional<gol::ShaderManager::IDPair> gol::ShaderManager::ParseShader(const 
 
 void gol::ShaderManager::AttachUniformVec4(std::string_view label, const glm::vec4& vec)
 {
-	GL_DEBUG(glUniform4f(UniformLocation(label), vec.x, vec.y, vec.z, vec.w));
+    auto loc = UniformLocation(label);
+	GL_DEBUG(glUniform4f(loc, vec.x, vec.y, vec.z, vec.w));
 }
 
 void gol::ShaderManager::AttachUniformMatrix4(std::string_view label, const glm::mat4& matrix)
@@ -158,14 +189,14 @@ void gol::ShaderManager::AttachUniformMatrix4(std::string_view label, const glm:
 
 int32_t gol::ShaderManager::UniformLocation(std::string_view label)
 {
-    if (m_Uniforms.find(label) != m_Uniforms.end())
-        return m_Uniforms[label];
-
-    GL_DEBUG(int location = glGetUniformLocation(m_ProgramID, label.data()));
+    if (m_ControlBlock->Uniforms.find(label) != m_ControlBlock->Uniforms.end())
+        return m_ControlBlock->Uniforms[label];
+    
+    GL_DEBUG(int location = glGetUniformLocation(Program(), label.data()));
     if (location == -1)
         throw GLException(std::format("Could not locate uniform '{}' in shader file", label));
     
-    m_Uniforms[label] = location;
+    m_ControlBlock->Uniforms[label] = location;
     return location;
 }
 

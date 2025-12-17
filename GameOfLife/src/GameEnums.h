@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <filesystem>
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -15,10 +16,12 @@ namespace gol
 		Paint, Simulation, Paused, Empty
 	};
 
-	struct EditorState
+	struct EditorResult
 	{
-		SimulationState State = SimulationState::Empty;
-		std::filesystem::path EditingPath;
+		std::filesystem::path CurrentFilePath;
+		SimulationState State = SimulationState::Paint;
+		bool Active = true;
+		bool Closing = false;
 		bool SelectionActive = false;
 		bool UndosAvailable = false;
 		bool RedosAvailable = false;

@@ -11,6 +11,7 @@
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
+#include "Widget.h"
 
 namespace gol
 {
@@ -22,11 +23,11 @@ namespace gol
         { }
     protected:
         virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorState&) const override final { return ICON_FA_FORWARD_STEP; }
-        virtual bool Enabled(const EditorState& state) const override final { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
+        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_FORWARD_STEP; }
+        virtual bool Enabled(const EditorResult& state) const override final { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
     };
 
-	class StepWidget
+	class StepWidget : public Widget
 	{
     public:
         static constexpr int32_t BigStep = 10;
@@ -35,8 +36,10 @@ namespace gol
         StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
             : m_Button(shortcuts)
         { }
+    friend Widget;
 
-		SimulationControlResult Update(const EditorState& state);
+    private:
+		SimulationControlResult UpdateImpl(const EditorResult& state);
 	private:
         int32_t m_StepCount = 1;
 

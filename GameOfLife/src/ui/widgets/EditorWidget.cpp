@@ -5,24 +5,19 @@
 #include "GameEnums.h"
 #include "SimulationControlResult.h"
 
-gol::SimulationControlResult gol::EditorWidget::Update(const EditorState& state)
+gol::SimulationControlResult gol::EditorWidget::UpdateImpl(const EditorResult& state)
 {
-	auto result = std::optional<ActionVariant> {};
-	const auto updateIfNone = [&result](std::optional<ActionVariant> update)
-	{
-		if (!result)
-			result = update;
-	};
+	auto result = SimulationControlResult {};
 	
-	updateIfNone(m_CopyButton.Update(state));
-	updateIfNone(m_PasteButton.Update(state));
-	updateIfNone(m_CutButton.Update(state));
-	updateIfNone(m_DeleteButton.Update(state));
-
-	updateIfNone(m_DeselectButton.Update(state));
-	updateIfNone(m_RotateButton.Update(state));
-	updateIfNone(m_UndoButton.Update(state));
-	updateIfNone(m_RedoButton.Update(state));
+	UpdateResult(result, m_CopyButton.Update(state));
+	UpdateResult(result, m_PasteButton.Update(state));
+	UpdateResult(result, m_CutButton.Update(state));
+	UpdateResult(result, m_DeleteButton.Update(state));
+				 
+	UpdateResult(result, m_DeselectButton.Update(state));
+	UpdateResult(result, m_RotateButton.Update(state));
+	UpdateResult(result, m_UndoButton.Update(state));
+	UpdateResult(result, m_RedoButton.Update(state));
 	
-	return { .Action = result };
+	return result;
 }

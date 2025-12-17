@@ -21,7 +21,7 @@ gol::SelectionShortcuts::SelectionShortcuts(
     })
 { }
 
-gol::SimulationControlResult gol::SelectionShortcuts::Update(const EditorState& state)
+gol::SimulationControlResult gol::SelectionShortcuts::Update(const EditorResult& state)
 {
 	SimulationControlResult result { .NudgeSize = 1 };
     for (auto&& [action, actionShortcuts] : Shortcuts)
@@ -40,6 +40,8 @@ gol::SimulationControlResult gol::SelectionShortcuts::Update(const EditorState& 
         if (resultActive && !result.Action)
             result.Action = action;
     }
+    if (result.Action)
+		result.FromShortcut = true;
     return result;
 }
 
@@ -74,9 +76,11 @@ void gol::SimulationControl::FillResults(SimulationControlResult& current, const
 		current.FilePath = update.FilePath;
     if (!current.GridLines)
         current.GridLines = update.GridLines;
+    if (!current.FromShortcut)
+		current.FromShortcut = update.FromShortcut;
 }
 
-gol::SimulationControlResult gol::SimulationControl::Update(const EditorState& state)
+gol::SimulationControlResult gol::SimulationControl::Update(const EditorResult& state)
 {
     ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNavInputs);
 

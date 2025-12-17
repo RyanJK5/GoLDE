@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <imgui/imgui.h>
+#include <vector>
 
 #include "GameEnums.h"
 #include "Graphics2D.h"
@@ -60,13 +61,17 @@ namespace gol
 
 		void InitImGUI(const std::filesystem::path& stylePath);
 		void CreateDockspace();
+		void CreateEditorDockspace();
 		void InitDockspace(uint32_t dockspaceID, ImVec2 windowSize);
-
 	private:
-		EditorState m_State = { .State = SimulationState::Paint };
+		EditorResult m_State = { .State = SimulationState::Paint };
+		uint32_t m_LastActive = 0;
 
 		OpenGLWindow m_Window;
-		SimulationEditor m_Editor;
+
+		std::vector<SimulationEditor> m_Editors;
+		size_t m_ActiveEditorID = 0;
+
 		SimulationControl m_Control;
 		PresetSelection m_PresetSelection;
 		ImFont* m_Font = nullptr;

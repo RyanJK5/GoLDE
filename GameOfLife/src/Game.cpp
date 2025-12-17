@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -38,10 +39,16 @@ gol::OpenGLWindow::~OpenGLWindow()
 
 gol::Game::Game()
     : m_Window(DefaultWindowWidth, DefaultWindowHeight)
-    , m_Editor({DefaultWindowWidth, DefaultWindowHeight}, {DefaultGridWidth, DefaultGridHeight})
+    , m_Editors()
     , m_Control(*(StyleLoader::LoadYAML<ImVec4>(std::filesystem::path("config") / "style.yaml")))
     , m_PresetSelection(std::filesystem::current_path() / "templates")
 {
+    m_Editors.emplace_back(
+        0u,
+        std::filesystem::path { },
+        Size2 { DefaultWindowWidth, DefaultWindowHeight },
+        Size2 { DefaultGridWidth, DefaultGridHeight }
+    );
     InitImGUI(std::filesystem::path("config") / "style.yaml");
 }
 
@@ -54,17 +61,65 @@ gol::Game::~Game()
 
 void gol::Game::Begin()
 {
-    std::println("Temp");
     while (Open())
     {
         BeginFrame();
         
         auto controlResult = m_Control.Update(m_State);
-		if (controlResult.FilePath)
-			m_State.EditingPath = *controlResult.FilePath;
+        bool pastWindowEnabled = true;
+        auto newWindowIndex = m_LastActive;
+        if (controlResult.FilePath && controlResult.Action && controlResult.Action == ActionVariant { EditorAction::Load })
+        {
+            auto pathPredicate = [path = controlResult.FilePath](const SimulationEditor& editor) 
+            { 
+                return editor.CurrentFilePath() == path; 
+            };
+
+            if (std::ranges::none_of(m_Editors, pathPredicate))
+            {
+                m_Editors.emplace_back(
+                    static_cast<uint32_t>(m_Editors.size()),
+				    *controlResult.FilePath,
+                    Size2 { DefaultWindowWidth, DefaultWindowHeight },
+                    Size2 { DefaultGridWidth, DefaultGridHeight }
+			    );
+
+                CreateEditorDockspace();
+            }
+            pastWindowEnabled = false;
+        }
 
         auto presetResult = m_PresetSelection.Update();
-        m_State = m_Editor.Update(controlResult, presetResult);
+        
+        ImGui::Begin("###EditorDockspace", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration);
+        ImGuiID subDockspace = ImGui::GetID("###EditorDockspace");
+        ImGui::DockSpace(subDockspace, ImGui::GetContentRegionAvail(), ImGuiDockNodeFlags_None);
+
+        if (m_LastActive < m_Editors.size())
+    		std::swap(m_Editors[m_LastActive], m_Editors.back());
+        m_LastActive = m_Editors.size() - 1;
+        for (size_t i = 0; i < m_Editors.size(); i++)
+        {
+            auto activeOverride = [&]() -> std::optional<bool>
+            {
+                if (newWindowIndex != i && !pastWindowEnabled)
+                    return false;
+                if (m_LastActive == i)
+                    return true;
+                return std::nullopt;
+            }();
+            auto result = m_Editors[i].Update(activeOverride, controlResult, presetResult);
+            
+            if (result.Active)
+            {
+				m_State = result;
+				m_LastActive = i;
+            }
+            if (result.Closing)
+				m_Editors.erase(m_Editors.begin() + i--);
+        }
+
+        ImGui::End();
 
         EndFrame();
     }
@@ -144,6 +199,7 @@ void gol::Game::CreateDockspace()
     if (m_Startup)
     {
         InitDockspace(dockspaceID, windowSize);
+        CreateEditorDockspace();
         m_Startup = false;
     }
 }
@@ -175,7 +231,19 @@ void gol::Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize)
     );
 
     ImGui::DockBuilderDockWindow("Presets", downID);
-    ImGui::DockBuilderDockWindow("###Simulation", rightID);
+    ImGui::DockBuilderDockWindow("###EditorDockspace", rightID);
     ImGui::DockBuilderDockWindow("Simulation Control", leftID);
     ImGui::DockBuilderFinish(dockspaceID);
+}
+
+void gol::Game::CreateEditorDockspace()
+{
+	ImGuiID editorDockspaceID = ImGui::GetID("###EditorDockspace");
+	for (size_t i = 0; i < m_Editors.size(); i++)
+    {
+        ImGui::DockBuilderDockWindow(
+            std::format("###Simulation{}", i).c_str(),
+            editorDockspaceID
+        );
+    }
 }

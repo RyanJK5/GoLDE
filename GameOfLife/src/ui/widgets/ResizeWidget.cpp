@@ -5,7 +5,7 @@
 #include "ResizeWidget.h"
 #include "SimulationControlResult.h"
 
-gol::SimulationControlResult gol::ResizeWidget::Update(const EditorState& state)
+gol::SimulationControlResult gol::ResizeWidget::UpdateImpl(const EditorResult& state)
 {
     const float totalWidth = ImGui::GetContentRegionAvail().x;
     ImGui::SetCursorPosX(ImGui::GetStyle().FramePadding.x * 3);
@@ -25,8 +25,8 @@ gol::SimulationControlResult gol::ResizeWidget::Update(const EditorState& state)
 
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
 
-    auto action = m_Button.Update(state);
-	if (action == EditorAction::Resize && (m_Dimensions.Width == 0 || m_Dimensions.Height == 0))
+    auto result = m_Button.Update(state);
+	if (result.Action == EditorAction::Resize && (m_Dimensions.Width == 0 || m_Dimensions.Height == 0))
     {
         m_Dimensions.Width = 0;
         m_Dimensions.Height = 0;
@@ -37,7 +37,8 @@ gol::SimulationControlResult gol::ResizeWidget::Update(const EditorState& state)
 
     return 
     {
-        .Action = action,
-        .NewDimensions = m_Dimensions
+        .Action = result.Action,
+        .NewDimensions = m_Dimensions,
+        .FromShortcut = result.FromShortcut
     };
 }

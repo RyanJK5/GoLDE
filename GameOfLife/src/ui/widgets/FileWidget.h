@@ -11,6 +11,7 @@
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
+#include "Widget.h"
 
 namespace gol
 {
@@ -20,8 +21,8 @@ namespace gol
 		UpdateFileButton(std::span<const ImGuiKeyChord> shortcuts);
 	protected:
 		virtual Size2F Dimensions() const override final;
-		virtual std::string Label(const EditorState& state) const override final;
-		virtual bool Enabled(const EditorState& state) const override final;
+		virtual std::string Label(const EditorResult& state) const override final;
+		virtual bool Enabled(const EditorResult& state) const override final;
 	};
 
 	class SaveButton : public ActionButton<EditorAction, false>
@@ -30,8 +31,8 @@ namespace gol
 		SaveButton(std::span<const ImGuiKeyChord> shortcuts);
 	protected:
 		virtual Size2F Dimensions() const override final;
-		virtual std::string Label(const EditorState& state) const override final;
-		virtual bool Enabled(const EditorState& state) const override final;
+		virtual std::string Label(const EditorResult& state) const override final;
+		virtual bool Enabled(const EditorResult& state) const override final;
 	};
 
 	class LoadButton : public ActionButton<EditorAction, false>
@@ -40,20 +41,19 @@ namespace gol
 		LoadButton(std::span<const ImGuiKeyChord> shortcuts);
 	protected:
 		virtual Size2F Dimensions() const override final;
-		virtual std::string Label(const EditorState& state) const override final;
-		virtual bool Enabled(const EditorState& state) const override final;
+		virtual std::string Label(const EditorResult& state) const override final;
+		virtual bool Enabled(const EditorResult& state) const override final;
 	};
 
-	class FileWidget
+	class FileWidget : public Widget
 	{
 	public:
 		FileWidget(std::span<const ImGuiKeyChord> updateFileShortcuts,
 			std::span<const ImGuiKeyChord> saveShortcuts, std::span<const ImGuiKeyChord> loadShortcuts);
-
-		SimulationControlResult Update(const EditorState& state);
+		friend Widget;
 	private:
-		std::filesystem::path m_WorkingPath;
-
+		SimulationControlResult UpdateImpl(const EditorResult& state);
+	private:
 		UpdateFileButton m_UpdateFileButton;
 		SaveButton m_SaveButton;
 		LoadButton m_LoadButton;

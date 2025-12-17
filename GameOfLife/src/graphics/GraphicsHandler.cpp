@@ -32,12 +32,12 @@ struct FrameBufferBinder
 };
 
 gol::GraphicsHandler::GraphicsHandler(
-    const std::filesystem::path& shaderFilePath, 
+    const std::filesystem::path& shader,
     int32_t windowWidth, int32_t windowHeight,
     Color bgColor
 )
     : m_BgColor(bgColor)
-    , m_Shader(shaderFilePath)
+    , m_Shader(shader)
 {
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer.ID()));
 

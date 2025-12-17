@@ -87,6 +87,7 @@
     <ClInclude Include="src\ui\VersionManager.h" />
     <ClInclude Include="src\ui\SimulationControlResult.h" />
     <ClInclude Include="src\ui\dialogs\WarnWindow.h" />
+    <ClInclude Include="src\ui\widgets\Widget.h" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\font\arial.ttf" />
