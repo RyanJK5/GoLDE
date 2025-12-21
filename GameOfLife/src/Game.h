@@ -50,6 +50,8 @@ namespace gol
 	
 		void Begin();
 
+		void UpdateEditors(const SimulationControlResult& controlResult, const PresetSelectionResult& presetResult);
+
 		static inline bool GetKeyState(ImGuiKey keyCode) { return ImGui::IsKeyDown(keyCode); }
 		static inline bool GetMouseState(int32_t mouseButtonCode) { return ImGui::IsMouseDown(mouseButtonCode); }
 		static inline Vec2F CursorPos() { return ImGui::GetMousePos(); }
@@ -61,7 +63,10 @@ namespace gol
 
 		void InitImGUI(const std::filesystem::path& stylePath);
 		void CreateDockspace();
+
+		bool CheckForNewEditors(const SimulationControlResult& controlResult);
 		void CreateEditorDockspace();
+		
 		void InitDockspace(uint32_t dockspaceID, ImVec2 windowSize);
 	private:
 		EditorResult m_State = { .State = SimulationState::Paint };

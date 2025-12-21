@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/fwd.hpp>
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <limits>
 #include <locale>
 #include <optional>
@@ -171,6 +172,9 @@ gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bo
     );
     
     bool stayOpen;
+    auto windowClass = ImGuiWindowClass{};
+    windowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoCloseButton;
+    ImGui::SetNextWindowClass(&windowClass);
     if (!ImGui::Begin(label.c_str(), &stayOpen))
     {
         ImGui::End();

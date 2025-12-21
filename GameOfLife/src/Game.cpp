@@ -1,17 +1,25 @@
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
+#include <format>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-#include <filesystem>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <optional>
+#include <utility>
 
 #include "Game.h"
 #include "GLException.h"
 #include "ConfigLoader.h"
 #include "Logging.h"
+#include "GameEnums.h"
+#include "Graphics2D.h"
+#include "SimulationEditor.h"
+#include "PresetSelectionResult.h"
+#include "SimulationControlResult.h"
  
 gol::OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
     : Bounds(0, 0, width, height)
@@ -66,63 +74,52 @@ void gol::Game::Begin()
         BeginFrame();
         
         auto controlResult = m_Control.Update(m_State);
-        bool pastWindowEnabled = true;
-        auto newWindowIndex = m_LastActive;
-        if (controlResult.FilePath && controlResult.Action && controlResult.Action == ActionVariant { EditorAction::Load })
-        {
-            auto pathPredicate = [path = controlResult.FilePath](const SimulationEditor& editor) 
-            { 
-                return editor.CurrentFilePath() == path; 
-            };
-
-            if (std::ranges::none_of(m_Editors, pathPredicate))
-            {
-                m_Editors.emplace_back(
-                    static_cast<uint32_t>(m_Editors.size()),
-				    *controlResult.FilePath,
-                    Size2 { DefaultWindowWidth, DefaultWindowHeight },
-                    Size2 { DefaultGridWidth, DefaultGridHeight }
-			    );
-
-                CreateEditorDockspace();
-            }
-            pastWindowEnabled = false;
-        }
-
         auto presetResult = m_PresetSelection.Update();
-        
-        ImGui::Begin("###EditorDockspace", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration);
-        ImGuiID subDockspace = ImGui::GetID("###EditorDockspace");
-        ImGui::DockSpace(subDockspace, ImGui::GetContentRegionAvail(), ImGuiDockNodeFlags_None);
-
-        if (m_LastActive < m_Editors.size())
-    		std::swap(m_Editors[m_LastActive], m_Editors.back());
-        m_LastActive = m_Editors.size() - 1;
-        for (size_t i = 0; i < m_Editors.size(); i++)
-        {
-            auto activeOverride = [&]() -> std::optional<bool>
-            {
-                if (newWindowIndex != i && !pastWindowEnabled)
-                    return false;
-                if (m_LastActive == i)
-                    return true;
-                return std::nullopt;
-            }();
-            auto result = m_Editors[i].Update(activeOverride, controlResult, presetResult);
-            
-            if (result.Active)
-            {
-				m_State = result;
-				m_LastActive = i;
-            }
-            if (result.Closing)
-				m_Editors.erase(m_Editors.begin() + i--);
-        }
-
-        ImGui::End();
+        UpdateEditors(controlResult, presetResult);
 
         EndFrame();
     }
+}
+
+void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, const PresetSelectionResult& presetResult)
+{
+    ImGui::Begin("###EditorDockspace", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration);
+    
+    ImGuiID subDockspace = ImGui::GetID("###EditorDockspace");
+    ImGui::DockSpace(subDockspace, ImGui::GetContentRegionAvail(), ImGuiDockNodeFlags_None);
+    if (m_Startup)
+		CreateEditorDockspace();
+
+    auto newWindowIndex = m_LastActive;
+    bool pastWindowEnabled = CheckForNewEditors(controlResult);
+
+
+    if (m_LastActive < m_Editors.size())
+        std::swap(m_Editors[m_LastActive], m_Editors.back());
+    m_LastActive = m_Editors.size() - 1;
+    for (size_t i = 0; i < m_Editors.size(); i++)
+    {
+        auto activeOverride = [&]() -> std::optional<bool>
+        {
+            if (newWindowIndex != i && !pastWindowEnabled)
+                return false;
+            if (m_LastActive == i)
+                return true;
+            return std::nullopt;
+        }();
+
+        auto result = m_Editors[i].Update(activeOverride, controlResult, presetResult);
+
+        if (result.Active)
+        {
+            m_State = result;
+            m_LastActive = i;
+        }
+        if (result.Closing)
+            m_Editors.erase(m_Editors.begin() + i--);
+    }
+
+    ImGui::End();
 }
 
 void gol::Game::InitImGUI(const std::filesystem::path& stylePath)
@@ -139,6 +136,8 @@ void gol::Game::InitImGUI(const std::filesystem::path& stylePath)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     io.ConfigDebugHighlightIdConflicts = true;
+
+    io.IniFilename = nullptr;
 
     auto path = std::filesystem::path("resources") / "font" / "arial.ttf";
     m_Font = io.Fonts->AddFontFromFileTTF(path.string().c_str(), 30.0f);
@@ -173,6 +172,7 @@ void gol::Game::BeginFrame()
 
 void gol::Game::EndFrame()
 {
+	m_Startup = false;
     ImGui::PopFont();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -197,11 +197,7 @@ void gol::Game::CreateDockspace()
     ImGuiID dockspaceID = ImGui::GetID("DockSpace");
     ImGui::DockSpaceOverViewport(dockspaceID, ImGui::GetMainViewport());
     if (m_Startup)
-    {
         InitDockspace(dockspaceID, windowSize);
-        CreateEditorDockspace();
-        m_Startup = false;
-    }
 }
 
 void gol::Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize)
@@ -209,7 +205,6 @@ void gol::Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize)
     ImGui::DockBuilderRemoveNode(dockspaceID);
     ImGui::DockBuilderAddNode(
         dockspaceID,
-        
         ImGuiDockNodeFlags_PassthruCentralNode | static_cast<ImGuiDockNodeFlags>(ImGuiDockNodeFlags_DockSpace)
     );
     ImGui::DockBuilderSetNodeSize(dockspaceID, windowSize);
@@ -236,14 +231,48 @@ void gol::Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize)
     ImGui::DockBuilderFinish(dockspaceID);
 }
 
+bool gol::Game::CheckForNewEditors(const SimulationControlResult& controlResult)
+{
+    if (!controlResult.FilePath)
+        return true;
+    if (!controlResult.Action)
+		return true;
+	if (controlResult.Action != ActionVariant{ EditorAction::Load })
+        return true;
+
+    const bool fileOpen = std::ranges::any_of(m_Editors, [path = controlResult.FilePath](const SimulationEditor& editor) 
+    { 
+        return editor.CurrentFilePath() == path; 
+    });
+    if (fileOpen)
+        return false;
+
+    m_Editors.emplace_back(
+        static_cast<uint32_t>(m_Editors.size()),
+        *controlResult.FilePath,
+        Size2{ DefaultWindowWidth, DefaultWindowHeight },
+        Size2{ DefaultGridWidth, DefaultGridHeight }
+    );
+
+    CreateEditorDockspace();
+
+    return false;
+}
+
 void gol::Game::CreateEditorDockspace()
 {
 	ImGuiID editorDockspaceID = ImGui::GetID("###EditorDockspace");
-	for (size_t i = 0; i < m_Editors.size(); i++)
+    auto id = ImGui::DockBuilderAddNode(
+        editorDockspaceID,
+        ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_DockSpace
+    );
+
+    for (size_t i = 0; i < m_Editors.size(); i++)
     {
         ImGui::DockBuilderDockWindow(
             std::format("###Simulation{}", i).c_str(),
             editorDockspaceID
         );
     }
+    ImGui::DockBuilderFinish(editorDockspaceID);
 }
