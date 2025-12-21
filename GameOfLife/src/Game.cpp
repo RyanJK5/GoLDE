@@ -285,7 +285,7 @@ bool gol::Game::WindowCanClose()
     m_UnsavedWarning.Active = true;
     m_UnsavedWarning.Message = "The following files have unsaved changes:";
     for (const auto& fileName : fileNames)
-        m_UnsavedWarning.Message += std::format("\n-{}", fileName);
+        m_UnsavedWarning.Message += std::format("\n- {}", fileName);
     m_UnsavedWarning.Message += "\nAre you sure you want to close the application without saving?";
 
     return false;
