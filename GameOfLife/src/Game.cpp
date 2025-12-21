@@ -23,6 +23,7 @@
 #include <cassert>
 #include <vector>
 #include "PopupWindow.h"
+#include <ranges>
  
 gol::OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
     : Bounds(0, 0, width, height)
@@ -269,8 +270,23 @@ bool gol::Game::WindowCanClose()
     if (std::ranges::all_of(m_Editors, [](const auto& editor) { return editor.IsSaved(); }))
         return true;
 
-	m_UnsavedWarning.Active = true;
-	m_UnsavedWarning.Message = "One or more files have unsaved changes. Are you sure you want to close the application without saving?";
+    const auto fileStringRepresentation = [](const SimulationEditor& editor){
+        return editor.CurrentFilePath().empty()
+            ? "(untitled)"
+            : editor.CurrentFilePath().filename().string();
+    };
+    
+    auto fileNames = m_Editors
+        | std::views::filter([](const auto& editor) { return !editor.IsSaved(); })
+        | std::views::transform(fileStringRepresentation)
+        | std::ranges::to<std::vector>();
+    std::ranges::sort(fileNames);
+
+    m_UnsavedWarning.Active = true;
+    m_UnsavedWarning.Message = "The following files have unsaved changes:";
+    for (const auto& fileName : fileNames)
+        m_UnsavedWarning.Message += std::format("\n-{}", fileName);
+    m_UnsavedWarning.Message += "\nAre you sure you want to close the application without saving?";
 
     return false;
 }
