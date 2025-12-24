@@ -214,6 +214,32 @@ void gol::GameGrid::RotateGrid(bool clockwise)
 	m_Data = newSet;
 }
 
+void gol::GameGrid::FlipGrid(bool vertical)
+{
+	std::set<Vec2> newData;
+	if (!Bounded())
+	{
+		for (const auto& pos : m_Data)
+		{
+			if (vertical)
+				newData.insert({ pos.X, -pos.Y });
+			else
+				newData.insert({ -pos.X, pos.Y });
+		}
+	}
+	else
+	{
+		for (const auto& pos : m_Data)
+		{
+			if (vertical)
+				newData.insert({ pos.X, m_Height - 1 - pos.Y });
+			else
+				newData.insert({m_Width - 1 - pos.X, pos.Y});
+		}
+	}
+	m_Data = newData;
+}
+
 std::optional<bool> gol::GameGrid::Get(int32_t x, int32_t y) const
 {
 	return Get({ x, y });

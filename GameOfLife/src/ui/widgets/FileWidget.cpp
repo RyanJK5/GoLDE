@@ -16,12 +16,15 @@
 gol::NewFileButton::NewFileButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::NewFile, shortcuts) {}
 gol::Size2F     gol::NewFileButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 4.f, ActionButton::DefaultButtonHeight }; }
 std::string     gol::NewFileButton::Label(const EditorResult&) const { return ICON_FA_FILE_CIRCLE_PLUS; }
-bool            gol::NewFileButton::Enabled(const EditorResult& state) const { return state.State != SimulationState::Simulation; }
+bool            gol::NewFileButton::Enabled(const EditorResult&) const { return true; }
 
 gol::UpdateFileButton::UpdateFileButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::UpdateFile, shortcuts) { }
 gol::Size2F     gol::UpdateFileButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButton::DefaultButtonHeight }; }
 std::string     gol::UpdateFileButton::Label(const EditorResult&) const { return ICON_FA_FILE_ARROW_UP; }
-bool            gol::UpdateFileButton::Enabled(const EditorResult& state) const { return state.State != SimulationState::Simulation; }
+bool            gol::UpdateFileButton::Enabled(const EditorResult& state) const 
+{ 
+	return (state.CurrentFilePath.empty() && state.State == SimulationState::Paused) || state.State == SimulationState::Paint || state.State == SimulationState::Empty; 
+}
 
 gol::SaveButton::SaveButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::Save, shortcuts) { }
 gol::Size2F     gol::SaveButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButton::DefaultButtonHeight }; }
@@ -31,7 +34,7 @@ bool            gol::SaveButton::Enabled(const EditorResult& state) const { retu
 gol::LoadButton::LoadButton(std::span<const ImGuiKeyChord> shortcuts) : ActionButton(EditorAction::Load, shortcuts) {}
 gol::Size2F     gol::LoadButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
 std::string     gol::LoadButton::Label(const EditorResult&) const { return ICON_FA_FOLDER_OPEN; }
-bool            gol::LoadButton::Enabled(const EditorResult& state) const { return state.State != SimulationState::Simulation; }
+bool            gol::LoadButton::Enabled(const EditorResult&) const { return true; }
 
 gol::FileWidget::FileWidget(const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>& shortcutInfo)
 	: m_NewFileButton(shortcutInfo.at(EditorAction::NewFile))

@@ -51,7 +51,7 @@ namespace gol
 	
 		void Begin();
 
-		void UpdateEditors(const SimulationControlResult& controlResult, const PresetSelectionResult& presetResult);
+		void UpdateEditors(SimulationControlResult& controlResult, const PresetSelectionResult& presetResult);
 
 		static inline bool GetKeyState(ImGuiKey keyCode) { return ImGui::IsKeyDown(keyCode); }
 		static inline bool GetMouseState(int32_t mouseButtonCode) { return ImGui::IsMouseDown(mouseButtonCode); }

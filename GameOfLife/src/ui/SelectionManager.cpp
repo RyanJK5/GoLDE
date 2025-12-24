@@ -210,6 +210,17 @@ std::optional<gol::VersionChange> gol::SelectionManager::Rotate(bool clockwise)
     };
 }
 
+std::optional<gol::VersionChange> gol::SelectionManager::Flip(SelectionAction direction)
+{
+    if (!m_Selected)
+		return std::nullopt;
+
+	m_Selected->FlipGrid(direction == SelectionAction::FlipVertically);
+
+    return VersionChange { .Action = direction };
+}
+
+
 std::optional<gol::VersionChange> gol::SelectionManager::Nudge(Vec2 translation)
 {
     if (!m_AnchorSelection || (m_AnchorSelection == m_SentinelSelection))
@@ -272,7 +283,7 @@ std::optional<gol::VersionChange> gol::SelectionManager::HandleAction(SelectionA
 {
     switch (action)
     {
-        using enum SelectionAction;
+    using enum SelectionAction;
     case Copy:       return this->Copy(grid);
     case Cut:        return this->Cut();
     case Delete:     return this->Delete();
@@ -282,6 +293,8 @@ std::optional<gol::VersionChange> gol::SelectionManager::HandleAction(SelectionA
     case NudgeUp:    return Nudge({ 0, -nudgeSize });
     case NudgeDown:  return Nudge({ 0, nudgeSize });
     case Rotate:     return this->Rotate(true);
+    case FlipVertically: [[fallthrough]];
+	case FlipHorizontally: return this->Flip(action);
     }
     return std::nullopt;
 }
@@ -346,6 +359,10 @@ void gol::SelectionManager::HandleVersionChange(EditorAction undoRedo, GameGrid&
             Nudge(-change.NudgeTranslation);
         else
             Nudge(change.NudgeTranslation);
+        return;
+    case FlipHorizontally: [[fallthrough]];
+    case FlipVertically:
+		Flip(*action);
         return;
     case Rotate:
         this->Rotate(undoRedo == EditorAction::Redo);

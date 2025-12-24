@@ -104,6 +104,8 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
             return PauseUpdate(graphicsArgs);
         case Empty:
             return PaintUpdate(graphicsArgs);
+        case None:
+            return Empty;
         };
         std::unreachable();
     }();

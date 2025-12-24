@@ -53,6 +53,8 @@ namespace gol
 		std::set<Vec2> InsertGrid(const GameGrid& grid, Vec2 pos);
 		
 		void RotateGrid(bool clockwise = true);
+		
+		void FlipGrid(bool vertical);
 
 		std::optional<bool> Get(int32_t x, int32_t y) const;
 		std::optional<bool> Get(Vec2 pos) const;

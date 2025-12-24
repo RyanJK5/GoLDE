@@ -21,6 +21,15 @@ std::string gol::Actions::ToString(ActionVariant action)
 				[value](auto&& pair) { return pair.second == *value; })->first;
 		std::unreachable();
 	}() };
+	
 	result[0] = static_cast<char>(std::toupper(result[0]));
+	auto underscoreIterator = std::ranges::find(result, '_');
+	if (underscoreIterator != result.end())
+	{
+		*underscoreIterator = ' ';
+		underscoreIterator++;
+		*underscoreIterator = static_cast<char>(std::toupper(*underscoreIterator));
+	}
+
 	return result;
 }

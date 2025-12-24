@@ -87,7 +87,7 @@ void gol::Game::Begin()
     }
 }
 
-void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, const PresetSelectionResult& presetResult)
+void gol::Game::UpdateEditors(SimulationControlResult& controlResult, const PresetSelectionResult& presetResult)
 {
     ImGui::Begin("###EditorDockspace", nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration);
     
@@ -98,6 +98,8 @@ void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, cons
 
     auto newWindowIndex = m_LastActive;
     bool pastWindowEnabled = CheckForNewEditors(controlResult);
+    if (!pastWindowEnabled)
+		controlResult.State = SimulationState::Paint;
 
     auto unsavedResult = m_UnsavedWarning.Update();
 	if (unsavedResult == PopupWindowState::Success)
@@ -121,6 +123,8 @@ void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, cons
     m_LastActive = m_Editors.size() > 0
         ? m_Editors.size() - 1
         : 0;
+    if (m_Editors.size() == 0)
+        m_State.State = SimulationState::None;
     for (size_t i = 0; i < m_Editors.size(); i++)
     {
         auto activeOverride = [&]() -> std::optional<bool>
@@ -136,6 +140,7 @@ void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, cons
 
         if (result.Active)
         {
+            std::println("{}", result.CurrentFilePath.filename().string());
             m_State = result;
             m_LastActive = i;
         }
@@ -145,10 +150,10 @@ void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, cons
         {
             m_UnsavedWarning.Active = true;
 			m_UnsavedWarning.Message = result.CurrentFilePath.empty()
-			? "This file has not been saved. Are you sure you want to close it without saving?"
-            : std::format(
-                "{} has unsaved changes. Are you sure you want to close it without saving?",
-                result.CurrentFilePath.filename().string());
+			    ? "This file has not been saved. Are you sure you want to close it without saving?"
+                : std::format(
+                    "{} has unsaved changes. Are you sure you want to close it without saving?",
+                    result.CurrentFilePath.filename().string());
 			m_Unsaved = &m_Editors[i];
         }
     }

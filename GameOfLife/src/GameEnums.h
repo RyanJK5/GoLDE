@@ -13,7 +13,7 @@ namespace gol
 {
 	enum class SimulationState
 	{
-		Paint, Simulation, Paused, Empty
+		None, Paint, Simulation, Paused, Empty
 	};
 
 	struct EditorResult
@@ -65,7 +65,10 @@ namespace gol
 		NudgeLeft,
 		NudgeRight,
 		NudgeUp,
-		NudgeDown
+		NudgeDown,
+
+		FlipVertically,
+		FlipHorizontally
 	};
 
 	using ActionVariant = std::variant<GameAction, EditorAction, SelectionAction>;
@@ -92,17 +95,18 @@ namespace gol
 			{ "close",       EditorAction::Close      },
 		};
 		inline const std::unordered_map<std::string_view, SelectionAction> SelectionActionDefinitions = {
-			{ "rotate",      SelectionAction::Rotate     },
-			{ "deselect",    SelectionAction::Deselect   },
-			{ "delete",      SelectionAction::Delete     },
-			{ "copy",        SelectionAction::Copy       },
-			{ "cut",         SelectionAction::Cut        },
-			{ "paste",       SelectionAction::Paste      },
-
-			{ "nudge_left",  SelectionAction::NudgeLeft  },
-			{ "nudge_right", SelectionAction::NudgeRight },
-			{ "nudge_up",    SelectionAction::NudgeUp    },
-			{ "nudge_down",  SelectionAction::NudgeDown  },
+			{ "rotate",           SelectionAction::Rotate            },
+			{ "deselect",         SelectionAction::Deselect          },
+			{ "delete",           SelectionAction::Delete            },
+			{ "copy",             SelectionAction::Copy              },
+			{ "cut",              SelectionAction::Cut               },
+			{ "paste",            SelectionAction::Paste             },
+			{ "nudge_left",       SelectionAction::NudgeLeft         },
+			{ "nudge_right",      SelectionAction::NudgeRight        },
+			{ "nudge_up",         SelectionAction::NudgeUp           },
+			{ "nudge_down",       SelectionAction::NudgeDown         },
+			{ "flip_horizontal",  SelectionAction::FlipHorizontally  },
+			{ "flip_vertical",    SelectionAction::FlipVertically    }
 		};
 
 		std::string ToString(ActionVariant action);

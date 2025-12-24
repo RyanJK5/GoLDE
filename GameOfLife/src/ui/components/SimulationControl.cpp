@@ -90,9 +90,9 @@ gol::SimulationControlResult gol::SimulationControl::Update(const EditorResult& 
 
     SimulationControlResult result { .State = state.State };
     
+    FillResults(result, m_FileWidget.Update(state));
     FillResults(result, m_ExecutionWidget.Update(state));
     FillResults(result, m_EditorWidget.Update(state));
-    FillResults(result, m_FileWidget.Update(state));
     FillResults(result, m_StepWidget.Update(state));
     FillResults(result, m_ResizeWidget.Update(state));
     FillResults(result, m_DelayWidget.Update(state));

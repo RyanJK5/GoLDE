@@ -54,7 +54,11 @@ gol::SimulationControlResult gol::ExecutionWidget::UpdateImpl(const EditorResult
 	UpdateResult(result, m_StartButton.Update(state));
 	UpdateResult(result, m_ResetButton.Update(state));
 	UpdateResult(result, m_RestartButton.Update(state));
+
+	ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
 	UpdateResult(result, m_ClearButton.Update(state));
+	ImGui::Separator();
+	ImGui::PopStyleVar();
 
 	return result;
 }

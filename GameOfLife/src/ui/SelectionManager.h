@@ -40,6 +40,8 @@ namespace gol
 
 		std::optional<VersionChange> Rotate(bool clockwise);
 
+		std::optional<VersionChange> Flip(SelectionAction direction);
+
 		std::optional<VersionChange> Nudge(Vec2 translation);
 
 		std::expected<VersionChange, std::string> Load(const std::filesystem::path& filePath);
