@@ -22,12 +22,13 @@ shortcuts:
     cut: [Ctrl+X]
     paste: [Ctrl+V]
     rotate: [R]
+    flip_horizontal: []
+    flip_vertical: []
 
     nudge_left: [Left, Shift+Left]
     nudge_right: [Right, Shift+Right]
     nudge_up: [Up, Shift+Up]
     nudge_down: [Down, Shift+Down]
-    
 
 colors:
     transparent: [0, 0, 0, 0]
@@ -36,7 +37,7 @@ colors:
     hover: [1, 1, 1, 0.2]
     text: [0.8, 0.8, 0.8, 1]
 
-imgui-style:
+imgui_style:
     WindowBg: background
     Border: contrast
     
@@ -44,7 +45,6 @@ imgui-style:
     FrameBgHovered: hover
 
     Text: text
-    
 
     Button: contrast
     ButtonHovered: hover

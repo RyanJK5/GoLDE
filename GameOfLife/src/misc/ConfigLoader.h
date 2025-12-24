@@ -102,7 +102,7 @@ namespace gol::StyleLoader
 
 	static const std::unordered_map<std::string_view, SectionType> SectionDefinitions = {
 		{ "colors",      SectionType::StyleColors },
-		{ "imgui-style", SectionType::ImGUIStyle  },
+		{ "imgui_style", SectionType::ImGUIStyle  },
 		{ "shortcuts",   SectionType::Shortcuts   }
 	};
 
