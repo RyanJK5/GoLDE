@@ -96,7 +96,7 @@ gol::PresetSelection::PresetSelection(const std::filesystem::path& defaultPath, 
 
 gol::PresetSelectionResult gol::PresetSelection::Update()
 {
-    ImGui::Begin("Presets", nullptr, ImGuiWindowFlags_NoNavInputs);
+    ImGui::Begin("Presets", nullptr, ImGuiWindowFlags_NoNav);
 
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 10.f);
 

@@ -86,7 +86,7 @@ void gol::SimulationControl::FillResults(SimulationControlResult& current, const
 
 gol::SimulationControlResult gol::SimulationControl::Update(const EditorResult& state)
 {
-    ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNavInputs);
+    ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNav);
 
     SimulationControlResult result { .State = state.State };
     

@@ -89,7 +89,7 @@ void gol::Game::Begin()
 
 void gol::Game::UpdateEditors(const SimulationControlResult& controlResult, const PresetSelectionResult& presetResult)
 {
-    ImGui::Begin("###EditorDockspace", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration);
+    ImGui::Begin("###EditorDockspace", nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration);
     
     ImGuiID subDockspace = ImGui::GetID("###EditorDockspace");
     ImGui::DockSpace(subDockspace, ImGui::GetContentRegionAvail(), ImGuiDockNodeFlags_None);
