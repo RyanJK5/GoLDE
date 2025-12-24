@@ -140,6 +140,7 @@ void gol::Game::UpdateEditors(SimulationControlResult& controlResult, const Pres
 
         if (result.Active)
         {
+            std::println("{}", result.CurrentFilePath.filename().string());
             m_State = result;
             m_LastActive = i;
         }
