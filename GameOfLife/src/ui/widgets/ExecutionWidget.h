@@ -2,7 +2,6 @@
 #define __ExecutionWidget_h__
 
 #include <imgui/imgui.h>
-#include <font-awesome/IconsFontAwesome7.h>
 #include <span>
 #include <unordered_map>
 #include <vector>

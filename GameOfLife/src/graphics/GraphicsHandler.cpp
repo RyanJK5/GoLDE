@@ -222,7 +222,7 @@ void gol::GraphicsHandler::DrawGridLines(Vec2 offset, const GraphicsHandlerArgs&
     GL_DEBUG(glDrawArrays(GL_LINES, 0, positions.size() / 2));
 }
 
-std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args) const
+std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const LifeHashSet& grid, const GraphicsHandlerArgs& args) const
 {
     float width = args.CellSize.Width;
     float height = args.CellSize.Height;
@@ -248,7 +248,7 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std
     return result;
 }
 
-void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args)
+void gol::GraphicsHandler::DrawGrid(Vec2 offset, const LifeHashSet& grid, const GraphicsHandlerArgs& args)
 {
     FrameBufferBinder binder{ m_FrameBuffer };
 

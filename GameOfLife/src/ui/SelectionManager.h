@@ -54,7 +54,7 @@ namespace gol
 		Rect SelectionBounds() const;
 
 		bool GridAlive() const;
-		const std::set<Vec2>& GridData() const;
+		const LifeHashSet& GridData() const;
 		int64_t SelectedPopulation() const;
 
 		bool CanDrawSelection() const;

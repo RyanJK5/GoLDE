@@ -100,7 +100,7 @@ gol::PresetSelectionResult gol::PresetSelection::Update()
 
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 10.f);
 
-    ImGui::SetNextItemWidth(m_MaxFileName * 20);
+    ImGui::SetNextItemWidth(m_MaxFileName * 20.f);
     ImGui::InputTextWithHint("##search", "Search...", m_SearchText.Data, m_SearchText.Length + 1);
 
     ImGui::SameLine();

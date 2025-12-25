@@ -36,12 +36,12 @@ gol::SelectionUpdateResult gol::SelectionManager::UpdateSelectionArea(GameGrid& 
 
         m_Selected = grid.SubRegion(SelectionBounds());
         auto change = VersionChange
-        ({
+        {
             .Action = SelectionAction::Select,
             .SelectionBounds = SelectionBounds(),
             .CellsInserted = m_Selected->Data(),
             .CellsDeleted = grid.ReadRegion(SelectionBounds())
-        });
+        };
         grid.ClearRegion(SelectionBounds());
 
         return { .Change = change, .BeginSelection = false };
@@ -439,7 +439,7 @@ bool gol::SelectionManager::GridAlive() const
     return m_Selected && m_Selected->Population() > 0;
 }
 
-const std::set<gol::Vec2>& gol::SelectionManager::GridData() const
+const gol::LifeHashSet& gol::SelectionManager::GridData() const
 {
     return m_Selected->Data();
 }

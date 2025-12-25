@@ -33,9 +33,6 @@
     <ClCompile Include="src\ui\KeyShortcut.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\components\SimulationEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -111,11 +108,11 @@
     <ClCompile Include="src\ui\components\PresetSelection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="resources\shader\default.shader">
-      <Filter>Source Files</Filter>
-    </Text>
     <Text Include="..\Dependencies\ImGUI\imgui\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -212,12 +209,11 @@
     <ClInclude Include="src\ui\widgets\Widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="resources\font\arial.ttf" />
-    <Font Include="resources\font\fontawesome7.otf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="config\style.yaml" />
+    <ClInclude Include="..\Dependencies\unordered_dense\unordered_dense.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\unordered_dense\stl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

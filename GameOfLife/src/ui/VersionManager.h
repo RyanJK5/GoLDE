@@ -2,7 +2,7 @@
 #define __VersionManager_h__
 
 #include <optional>
-#include <set>
+#include <unordered_set>
 #include <stack>
 #include <utility>
 
@@ -17,8 +17,8 @@ namespace gol
 		std::optional<ActionVariant> Action;
 		std::optional<std::pair<GameGrid, Size2>> GridResize;
 		std::optional<Rect> SelectionBounds;
-		std::set<Vec2> CellsInserted;
-		std::set<Vec2> CellsDeleted;
+		LifeHashSet CellsInserted;
+		LifeHashSet CellsDeleted;
 		Vec2 NudgeTranslation;
 
 		bool InsertedIntoSelection() const { return SelectionBounds.has_value(); }

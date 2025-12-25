@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <unordered_dense.h>
 #include <set>
 #include <optional>
 
@@ -10,6 +11,8 @@
 
 namespace gol
 {
+	using LifeHashSet = ankerl::unordered_dense::set<Vec2>;
+
 	class GameGrid
 	{
 	public:
@@ -44,13 +47,13 @@ namespace gol
 
 		GameGrid SubRegion(const Rect& region) const;
 		
-		std::set<Vec2> ReadRegion(const Rect& region) const;
+		LifeHashSet ReadRegion(const Rect& region) const;
 		
 		void ClearRegion(const Rect& region);
 		
 		void ClearData(const std::vector<Vec2>& data, Vec2 pos);
 		
-		std::set<Vec2> InsertGrid(const GameGrid& grid, Vec2 pos);
+		LifeHashSet InsertGrid(const GameGrid& grid, Vec2 pos);
 		
 		void RotateGrid(bool clockwise = true);
 		
@@ -59,9 +62,14 @@ namespace gol
 		std::optional<bool> Get(int32_t x, int32_t y) const;
 		std::optional<bool> Get(Vec2 pos) const;
 
-		constexpr const std::set<Vec2>& Data() const { return m_Data; }
+		const std::set<Vec2>& SortedData() const;
+		const LifeHashSet& Data() const;
 	private:
-		std::set<Vec2> m_Data;
+		LifeHashSet m_Data;
+
+		mutable std::set<Vec2> m_SortedData;
+		mutable bool m_ResetCache = true;
+
 		int32_t m_Width;
 		int32_t m_Height;
 

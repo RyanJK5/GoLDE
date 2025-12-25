@@ -41,7 +41,7 @@ namespace gol
 		static constexpr int32_t DefaultGridWidth = 0;
 		static constexpr int32_t DefaultGridHeight = 0;
 	public:
-		Game(const StyleLoader::StyleInfo<ImVec4>& style);
+		Game(const std::filesystem::path& configPath);
 		~Game();
 
 		Game(const Game& other) = delete;

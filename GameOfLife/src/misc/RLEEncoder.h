@@ -77,7 +77,7 @@ namespace gol::RLEEncoder
 		auto runStart = Vec2 { region.X, region.Y - 1 } - offset;
 		bool running = false;
 		bool first = true;
-		for (auto pos : grid.Data())
+		for (auto pos : grid.SortedData())
 		{
 			if (!region.InBounds(pos))
 				continue;

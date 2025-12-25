@@ -6,6 +6,7 @@
 #include <concepts>
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
+#include <utility>
 
 namespace gol
 {
@@ -131,6 +132,13 @@ namespace gol
 
 	using Rect = GenericRect<int32_t>;
 	using RectDouble = GenericRect<double>;
+
 }
+
+template <>
+struct std::hash<gol::Vec2>
+{
+	size_t operator()(gol::Vec2 vec) const;
+};
 
 #endif

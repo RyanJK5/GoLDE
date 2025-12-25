@@ -2,14 +2,16 @@
 #define __Logger_h__
 
 #include <format>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <print>
 #include <source_location>
 #include <string>
 #include <string_view>
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #ifdef _DEBUG
+
 	#define GL_DEBUG(statement)\
 		while (glGetError());\
 		statement;\

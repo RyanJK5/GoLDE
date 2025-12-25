@@ -4,10 +4,11 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "Camera.h"
+#include "GameGrid.h"
 #include "GLBuffer.h"
 #include "Graphics2D.h"
 #include "ShaderManager.h"
@@ -42,7 +43,7 @@ namespace gol
 
 		void RescaleFrameBuffer(const Rect& windowBounds, const Rect& viewportBounds);
 
-		void DrawGrid(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args);
+		void DrawGrid(Vec2 offset, const LifeHashSet& grid, const GraphicsHandlerArgs& args);
 		void DrawSelection(const Rect& region, const GraphicsHandlerArgs& info);
 		void ClearBackground(const GraphicsHandlerArgs& args);
 
@@ -50,7 +51,7 @@ namespace gol
 
 		uint32_t TextureID() const { return m_Texture.ID(); }
 	private:
-		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::set<Vec2>& grid, const GraphicsHandlerArgs& args) const;
+		std::vector<float> GenerateGLBuffer(Vec2 offset, const LifeHashSet& grid, const GraphicsHandlerArgs& args) const;
 
 		RectDouble GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const;
 	private:

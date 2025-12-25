@@ -1,5 +1,6 @@
-#include <optional>
+#include <font-awesome/IconsFontAwesome7.h>
 #include <imgui/imgui.h>
+#include <optional>
 
 #include "EditorWidget.h"
 #include "GameEnums.h"

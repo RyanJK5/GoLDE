@@ -1,9 +1,16 @@
+#include <font-awesome/IconsFontAwesome7.h>
 #include <imgui/imgui.h>
+#include <string>
 #include <utility>
 
 #include "GameEnums.h"
+#include "Graphics2D.h"
 #include "SimulationControlResult.h"
 #include "StepWidget.h"
+
+gol::Size2F gol::StepButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
+std::string gol::StepButton::Label(const EditorResult&) const { return ICON_FA_FORWARD_STEP; }
+bool        gol::StepButton::Enabled(const EditorResult& state) const { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
 
 gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& state)
 {

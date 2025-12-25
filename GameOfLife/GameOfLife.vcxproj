@@ -25,8 +25,8 @@
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\GameEnums.cpp" />
+    <ClCompile Include="src\Graphics2D.cpp" />
     <ClCompile Include="src\graphics\Camera.cpp" />
     <ClCompile Include="src\misc\RLEEncoder.cpp" />
     <ClCompile Include="src\ui\components\PresetSelection.cpp" />
@@ -52,11 +52,10 @@
     <ClCompile Include="src\ui\widgets\StepWidget.cpp" />
     <ClCompile Include="src\ui\VersionManager.cpp" />
     <Text Include="..\Dependencies\ImGUI\imgui\LICENSE.txt" />
-    <Text Include="resources\shader\default.shader">
-      <FileType>Document</FileType>
-    </Text>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Dependencies\unordered_dense\stl.h" />
+    <ClInclude Include="..\Dependencies\unordered_dense\unordered_dense.h" />
     <ClInclude Include="src\graphics\Camera.h" />
     <ClInclude Include="src\graphics\GLBuffer.h" />
     <ClInclude Include="src\ui\components\PresetSelection.h" />
@@ -89,13 +88,6 @@
     <ClInclude Include="src\ui\dialogs\WarnWindow.h" />
     <ClInclude Include="src\ui\widgets\Widget.h" />
   </ItemGroup>
-  <ItemGroup>
-    <Font Include="resources\font\arial.ttf" />
-    <Font Include="resources\font\fontawesome7.otf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="config\style.yaml" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -105,17 +97,17 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -148,6 +140,22 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <PublicIncludeDirectories>$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDIr)Dependencies\GLFW\include</PublicIncludeDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <PublicIncludeDirectories>$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDIr)Dependencies\GLFW\include</PublicIncludeDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PublicIncludeDirectories>$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDIr)Dependencies\GLFW\include</PublicIncludeDirectories>
+    <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PublicIncludeDirectories>$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDIr)Dependencies\GLFW\include</PublicIncludeDirectories>
+    <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -157,7 +165,7 @@
       <LanguageStandard>stdcpp23</LanguageStandard>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;$(SolutionDir)Dependencies\NFD\include;$(SolutionDir)GameOfLife\src\ui\dialogs</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;$(SolutionDir)Dependencies\NFD\include;$(SolutionDir)GameOfLife\src\ui\dialogs;$(SolutionDir)GameOfLife\include;$(SolutionDir)Dependencies\unordered_dense</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -175,14 +183,16 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;$(SolutionDir)Dependencies\NFD\include;$(SolutionDir)GameOfLife\src\ui\dialogs</AdditionalIncludeDirectories>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;$(SolutionDir)Dependencies\NFD\include;$(SolutionDir)GameOfLife\src\ui\dialogs;$(SolutionDir)GameOfLife\include;$(SolutionDir)Dependencies\unordered_dense</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\GLFW\lib-vc2022;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\lib\Release\Win32;$(SolutionDir)Dependencies\NFD\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;nfd.lib;ole32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -192,7 +202,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLM;$(SolutionDir)Dependencies\ImGUI</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;$(SolutionDir)Dependencies\NFD\include;$(SolutionDir)GameOfLife\src\ui\dialogs;$(SolutionDir)GameOfLife\include;$(SolutionDir)Dependencies\unordered_dense</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -209,7 +219,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLM;$(SolutionDir)Dependencies\ImGUI</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLEW\glew-2.1.0\include;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\ImGUI;$(SolutionDir)Dependencies\GLM;$(SolutionDir)\Dependencies\ImGUI\imgui;$(SolutionDir)\GameOfLife\src;$(SolutionDir)\GameOfLife\src\graphics;$(SolutionDir)\GameOfLife\src\misc;$(SolutionDir)\GameOfLife\src\ui;$(SolutionDir)\GameOfLife\src\ui\components;$(SolutionDir)\GameOfLife\src\ui\widgets;$(SolutionDir)\Dependencies\FontAwesome;$(SolutionDir)Dependencies\NFD\include;$(SolutionDir)GameOfLife\src\ui\dialogs;$(SolutionDir)GameOfLife\include;$(SolutionDir)Dependencies\unordered_dense</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

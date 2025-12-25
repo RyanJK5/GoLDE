@@ -2,7 +2,6 @@
 #define __StepWidget_h__
 
 #include <cstdint>
-#include <font-awesome/IconsFontAwesome7.h>
 #include <imgui/imgui.h>
 #include <span>
 #include <string>
@@ -22,9 +21,9 @@ namespace gol
             : ActionButton(GameAction::Step, shortcuts)
         { }
     protected:
-        virtual Size2F Dimensions() const override final { return { ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight }; }
-        virtual std::string Label(const EditorResult&) const override final { return ICON_FA_FORWARD_STEP; }
-        virtual bool Enabled(const EditorResult& state) const override final { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
+        virtual Size2F Dimensions() const override final;
+        virtual std::string Label(const EditorResult&) const override final;
+        virtual bool Enabled(const EditorResult& state) const override final;
     };
 
 	class StepWidget : public Widget

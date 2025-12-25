@@ -60,41 +60,53 @@ gol::Rect gol::GameGrid::BoundingBox() const
 	};
 }
 
-
-struct Vec2Hash
+const std::set<gol::Vec2>& gol::GameGrid::SortedData() const
 {
-	size_t operator()(gol::Vec2 vec) const
+	if (m_ResetCache)
 	{
-		return std::hash<int32_t>{}(vec.X) ^ std::hash<int32_t>{}(vec.Y);
+		m_SortedData.clear();
+		for (auto& pos : m_Data)
+			m_SortedData.insert(pos);
+		m_ResetCache = false;
 	}
-};
+	return m_SortedData;
+}
+
+const gol::LifeHashSet& gol::GameGrid::Data() const
+{
+	return m_Data;
+}
 
 void gol::GameGrid::Update()
 {
-	std::unordered_map<Vec2, int8_t, Vec2Hash> neighborCount;
+	constexpr int32_t dx[] = { -1,-1,-1,0,0,1,1,1 };
+	constexpr int32_t dy[] = { -1,0,1,-1,1,-1,0,1 };
+
+	ankerl::unordered_dense::map<Vec2, uint8_t> neighborCount;
+	neighborCount.reserve(m_Data.size() * 8);
 	for (auto&& pos : m_Data)
 	{
-		for (int32_t x = pos.X - 1; x <= pos.X + 1; x++)
+		for (int32_t i = 0; i < 8; ++i)
 		{
-			for (int32_t y = pos.Y - 1; y <= pos.Y + 1; y++)
-			{
-				if (!InBounds(x, y))
-					continue;
-				if (x != pos.X || y != pos.Y)
-					neighborCount[{x, y}]++;
-			}
+			int32_t x = pos.X + dx[i];
+			int32_t y = pos.Y + dy[i];
+			if (!InBounds(x, y))
+				continue;
+			
+			++neighborCount[{x, y}];
 		}
 	}
 
-	std::set<Vec2> newSet;
+	LifeHashSet newSet {};
+	newSet.reserve(neighborCount.size());
 	for (auto&& [pos, neighbors] : neighborCount)
 	{
-		if (neighbors == 3 || (neighbors == 2 && m_Data.find(pos) != m_Data.end()))
+		if (neighbors == 3 || (neighbors == 2 && m_Data.contains(pos)))
 			newSet.insert(pos);
 	}
-	m_Data = newSet;
 	m_Population = newSet.size();
 	m_Generation++;
+	m_Data = std::move(newSet);
 }
 
 bool gol::GameGrid::Toggle(int32_t x, int32_t y)
@@ -115,11 +127,13 @@ bool gol::GameGrid::Set(int32_t x, int32_t y, bool active)
 	{
 		m_Population++;
 		m_Data.insert({ x, y });
+		m_SortedData.insert({ x, y });
 	}
 	else if (itr != m_Data.end() && !active)
 	{
 		m_Population--;
 		m_Data.erase(itr);
+		m_SortedData.erase({x, y});
 	}
 
 	m_Generation = 0;
@@ -140,7 +154,8 @@ void gol::GameGrid::TranslateRegion(const Rect& region, Vec2 translation)
 		}
 		++it;
 	}
-	m_Data.insert_range(newCells);
+	for (auto& pos : newCells)
+		m_Data.insert(pos);
 }
 
 gol::GameGrid gol::GameGrid::SubRegion(const Rect& region) const
@@ -157,9 +172,9 @@ gol::GameGrid gol::GameGrid::SubRegion(const Rect& region) const
 	return result;
 }
 
-std::set<gol::Vec2> gol::GameGrid::ReadRegion(const Rect& region) const
+gol::LifeHashSet gol::GameGrid::ReadRegion(const Rect& region) const
 {
-	std::set<Vec2> result;
+	LifeHashSet result;
 	for (auto&& pos : m_Data)
 	{
 		if (region.InBounds(pos))
@@ -172,6 +187,7 @@ std::set<gol::Vec2> gol::GameGrid::ReadRegion(const Rect& region) const
 void gol::GameGrid::ClearRegion(const Rect& region)
 {
 	m_Population -= std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
+	m_ResetCache = true;
 }
 
 void gol::GameGrid::ClearData(const std::vector<Vec2>& data, Vec2 offset)
@@ -180,17 +196,19 @@ void gol::GameGrid::ClearData(const std::vector<Vec2>& data, Vec2 offset)
 	{
 		m_Population -= m_Data.erase({ vec.X + offset.X, vec.Y + offset.Y });
 	}
+	m_ResetCache = true;
 }
 
-std::set<gol::Vec2> gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
+gol::LifeHashSet gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
 {
-	std::set<Vec2> result {};
+	gol::LifeHashSet result {};
 	for (auto&& cell : region.m_Data)
 	{
 		Vec2 offsetPos = { pos.X + cell.X, pos.Y + cell.Y };
 		if (m_Data.find(offsetPos) != m_Data.end())
 			continue;
 		m_Data.insert(offsetPos);
+		m_SortedData.insert(offsetPos);
 		result.insert(offsetPos);
 		m_Population++;
 	}
@@ -200,7 +218,7 @@ std::set<gol::Vec2> gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
 void gol::GameGrid::RotateGrid(bool clockwise)
 {
 	auto center = Vec2F { static_cast<float>(m_Width / 2.f - 0.5f), static_cast<float>(m_Height / 2.f - 0.5f) };
-	std::set<Vec2> newSet;
+	gol::LifeHashSet newSet {};
 	for (auto&& cellPos : m_Data)
 	{
 		auto offset = Vec2F { static_cast<float>(cellPos.X), static_cast<float>(cellPos.Y) } - center;
@@ -211,12 +229,13 @@ void gol::GameGrid::RotateGrid(bool clockwise)
 		newSet.insert(Vec2 { static_cast<int32_t>(result.X), static_cast<int32_t>(result.Y) });
 	}
 	std::swap(m_Width, m_Height);
-	m_Data = newSet;
+	m_ResetCache = true;
+	m_Data = std::move(newSet);
 }
 
 void gol::GameGrid::FlipGrid(bool vertical)
 {
-	std::set<Vec2> newData;
+	LifeHashSet newData;
 	if (!Bounded())
 	{
 		for (const auto& pos : m_Data)
@@ -237,7 +256,8 @@ void gol::GameGrid::FlipGrid(bool vertical)
 				newData.insert({m_Width - 1 - pos.X, pos.Y});
 		}
 	}
-	m_Data = newData;
+	m_ResetCache = true;
+	m_Data = std::move(newData);
 }
 
 std::optional<bool> gol::GameGrid::Get(int32_t x, int32_t y) const
