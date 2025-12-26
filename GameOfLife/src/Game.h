@@ -13,12 +13,6 @@
 #include "SimulationControl.h"
 #include "SimulationEditor.h"
 
-template <>
-struct std::default_delete<GLFWwindow>
-{
-	void operator() (GLFWwindow*) { glfwTerminate(); }
-};
-
 namespace gol
 {
 	class OpenGLWindow
