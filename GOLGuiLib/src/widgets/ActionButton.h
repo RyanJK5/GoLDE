@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "EditorResult.h"
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "KeyShortcut.h"

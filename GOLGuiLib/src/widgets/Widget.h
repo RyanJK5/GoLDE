@@ -4,6 +4,7 @@
 #include <concepts>
 
 #include "ActionButton.h"
+#include "EditorResult.h"
 #include "GameEnums.h"
 #include "SimulationControlResult.h"
 

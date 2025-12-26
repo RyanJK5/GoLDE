@@ -7,6 +7,7 @@
 #include <span>
 
 #include "ActionButton.h"
+#include "EditorResult.h"
 #include "ErrorWindow.h"
 #include "GameEnums.h"
 #include "Graphics2D.h"

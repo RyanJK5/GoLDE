@@ -7,9 +7,10 @@
 #include <vector>
 
 #include "ActionButton.h"
-#include "KeyShortcut.h"
+#include "EditorResult.h"
 #include "GameEnums.h"
 #include "Graphics2D.h"
+#include "KeyShortcut.h"
 #include "SimulationControlResult.h"
 #include "Widget.h"
 

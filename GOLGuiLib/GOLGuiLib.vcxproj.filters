@@ -101,13 +101,7 @@
     <ClInclude Include="src\KeyShortcut.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\PresetSelectionResult.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\SelectionManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SimulationControlResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\VersionManager.h">
@@ -120,6 +114,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\misc\RLEEncoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EditorResult.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SimulationControlResult.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PresetSelectionResult.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

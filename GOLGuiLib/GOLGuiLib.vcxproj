@@ -160,6 +160,7 @@
     <ClCompile Include="src\widgets\StepWidget.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\EditorResult.h" />
     <ClInclude Include="src\GameEnums.h" />
     <ClInclude Include="src\dialogs\ErrorWindow.h" />
     <ClInclude Include="src\dialogs\FileDialog.h" />

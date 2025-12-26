@@ -16,18 +16,6 @@ namespace gol
 		None, Paint, Simulation, Paused, Empty
 	};
 
-	struct EditorResult
-	{
-		std::filesystem::path CurrentFilePath;
-		SimulationState State = SimulationState::Paint;
-		bool Active = true;
-		bool Closing = false;
-		bool SelectionActive = false;
-		bool UndosAvailable = false;
-		bool RedosAvailable = false;
-		bool HasUnsavedChanges = false;
-	};
-
 	enum class GameAction
 	{
 		None,

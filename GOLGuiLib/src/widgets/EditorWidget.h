@@ -8,6 +8,7 @@
 
 #include "ActionButton.h"
 #include "GameEnums.h"
+#include "EditorResult.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
 #include "Widget.h"
