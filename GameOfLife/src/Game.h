@@ -18,11 +18,18 @@ namespace gol
 	class OpenGLWindow
 	{
 	public:
+		Rect Bounds;
+		
 		OpenGLWindow(int32_t width, int32_t height);
 		~OpenGLWindow();
 
-		Rect Bounds;
-		inline GLFWwindow* Get() const { return Underlying; }
+		OpenGLWindow(const OpenGLWindow& other) = delete;
+		OpenGLWindow(OpenGLWindow&& other) noexcept = delete;
+		
+		OpenGLWindow& operator=(const OpenGLWindow& other) = delete;
+		OpenGLWindow& operator=(OpenGLWindow&& other) noexcept = delete;
+
+		GLFWwindow* Get() const { return Underlying; }
 	private:
 		GLFWwindow* Underlying;
 	};
