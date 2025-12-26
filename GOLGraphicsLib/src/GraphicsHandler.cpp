@@ -12,24 +12,15 @@
 #include "Logging.h"
 #include "ShaderManager.h"
 
-struct FrameBufferBinder
+gol::FrameBufferBinder::FrameBufferBinder(const gol::GLFrameBuffer& buffer)
 {
-    FrameBufferBinder(const gol::GLFrameBuffer& buffer) 
-    {
-        GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, buffer.ID()));
-    }
+    GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, buffer.ID()));
+}
 
-    ~FrameBufferBinder() 
-    {
-        GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-    }
-
-    FrameBufferBinder(const FrameBufferBinder&) = delete;
-    auto& operator=(const FrameBufferBinder&) = delete;
-
-    FrameBufferBinder(FrameBufferBinder&&) = delete;
-    auto& operator=(const FrameBufferBinder&&) = delete;
-};
+gol::FrameBufferBinder::~FrameBufferBinder()
+{
+    GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
 
 gol::GraphicsHandler::GraphicsHandler(
     const std::filesystem::path& shader,
@@ -220,57 +211,6 @@ void gol::GraphicsHandler::DrawGridLines(Vec2 offset, const GraphicsHandlerArgs&
     GL_DEBUG(glEnableVertexAttribArray(0));
     GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
     GL_DEBUG(glDrawArrays(GL_LINES, 0, positions.size() / 2));
-}
-
-std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const LifeHashSet& grid, const GraphicsHandlerArgs& args) const
-{
-    float width = args.CellSize.Width;
-    float height = args.CellSize.Height;
-    std::vector<float> result;
-    for (const Vec2& vec : grid)
-    {
-        float xCoord = (vec.X + offset.X) * width;
-        float yCoord = (vec.Y + offset.Y) * height;
-        
-        result.push_back(xCoord);
-        result.push_back(yCoord);
-
-        result.push_back(xCoord);
-        result.push_back(yCoord + height);
-            
-        result.push_back(xCoord + width);
-        result.push_back(yCoord + height);
-
-        result.push_back(xCoord + width);
-        result.push_back(yCoord);
-    }
-
-    return result;
-}
-
-void gol::GraphicsHandler::DrawGrid(Vec2 offset, const LifeHashSet& grid, const GraphicsHandlerArgs& args)
-{
-    FrameBufferBinder binder{ m_FrameBuffer };
-
-    auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
-    m_Shader.AttachUniformMatrix4("u_MVP", matrix);
-
-    if (args.ShowGridLines && offset.X == 0 && offset.Y == 0)
-    {
-        m_Shader.AttachUniformVec4("u_Color", { 0.2f, 0.2f, 0.2f, 1.f });
-        DrawGridLines(offset, args);
-    }
-
-    m_Shader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
-    auto positions = GenerateGLBuffer(offset, grid, args);
-
-    GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridBuffer.ID()));
-    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_DYNAMIC_DRAW));
-
-    GL_DEBUG(glEnableVertexAttribArray(0));
-    GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
-
-    GL_DEBUG(glDrawArrays(GL_QUADS, 0, positions.size() / 2));
 }
 
 gol::RectDouble gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const

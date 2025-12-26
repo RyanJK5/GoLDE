@@ -32,13 +32,13 @@ namespace gol
 
 		constexpr auto operator<=>(const GenericVec<T>&) const = default;
 
-		constexpr GenericVec<T> operator-() const { return { -X, -Y }; }
+		constexpr GenericVec operator-() const { return { -X, -Y }; }
 
-		constexpr GenericVec<T> operator+(GenericVec<T> other) const { return { X + other.X, Y + other.Y }; }
-		constexpr GenericVec<T> operator-(GenericVec<T> other) const { return { X - other.X, Y - other.Y }; }
+		constexpr GenericVec operator+(GenericVec<T> other) const { return { X + other.X, Y + other.Y }; }
+		constexpr GenericVec operator-(GenericVec<T> other) const { return { X - other.X, Y - other.Y }; }
 
-		constexpr GenericVec<T>& operator+=(GenericVec<T> other) { X += other.X; Y += other.Y; return *this; }
-		constexpr GenericVec<T>& operator-=(GenericVec<T> other) { X -= other.X; Y -= other.Y; return *this; }
+		constexpr GenericVec& operator+=(GenericVec<T> other) { X += other.X; Y += other.Y; return *this; }
+		constexpr GenericVec& operator-=(GenericVec<T> other) { X -= other.X; Y -= other.Y; return *this; }
 	};
 
 	template <std::totally_ordered T>
@@ -46,7 +46,6 @@ namespace gol
 	{
 		T Width;
 		T Height;
-
 
 		constexpr GenericSize() : Width(0), Height(0) { }
 		constexpr GenericSize(T width, T height) : Width(width), Height(height) { }
@@ -117,7 +116,8 @@ namespace gol
 
 		constexpr operator GenericRect<int32_t>() const
 		{
-			return {
+			return 
+			{
 				static_cast<int32_t>(X),
 				static_cast<int32_t>(Y),
 				static_cast<int32_t>(Width),
@@ -134,11 +134,5 @@ namespace gol
 	using RectDouble = GenericRect<double>;
 
 }
-
-template <>
-struct std::hash<gol::Vec2>
-{
-	size_t operator()(gol::Vec2 vec) const;
-};
 
 #endif

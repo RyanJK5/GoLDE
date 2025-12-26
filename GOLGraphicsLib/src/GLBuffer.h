@@ -4,6 +4,8 @@
 #include <concepts>
 #include <cstdint>
 #include <utility>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include "Logging.h"
 

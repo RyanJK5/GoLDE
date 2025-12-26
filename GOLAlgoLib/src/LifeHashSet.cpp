@@ -2,6 +2,7 @@
 #include <unordered_dense.h>
 
 #include "Graphics2D.h"
+#include "LifeHashSet.h"
 
 size_t std::hash<gol::Vec2>::operator()(gol::Vec2 vec) const
 {

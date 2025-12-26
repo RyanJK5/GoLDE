@@ -16,7 +16,7 @@ namespace gol
 			std::views::transform([](auto chord) { return KeyShortcut { chord }; })
 			| std::ranges::to<std::vector>();
 		constexpr static auto RepeatableMapChordsToVector =
-			std::views::transform([](auto chord) { return KeyShortcut{ chord, true, true }; })
+			std::views::transform([](auto chord) { return KeyShortcut { chord, true, true }; })
 			| std::ranges::to<std::vector>();
 
 		static std::string StringRepresentation(std::span<const KeyShortcut> shortcuts);

@@ -8,11 +8,10 @@
 #include <optional>
 
 #include "Graphics2D.h"
+#include "LifeHashSet.h"
 
 namespace gol
 {
-	using LifeHashSet = ankerl::unordered_dense::set<Vec2>;
-
 	class GameGrid
 	{
 	public:
