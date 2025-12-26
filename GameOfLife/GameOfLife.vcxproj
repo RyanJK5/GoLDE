@@ -25,19 +25,19 @@
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\ui\components\PresetSelection.cpp" />
+    <ClCompile Include="src\PresetSelection.cpp" />
     <ClCompile Include="src\Game.cpp" />
-    <ClCompile Include="src\ui\components\SimulationControl.cpp" />
-    <ClCompile Include="src\ui\components\SimulationEditor.cpp" />
+    <ClCompile Include="src\SimulationControl.cpp" />
+    <ClCompile Include="src\SimulationEditor.cpp" />
     <Text Include="..\Dependencies\ImGUI\imgui\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Dependencies\unordered_dense\stl.h" />
     <ClInclude Include="..\Dependencies\unordered_dense\unordered_dense.h" />
-    <ClInclude Include="src\ui\components\PresetSelection.h" />
+    <ClInclude Include="src\PresetSelection.h" />
     <ClInclude Include="src\Game.h" />
-    <ClInclude Include="src\ui\components\SimulationControl.h" />
-    <ClInclude Include="src\ui\components\SimulationEditor.h" />
+    <ClInclude Include="src\SimulationControl.h" />
+    <ClInclude Include="src\SimulationEditor.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GOLAlgoLib\GOLAlgoLib.vcxproj">

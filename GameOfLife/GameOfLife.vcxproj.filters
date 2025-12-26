@@ -18,10 +18,10 @@
     <ClCompile Include="src\Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\components\SimulationEditor.cpp">
+    <ClCompile Include="src\SimulationEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\components\SimulationControl.cpp">
+    <ClCompile Include="src\SimulationControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui.cpp">
@@ -42,7 +42,7 @@
     <ClCompile Include="..\Dependencies\ImGUI\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\components\PresetSelection.cpp">
+    <ClCompile Include="src\PresetSelection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,13 +53,13 @@
     <ClInclude Include="src\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\components\SimulationEditor.h">
+    <ClInclude Include="src\SimulationEditor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\components\SimulationControl.h">
+    <ClInclude Include="src\SimulationControl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\components\PresetSelection.h">
+    <ClInclude Include="src\PresetSelection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Dependencies\unordered_dense\unordered_dense.h">
