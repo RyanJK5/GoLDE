@@ -51,7 +51,7 @@ bool gol::SimulationEditor::operator==(const SimulationEditor& other) const
 
 gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverride, const SimulationControlResult& controlArgs, const PresetSelectionResult& presetArgs)
 {
-    auto displayResult = DisplaySimulation(controlArgs.Action && activeOverride && (*activeOverride));
+    auto displayResult = DisplaySimulation((controlArgs.Action || !presetArgs.ClipboardText.empty()) && activeOverride && (*activeOverride));
     if (!displayResult.Visible || (activeOverride && !(*activeOverride)))
         return { .Active = false, .Closing = displayResult.Closing };
 

@@ -104,18 +104,15 @@ uint32_t gol::ShaderManager::CompileShader(uint32_t type, std::string_view sourc
     int result;
     GL_DEBUG(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
     if (result != GL_FALSE)
-    {
         return id;
-    }
 
-    int length;
+    int32_t length = 0;
     GL_DEBUG(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
-    char* message = new char[length];
+    auto message = new char[length];
     GL_DEBUG(glGetShaderInfoLog(id, length, &length, message));
 
-    std::string error = "Failed to compile " + std::string(type == GL_VERTEX_SHADER ? "vertex" : "fragment") + " shader\n" + message;
+	auto error = std::format("Failed to compile {} shader\n{}", type == GL_VERTEX_SHADER ? "vertex" : "fragment", message);
     delete[] message;
-
     throw GLException(error);
 }
 

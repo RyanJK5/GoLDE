@@ -164,8 +164,10 @@ gol::PresetSelectionResult gol::PresetSelection::Update()
 
         ImGui::SetCursorPos(cursorPos);
 
-        if (ImGui::InvisibleButton(std::format("##{}", m_Library[i].FileName).c_str(), {windowBounds.Width, windowBounds.Height}))
+        if (ImGui::InvisibleButton(std::format("##{}", m_Library[i].FileName).c_str(), { windowBounds.Width, windowBounds.Height }))
+        {
             retString = RLEEncoder::EncodeRegion(m_Library[i].Grid, {{0, 0}, m_Library[i].Grid.Size()}).c_str();
+        }
 
         if (ImGui::IsItemHovered())
             m_Library[i].Graphics.DrawSelection({ {0, 0}, graphicsArgs.GridSize }, graphicsArgs);
@@ -174,8 +176,6 @@ gol::PresetSelectionResult gol::PresetSelection::Update()
     }
 
     ImGui::End();
-
-
     return { .ClipboardText = retString };
 }
 
