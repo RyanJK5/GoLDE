@@ -80,7 +80,7 @@ gol::PresetDisplay::PresetDisplay(const GameGrid& grid, const std::string& fileN
     : Grid(grid)
     , FileName(fileName)
     , Graphics(
-        std::filesystem::path("resources") / "shader" / "default.shader",
+        std::filesystem::path("resources") / "shader",
         windowSize.Width, windowSize.Height,
         Color { }
     )

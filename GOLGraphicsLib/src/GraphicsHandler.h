@@ -43,7 +43,7 @@ namespace gol
 		Camera Camera;
 	public:
 		GraphicsHandler(
-			const std::filesystem::path& shaderFilePath, 
+			const std::filesystem::path& shaderDirectory, 
 			int32_t windowWidth, int32_t windowHeight,
 			Color bgColor
 		);
@@ -65,6 +65,8 @@ namespace gol
 
 		uint32_t TextureID() const { return m_Texture.ID(); }
 	private:
+		void InitGridBuffer();
+
 		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args) const;
 
 		RectDouble GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const;
@@ -81,10 +83,16 @@ namespace gol
 	private:
 		Color m_BgColor;
 
-		ShaderManager m_Shader;
+		ShaderManager m_GridShader;
+		ShaderManager m_SelectionShader;
 		
-		GLBuffer m_GridBuffer;
+		GLVertexArray m_GridVAO;
+		GLBuffer m_InstanceBuffer;
+		GLBuffer m_CellBuffer;
+		GLIndexBuffer m_CellIndexBuffer;
+
 		GLBuffer m_GridLineBuffer;
+
 		GLBuffer m_SelectionBuffer;
 		GLIndexBuffer m_SelectionIndexBuffer;
 
@@ -96,26 +104,12 @@ namespace gol
 
 std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args) const
 {
-	float width = args.CellSize.Width;
-	float height = args.CellSize.Height;
-	std::vector<float> result{};
-	result.reserve(8 * grid.size());
+	std::vector<float> result {};
+	result.reserve(grid.size() * 2);
 	for (const Vec2& vec : grid)
 	{
-		float xCoord = (vec.X + offset.X) * width;
-		float yCoord = (vec.Y + offset.Y) * height;
-
-		result.push_back(xCoord);
-		result.push_back(yCoord);
-
-		result.push_back(xCoord);
-		result.push_back(yCoord + height);
-
-		result.push_back(xCoord + width);
-		result.push_back(yCoord + height);
-
-		result.push_back(xCoord + width);
-		result.push_back(yCoord);
+		result.push_back(vec.X + offset.X);
+		result.push_back(vec.Y + offset.Y);
 	}
 
 	return result;
@@ -123,27 +117,34 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std
 
 void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args)
 {
-	FrameBufferBinder binder{ m_FrameBuffer };
+	FrameBufferBinder binder { m_FrameBuffer };
 
 	auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
-	m_Shader.AttachUniformMatrix4("u_MVP", matrix);
 
 	if (args.ShowGridLines && offset.X == 0 && offset.Y == 0)
 	{
-		m_Shader.AttachUniformVec4("u_Color", { 0.2f, 0.2f, 0.2f, 1.f });
+		GL_DEBUG(glUseProgram(m_SelectionShader.Program()));
+		m_SelectionShader.AttachUniformMatrix4("u_MVP", matrix);
+		m_SelectionShader.AttachUniformVec4("u_Color", { 0.2f, 0.2f, 0.2f, 1.f });
 		DrawGridLines(offset, args);
 	}
 
-	m_Shader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
+	GL_DEBUG(glUseProgram(m_GridShader.Program()));
+	GL_DEBUG(glBindVertexArray(m_GridVAO.ID()));
+	m_GridShader.AttachUniformVec2("u_CellSize", { args.CellSize.Width, args.CellSize.Height });
+	m_GridShader.AttachUniformMatrix4("u_MVP", matrix);
+	m_GridShader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
+
 	auto positions = GenerateGLBuffer(offset, grid, args);
 
-	GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridBuffer.ID()));
-	GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_DYNAMIC_DRAW));
+	GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
+	
+	GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
+	GL_DEBUG(glBufferSubData(GL_ARRAY_BUFFER, 0, positions.size() * sizeof(float), positions.data()));
 
-	GL_DEBUG(glEnableVertexAttribArray(0));
-	GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
+	GL_DEBUG(glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr, static_cast<GLsizei>(positions.size() / 2)));
 
-	GL_DEBUG(glDrawArrays(GL_QUADS, 0, positions.size() / 2));
+	GL_DEBUG(glBindVertexArray(0));
 }
 
 #endif

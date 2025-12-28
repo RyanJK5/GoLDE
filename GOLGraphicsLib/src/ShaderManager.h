@@ -31,6 +31,7 @@ namespace gol
 
         uint32_t Program() const;
 
+		void AttachUniformVec2(std::string_view label, const glm::vec2& vec);
         void AttachUniformVec4(std::string_view label, const glm::vec4& vec);
         void AttachUniformMatrix4(std::string_view label, const glm::mat4& matrix);
     private:

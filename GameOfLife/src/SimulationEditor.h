@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <optional>
 
+#include "EditorResult.h"
 #include "ErrorWindow.h"
 #include "GameEnums.h"
 #include "GameGrid.h"

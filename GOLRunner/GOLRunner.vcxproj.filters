@@ -21,7 +21,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config\style.yaml" />
-    <None Include="resources\shader\default.shader" />
+    <None Include="resources\shader\grid.shader" />
+    <None Include="resources\shader\selection.shader" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="resources\font\arial.ttf" />

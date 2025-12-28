@@ -160,7 +160,7 @@ gol::FlipVerticalButton::FlipVerticalButton(std::span<const ImGuiKeyChord> short
 {}
 
 gol::UndoButton::UndoButton(std::span<const ImGuiKeyChord> shortcuts)
-    : ActionButton(EditorAction::Undo, shortcuts)
+    : ActionButton(EditorAction::Undo, shortcuts, true)
 {}
 
 gol::Size2F gol::UndoButton::Dimensions() const
@@ -179,7 +179,7 @@ bool gol::UndoButton::Enabled(const EditorResult& state) const
 }
 
 gol::RedoButton::RedoButton(std::span<const ImGuiKeyChord> shortcuts)
-    : ActionButton(EditorAction::Redo, shortcuts)
+    : ActionButton(EditorAction::Redo, shortcuts, true)
 {}
 
 gol::Size2F gol::RedoButton::Dimensions() const

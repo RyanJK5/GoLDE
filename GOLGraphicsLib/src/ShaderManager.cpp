@@ -176,6 +176,12 @@ std::optional<gol::ShaderManager::IDPair> gol::ShaderManager::ParseShader(const 
     return std::make_pair(id1.value(), id2.value());
 }
 
+void gol::ShaderManager::AttachUniformVec2(std::string_view label, const glm::vec2& vec)
+{
+    auto loc = UniformLocation(label);
+    GL_DEBUG(glUniform2f(loc, vec.x, vec.y));
+}
+
 void gol::ShaderManager::AttachUniformVec4(std::string_view label, const glm::vec4& vec)
 {
     auto loc = UniformLocation(label);

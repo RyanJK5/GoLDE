@@ -89,8 +89,11 @@ namespace gol
 	class ActionButton : public MultiActionButton<ActType, LineBreak>
 	{
 	public:
-		ActionButton(ActType action, std::span<const ImGuiKeyChord> shortcuts) 
-			: MultiActionButton<ActType, LineBreak>({{action, shortcuts | KeyShortcut::MapChordsToVector}}), m_Action(action)
+		ActionButton(ActType action, std::span<const ImGuiKeyChord> shortcuts, bool allowRepeats = false) 
+			: MultiActionButton<ActType, LineBreak>(
+				{{action, allowRepeats ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
+									   : shortcuts | KeyShortcut::MapChordsToVector
+				}}), m_Action(action)
 		{ }
 	protected:
 		virtual ActType Action(const EditorResult&) const override final { return m_Action; }

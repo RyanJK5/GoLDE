@@ -23,13 +23,16 @@ gol::FrameBufferBinder::~FrameBufferBinder()
 }
 
 gol::GraphicsHandler::GraphicsHandler(
-    const std::filesystem::path& shader,
+    const std::filesystem::path& shaderDirectory,
     int32_t windowWidth, int32_t windowHeight,
     Color bgColor
 )
     : m_BgColor(bgColor)
-    , m_Shader(shader)
+    , m_GridShader(shaderDirectory / "grid.shader")
+	, m_SelectionShader(shaderDirectory / "selection.shader")
 {
+    InitGridBuffer();
+
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer.ID()));
 
     GL_DEBUG(glBindTexture(GL_TEXTURE_2D, m_Texture.ID()));
@@ -50,9 +53,41 @@ gol::GraphicsHandler::GraphicsHandler(
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     GL_DEBUG(glBindTexture(GL_TEXTURE_2D, 0));
     GL_DEBUG(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-
-    GL_DEBUG(glUseProgram(m_Shader.Program()));
 }
+
+void gol::GraphicsHandler::InitGridBuffer()
+{
+    GL_DEBUG(glBindVertexArray(m_GridVAO.ID()));
+
+    float quadVertices[] = {
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f
+    };
+
+    GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_CellBuffer.ID()));
+    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW));
+	GL_DEBUG(glEnableVertexAttribArray(0));
+    GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr));
+    
+    uint16_t quadIndices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    GL_DEBUG(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_CellIndexBuffer.ID()));
+    GL_DEBUG(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW));
+
+    GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
+    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+    GL_DEBUG(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr));
+    GL_DEBUG(glEnableVertexAttribArray(1));
+    GL_DEBUG(glVertexAttribDivisor(1, 1));
+
+    GL_DEBUG(glBindVertexArray(0));
+}
+
 
 void gol::GraphicsHandler::RescaleFrameBuffer(const Rect& windowBounds, const Rect& viewportBounds)
 {
@@ -227,10 +262,11 @@ gol::RectDouble gol::GraphicsHandler::GridToScreenBounds(const Rect& region, con
 void gol::GraphicsHandler::DrawSelection(const Rect& region, const GraphicsHandlerArgs& args)
 {
     FrameBufferBinder binder { m_FrameBuffer };
+    GL_DEBUG(glUseProgram(m_SelectionShader.Program()));
 
     auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());
-    m_Shader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
-    m_Shader.AttachUniformMatrix4("u_MVP", matrix);
+    m_SelectionShader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
+    m_SelectionShader.AttachUniformMatrix4("u_MVP", matrix);
 
     RectDouble rect = GridToScreenBounds(region, args);
     float positions[] = 

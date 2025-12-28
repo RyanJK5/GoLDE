@@ -65,6 +65,11 @@ namespace gol
 		decltype(&glGenTextures), decltype(&glDeleteTextures),
 		&glGenTextures, &glDeleteTextures
 	>;
+
+	using GLVertexArray = GLWrapper<
+		decltype(&glGenVertexArrays), decltype(&glDeleteVertexArrays),
+		&glGenVertexArrays, &glDeleteVertexArrays
+	>;
 }
 
 template <gol::GLGenerator GeneratorType, gol::GLDeleter DeleterType, GeneratorType Generator, DeleterType Deleter>

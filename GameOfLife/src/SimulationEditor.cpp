@@ -30,7 +30,7 @@ gol::SimulationEditor::SimulationEditor(uint32_t id, const std::filesystem::path
     , m_CurrentFilePath(path)
     , m_Grid(gridSize)
     , m_Graphics(
-        std::filesystem::path("resources") / "shader" / "default.shader", 
+        std::filesystem::path("resources") / "shader", 
         windowSize.Width, windowSize.Height,
         { 0.1f, 0.1f, 0.1f, 1.f }
     )
