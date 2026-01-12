@@ -10,6 +10,7 @@ namespace gol
 	class Camera
 	{
 	public:
+		static constexpr float MinZoom = 0.0001f;
 		static constexpr float MaxZoom = 60.f;
 	public:
 		float Zoom = 1.f;

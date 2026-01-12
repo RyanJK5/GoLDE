@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <print>
 
 #include "Camera.h"
 #include "Graphics2D.h"
@@ -10,7 +11,7 @@ void gol::Camera::ZoomBy(Vec2F screenPos, const RectF& viewBounds, float zoom)
     Zoom *= 1.f + zoom;
     if (Zoom < MaxZoom)
         Center += (ScreenToWorldPos(screenPos, viewBounds) - Center) * zoom;
-    Zoom = std::min(Zoom, MaxZoom);
+    Zoom = std::clamp(Zoom, MinZoom, MaxZoom);
 }
 
 void gol::Camera::Translate(glm::vec2 delta)
