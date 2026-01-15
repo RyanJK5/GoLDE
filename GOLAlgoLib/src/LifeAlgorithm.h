@@ -2,17 +2,24 @@
 #define __LifeAlgorithm_h__
 
 #include <functional>
+#include <span>
+#include <variant>
 
 #include "Graphics2D.h"
+#include "HashQuadtree.h"
 #include "LifeHashSet.h"
 
 namespace gol
 {
-	using LifeAlgorithm = std::function<LifeHashSet(const LifeHashSet&, const Rect&)>;
+	
+	LifeHashSet SparseLife(std::span<const Vec2> data, const Rect& bounds);
 
-	LifeHashSet SparseLife(const LifeHashSet& data, const Rect& bounds);
+	const HashQuadtree& HashLife(const HashQuadtree& data, const Rect& bounds);
 
-	LifeHashSet HashLife(const LifeHashSet& data, const Rect& bounds);
+	enum class LifeAlgorithm {
+		SparseLife,
+		HashLife
+	};
 }
 
 #endif

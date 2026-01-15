@@ -10,6 +10,9 @@ target_include_directories(unordered_dense INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 add_library(fontawesome INTERFACE)
 target_include_directories(fontawesome INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/FontAwesome)
 
+# Add GoogleTest
+add_subdirectory(GoogleTest)
+
 message(STATUS "Header-only dependencies configured")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)

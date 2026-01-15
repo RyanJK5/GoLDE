@@ -14,7 +14,7 @@
 
 gol::GameGrid::GameGrid(int32_t width, int32_t height)
 	: m_Width(width), m_Height(height)
-	, m_Algorithm(SparseLife)
+	, m_Algorithm(LifeAlgorithm::SparseLife)
 { }
 
 gol::GameGrid::GameGrid(Size2 size)
@@ -81,7 +81,14 @@ const gol::LifeHashSet& gol::GameGrid::Data() const
 
 void gol::GameGrid::Update()
 {
-	m_Data = m_Algorithm(m_Data, {0, 0, m_Width, m_Height});
+	switch (m_Algorithm) {
+	case LifeAlgorithm::SparseLife:
+		m_Data = SparseLife(m_Data, {0, 0, m_Width, m_Height});
+		break;
+	case LifeAlgorithm::HashLife:
+		break;
+	}
+
 	m_Population = m_Data.size();
 	m_Generation++;
 }

@@ -1,11 +1,13 @@
+#include <algorithm>
+
 #include "Graphics2D.h"
 #include "LifeAlgorithm.h"
 #include "LifeHashSet.h"
 
-gol::LifeHashSet gol::SparseLife(const LifeHashSet& data, const Rect& bounds)
+gol::LifeHashSet gol::SparseLife(std::span<const Vec2> data, const Rect& bounds)
 {
-	constexpr static int32_t dx[] = { -1,-1,-1,0,0,1,1,1 };
-	constexpr static int32_t dy[] = { -1,0,1,-1,1,-1,0,1 };
+	constexpr static std::array dx = { -1,-1,-1,0,0,1,1,1 };
+	constexpr static std::array dy = { -1,0,1,-1,1,-1,0,1 };
 
 	ankerl::unordered_dense::map<Vec2, uint8_t> neighborCount;
 	neighborCount.reserve(data.size() * 8);
@@ -15,6 +17,7 @@ gol::LifeHashSet gol::SparseLife(const LifeHashSet& data, const Rect& bounds)
 		{
 			int32_t x = pos.X + dx[i];
 			int32_t y = pos.Y + dy[i];
+
 			if (bounds.Width > 0 && bounds.Height > 0 && !bounds.InBounds(x, y))
 				continue;
 
@@ -26,8 +29,9 @@ gol::LifeHashSet gol::SparseLife(const LifeHashSet& data, const Rect& bounds)
 	newSet.reserve(neighborCount.size());
 	for (auto&& [pos, neighbors] : neighborCount)
 	{
-		if (neighbors == 3 || (neighbors == 2 && data.contains(pos)))
+		if (neighbors == 3 || (neighbors == 2 && std::ranges::contains(data, pos)))
 			newSet.insert(pos);
 	}
+
 	return newSet;
 }
