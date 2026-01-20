@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(GameOfLife VERSION 1.0 LANGUAGES CXX)
 
+include(CTest) # enables ctest integration via BUILD_TESTING/enable_testing
+
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
