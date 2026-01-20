@@ -248,9 +248,9 @@ void gol::GraphicsHandler::DrawGridLines(Vec2 offset, const GraphicsHandlerArgs&
     GL_DEBUG(glDrawArrays(GL_LINES, 0, positions.size() / 2));
 }
 
-gol::RectDouble gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const
+gol::RectF gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const
 {
-    return RectDouble 
+    return RectF
     {
           region.X      * args.CellSize.Width,
           region.Y      * args.CellSize.Height,
@@ -268,7 +268,7 @@ void gol::GraphicsHandler::DrawSelection(const Rect& region, const GraphicsHandl
     m_SelectionShader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
     m_SelectionShader.AttachUniformMatrix4("u_MVP", matrix);
 
-    RectDouble rect = GridToScreenBounds(region, args);
+    auto rect = GridToScreenBounds(region, args);
     float positions[] = 
     { 
         rect.UpperLeft().X, rect.UpperLeft().Y,

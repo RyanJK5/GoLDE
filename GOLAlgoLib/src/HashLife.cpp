@@ -9,6 +9,11 @@
 
 namespace gol 
 {
+	HashLifeUpdateInfo HashLife(const HashQuadtree& data, const Rect& bounds)
+	{
+		return data.NextGeneration(bounds);
+	}
+
 	size_t LifeNodeHash::operator()(const gol::LifeNode* node) const
 	{
 		if (!node) 
@@ -19,29 +24,61 @@ namespace gol
 	template class HashQuadtree::IteratorImpl<Vec2>;
 	template class HashQuadtree::IteratorImpl<const Vec2>;
 
-	HashQuadtree::HashQuadtree(const LifeHashSet& data)
+	HashQuadtree::HashQuadtree(const LifeHashSet& data, Vec2 offset)
 	{
-		if (!data.empty())
-			m_Root = BuildTree(data);
+		if (data.empty())
+			return;
+		
+		m_Root = BuildTree(data);
+		m_RootOffset += offset;
+	}
+
+	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2 offset)
+		: m_Root(root)
+		, m_RootOffset(offset)
+	{ }
+
+	int32_t HashQuadtree::CalculateDepth() const
+	{
+		if (m_Root == FalseNode || m_Root == TrueNode)
+			return 0;
+
+		auto depth = 0;
+		const LifeNode* current = m_Root;
+		while (current != TrueNode && current != FalseNode)
+		{
+			current = current->NorthWest;
+			depth++;
+		}
+		return depth;
+	}
+
+	bool HashQuadtree::operator==(const HashQuadtree& other) const
+	{
+		if (m_Root == other.m_Root && m_RootOffset == other.m_RootOffset)
+			return true;
+
+		auto hashSet1 = *this | std::ranges::to<LifeHashSet>();
+		auto hashSet2 = other | std::ranges::to<LifeHashSet>();
+
+		return hashSet1 == hashSet2;
+	}
+
+	bool HashQuadtree::operator!=(const HashQuadtree& other) const
+	{
+		return !(*this == other);
 	}
 
 	int32_t HashQuadtree::CalculateTreeSize() const
 	{
-		if (m_Root == FalseNode || m_Root == TrueNode)
-			return 1;
-		
-		int32_t depth = 0;
-		const LifeNode* current = m_Root;
-		while (current != TrueNode && current != FalseNode) {
-			current = current->NorthWest;
-			depth++;
-		}
-		return 1 << depth;
+		if (m_Root == FalseNode)
+			return 0;
+		return 1 << CalculateDepth();
 	}
 
 	bool HashQuadtree::empty() const
 	{
-		return m_Root == FalseNode;
+          return m_Root == FalseNode || m_Root->IsEmpty;
 	}
 
 	HashQuadtree::Iterator HashQuadtree::begin()
@@ -55,7 +92,7 @@ namespace gol
 
 	HashQuadtree::Iterator HashQuadtree::end()
 	{
-		return Iterator();
+		return Iterator{};
 	}
 
 	HashQuadtree::ConstIterator HashQuadtree::begin() const 
@@ -69,22 +106,42 @@ namespace gol
 
 	HashQuadtree::ConstIterator HashQuadtree::end() const
 	{
-		return ConstIterator();
+		return ConstIterator{};
 	}
 
-	const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se) 
+	const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se) const
 	{
 		LifeNode toFind { nw, ne, sw, se };
-		if (auto itr = m_NodeMap.find(&toFind); itr != m_NodeMap.end()) 
+		if (auto itr = s_NodeMap.find(&toFind); itr != s_NodeMap.end()) 
 			return itr->first;
 
 		auto node = std::make_unique<LifeNode>(nw, ne, sw, se);
-		m_NodeStorage.push_back(std::move(node));
-		m_NodeMap[m_NodeStorage.back().get()] = nullptr;
-		return m_NodeStorage.back().get();
+		s_NodeStorage.push_back(std::move(node));
+		s_NodeMap[s_NodeStorage.back().get()] = nullptr;
+		return s_NodeStorage.back().get();
 	}
 
-	const LifeNode* HashQuadtree::CenteredSubnode(const LifeNode& node) 
+	const LifeNode* HashQuadtree::CenteredHorizontal(const LifeNode& west, const LifeNode& east) const
+	{
+		return FindOrCreate(
+			west.NorthEast,
+			east.NorthWest,
+			west.SouthEast,
+			east.SouthWest
+		);
+	}
+
+	const LifeNode* HashQuadtree::CenteredVertical(const LifeNode& north, const LifeNode& south) const
+	{
+		return FindOrCreate(
+			north.SouthWest,
+			north.SouthEast,
+			south.NorthWest,
+			south.NorthEast
+		);
+	}
+
+	const LifeNode* HashQuadtree::CenteredSubNode(const LifeNode& node) const
 	{
 		return FindOrCreate(
 			node.NorthWest->SouthEast,
@@ -94,44 +151,14 @@ namespace gol
 		);
 	}
 
-	const LifeNode* HashQuadtree::CenteredHorizontal(const LifeNode& west, const LifeNode& east) 
-	{
-		return FindOrCreate(
-			west.NorthEast->SouthEast,
-			east.NorthWest->SouthWest,
-			west.SouthEast->NorthEast,
-			east.SouthWest->NorthWest
-		);
-	}
-
-	const LifeNode* HashQuadtree::CenteredVertical(const LifeNode& north, const LifeNode& south) 
-	{
-		return FindOrCreate(
-			north.SouthWest->SouthEast,
-			north.SouthEast->SouthWest,
-			south.NorthWest->NorthEast,
-			south.NorthEast->NorthWest
-		);
-	}
-
-	const LifeNode* HashQuadtree::CenteredSubSubNode(const LifeNode& node) 
-	{
-		return FindOrCreate(
-			node.NorthWest->SouthEast->SouthEast,
-			node.NorthEast->SouthWest->SouthWest,
-			node.SouthWest->NorthEast->NorthEast,
-			node.SouthEast->NorthWest->NorthWest
-		);
-	}
-
 	// TODO: Use more sophisticated algorithm for base case
-	const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) 
+	const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) const
 	{
 		constexpr static auto gridSize = 4;
 		const std::array cells = 
 		{ 
 			node->NorthWest->NorthWest, node->NorthWest->NorthEast, node->NorthEast->NorthWest, node->NorthEast->NorthEast,
-			node->NorthWest->SouthWest, node->NorthWest->SouthEast, node->NorthEast->SouthWest, node->NorthEast->SouthWest,
+			node->NorthWest->SouthWest, node->NorthWest->SouthEast, node->NorthEast->SouthWest, node->NorthEast->SouthEast,
 			node->SouthWest->NorthWest, node->SouthWest->NorthEast, node->SouthEast->NorthWest, node->SouthEast->NorthEast,
 			node->SouthWest->SouthWest, node->SouthWest->SouthEast, node->SouthEast->SouthWest, node->SouthEast->SouthEast
 		};
@@ -148,38 +175,159 @@ namespace gol
 		}
 		result = SparseLife(result, {0, 0, gridSize, gridSize});
 
-		const auto* quadtree = BuildTree(result);
-		return quadtree;
+		return FindOrCreate(
+			result.contains({ 1, 1 }) ? TrueNode : FalseNode,
+			result.contains({ 2, 1 }) ? TrueNode : FalseNode,
+			result.contains({ 1, 2 }) ? TrueNode : FalseNode,
+			result.contains({ 2, 2 }) ? TrueNode : FalseNode
+		);
 	}
 
-	const LifeNode* HashQuadtree::AdvanceNode(const LifeNode* node, int32_t level) {
-		return node;
-	}
-
-	const LifeNode* HashQuadtree::AdvanceFast(const LifeNode* node, int32_t level) 
+	const LifeNode* HashQuadtree::AdvanceNode(const LifeNode* node, int32_t level) const
 	{
-		if (auto itr = m_NodeMap.find(node); itr != m_NodeMap.end()) 
+		return AdvanceFast(node, level);
+	}
+
+	const LifeNode* HashQuadtree::AdvanceFast(const LifeNode* node, int32_t level) const
+	{
+		if (auto itr = s_NodeMap.find(node); itr != s_NodeMap.end() && itr->second != nullptr)
 			return itr->second;
 
 		if (level == 2) 
-			return AdvanceBase(node);
+		{
+			const auto* base = AdvanceBase(node);
+			s_NodeMap[node] = base;
+			return base;
+		}
 		
-		const auto n00 = CenteredSubnode(*node->NorthWest);
-		const auto n01 = CenteredHorizontal(*node->NorthWest, *node->NorthEast);
-		const auto n02 = CenteredSubnode(*node->NorthEast);
-		const auto n10 = CenteredVertical(*node->NorthWest, *node->SouthWest);
-		const auto n11 = CenteredSubSubNode(*node);
-		const auto n12 = CenteredVertical(*node->NorthEast, *node->SouthEast);
-		const auto n20 = CenteredSubnode(*node->SouthWest);
-		const auto n21 = CenteredHorizontal(*node->SouthWest, *node->SouthEast);
-		const auto n22 = CenteredSubnode(*node->SouthEast);
+		const auto* n00 = AdvanceNode(node->NorthWest, level - 1);
+		const auto* n01 = AdvanceNode(CenteredHorizontal(*node->NorthWest, *node->NorthEast), level - 1);
+        const auto* n02 = AdvanceNode(node->NorthEast, level - 1);
+		const auto* n10 = AdvanceNode(CenteredVertical(*node->NorthWest, *node->SouthWest), level - 1);
+		const auto* n11 = AdvanceNode(CenteredSubNode(*node), level - 1);
+		const auto* n12 = AdvanceNode(CenteredVertical(*node->NorthEast, *node->SouthEast), level - 1);
+        const auto* n20 = AdvanceNode(node->SouthWest, level - 1);
+		const auto* n21 = AdvanceNode(CenteredHorizontal(*node->SouthWest, *node->SouthEast), level - 1);
+		const auto* n22 = AdvanceNode(node->SouthEast, level - 1);
 
-		return FindOrCreate(
+		const auto* result = FindOrCreate(
 			AdvanceNode(FindOrCreate(n00, n01, n10, n11), level - 1),
 			AdvanceNode(FindOrCreate(n01, n02, n11, n12), level - 1),
 			AdvanceNode(FindOrCreate(n10, n11, n20, n21), level - 1),
 			AdvanceNode(FindOrCreate(n11, n12, n21, n22), level - 1)
 		);
+		s_NodeMap[node] = result;
+		return result;
+	}
+
+	static auto notEmpty(const LifeNode* n)
+	{
+		return n != FalseNode && !n->IsEmpty;
+	};
+
+	bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const
+	{
+		if (node == FalseNode)
+			return false;
+		if (level <= 2)
+			return true;
+
+		const auto* nw = node->NorthWest;
+		if (notEmpty(nw)) 
+		{ 
+			if (notEmpty(nw->NorthWest) || notEmpty(nw->NorthEast) || notEmpty(nw->SouthWest))
+				return true;
+
+			const auto* nw_se = nw->SouthEast;
+			if (notEmpty(nw_se) && (notEmpty(nw_se->NorthWest) || notEmpty(nw_se->NorthEast) || notEmpty(nw_se->SouthWest)))
+				return true;
+		}
+
+		const auto* ne = node->NorthEast;
+		if (notEmpty(ne)) 
+		{
+			if (notEmpty(ne->NorthWest) || notEmpty(ne->NorthEast) || notEmpty(ne->SouthEast))
+				return true;
+
+			const auto* ne_sw = ne->SouthWest;
+			if (notEmpty(ne_sw) && (notEmpty(ne_sw->NorthWest) || notEmpty(ne_sw->NorthEast) || notEmpty(ne_sw->SouthEast)))
+				return true;
+		}
+
+		const auto* sw = node->SouthWest;
+		if (notEmpty(sw)) 
+		{
+			if (notEmpty(sw->NorthWest) || notEmpty(sw->SouthWest) || notEmpty(sw->SouthEast))
+				return true;
+
+			const auto* sw_ne = sw->NorthEast;
+			if (notEmpty(sw_ne) && (notEmpty(sw_ne->NorthWest) || notEmpty(sw_ne->SouthWest) || notEmpty(sw_ne->SouthEast)))
+				return true;
+		}
+
+		const auto* se = node->SouthEast;
+		if (notEmpty(se)) 
+		{
+			if (notEmpty(se->NorthEast) || notEmpty(se->SouthWest) || notEmpty(se->SouthEast))
+				return true;
+
+			const auto* se_nw = se->NorthWest;
+			if (notEmpty(se_nw) && (notEmpty(se_nw->NorthEast) || notEmpty(se_nw->SouthWest) || notEmpty(se_nw->SouthEast)))
+				return true;
+		}
+
+		return false;
+	}
+
+	const LifeNode* HashQuadtree::ExpandUniverse(const LifeNode* node, int32_t level) const
+	{
+		if (node == FalseNode)
+			return EmptyTree(1 << (level + 1));
+
+		if (node == TrueNode)
+			return FindOrCreate(FalseNode, FalseNode, FalseNode, TrueNode);
+
+		const auto childSize = level > 0 ? (1 << (level - 1)) : 1;
+		const auto* empty = EmptyTree(childSize);
+		const auto* expandedNW = FindOrCreate(empty, empty, empty, node->NorthWest);
+		const auto* expandedNE = FindOrCreate(empty, empty, node->NorthEast, empty);
+		const auto* expandedSW = FindOrCreate(empty, node->SouthWest, empty, empty);
+		const auto* expandedSE = FindOrCreate(node->SouthEast, empty, empty, empty);
+
+		return FindOrCreate(expandedNW, expandedNE, expandedSW, expandedSE);
+	}
+
+	HashLifeUpdateInfo HashQuadtree::NextGeneration(const Rect& bounds) const
+	{
+		if (m_Root == FalseNode)
+			return {};
+
+		const LifeNode* root = m_Root;
+		
+		auto level = CalculateDepth();
+		auto size = std::max(1, CalculateTreeSize());
+		auto offset = m_RootOffset;
+
+		const auto expand = [&]()
+		{
+			root = ExpandUniverse(root, level);
+			const auto delta = std::max(1, size / 2);
+			offset.X -= delta;
+			offset.Y -= delta;
+			level++;
+			size <<= 1;
+		};
+		while (NeedsExpansion(root, level)) 
+		{
+			expand();
+		}
+
+		const auto advanced = AdvanceNode(root, level);
+		const auto centerDelta = std::max(1, size / 4);
+		offset.X += centerDelta;
+		offset.Y += centerDelta;
+
+		return { .Data = { advanced, offset }, .Generations = 1ULL << (level - 2ULL) };
 	}
 
 	size_t HashQuadtree::QuadHash::operator()(const QuadKey& key) const noexcept
@@ -187,7 +335,7 @@ namespace gol
 		return ankerl::unordered_dense::detail::wyhash::hash(&key, sizeof(key));
 	}
 
-	const LifeNode* HashQuadtree::EmptyTree(int32_t size)
+	const LifeNode* HashQuadtree::EmptyTree(int32_t size) const
 	{
 		if (size <= 1)
 			return FalseNode;
@@ -244,12 +392,12 @@ namespace gol
 			[](const Vec2& a, const Vec2& b) { return a.Y < b.Y; });
 		
 		const auto neighborhoodSize = std::max(maxX->X - minX->X, maxY->Y - minY->Y) + 1;
-		const auto gridExponent = std::ceil(std::log2(neighborhoodSize));
-		const auto gridSize = static_cast<int32_t>(std::pow(2, gridExponent));
+		const auto gridExponent = static_cast<int32_t>(std::ceil(std::log2(neighborhoodSize)));
+		const auto gridSize = 1 << gridExponent;
 		
         m_RootOffset = {minX->X, minY->Y};
 		
-		std::vector<Vec2> cellVec(cells.begin(), cells.end());
+		std::vector<Vec2> cellVec{ cells.begin(), cells.end() };
 		return BuildTreeRegion(cellVec, m_RootOffset, gridSize);
 	}
 }

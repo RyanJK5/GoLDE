@@ -14,7 +14,8 @@
 
 gol::GameGrid::GameGrid(int32_t width, int32_t height)
 	: m_Width(width), m_Height(height)
-	, m_Algorithm(LifeAlgorithm::SparseLife)
+	, m_Algorithm(LifeAlgorithm::HashLife)
+	, m_Data(LifeHashSet{})
 { }
 
 gol::GameGrid::GameGrid(Size2 size)
@@ -25,15 +26,14 @@ gol::GameGrid::GameGrid(const GameGrid& other, Size2 size)
 	: GameGrid(size)
 {
 	m_Population = other.m_Population;
-	for (const auto& pos : other.Data())
-	{
-		if (InBounds(pos))
-			m_Data.insert(pos);
-	}
+	m_Data = other.Data() 
+		| std::views::filter([this](const auto& pos) { return InBounds(pos); }) 
+		| std::ranges::to<LifeHashSet>();
 }
 
 bool gol::GameGrid::Dead() const
 {
+
 	return m_Data.size() == 0;
 }
 
@@ -44,7 +44,7 @@ gol::Rect gol::GameGrid::BoundingBox() const
 
 	auto least = Vec2 { std::numeric_limits<int32_t>::max(), std::numeric_limits<int32_t>::max() };
 	auto most = Vec2  { std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::min() };
-	for (auto&& value : m_Data)
+	for (const auto& value : m_Data)
 	{
 		least.X = std::min(least.X, value.X);
 		least.Y = std::min(least.Y, value.Y);
@@ -64,12 +64,12 @@ gol::Rect gol::GameGrid::BoundingBox() const
 
 const std::set<gol::Vec2>& gol::GameGrid::SortedData() const
 {
-	if (m_ResetCache)
+	if (m_CacheInvalidated)
 	{
 		m_SortedData.clear();
 		for (auto& pos : m_Data)
 			m_SortedData.insert(pos);
-		m_ResetCache = false;
+		m_CacheInvalidated = false;
 	}
 	return m_SortedData;
 }
@@ -84,13 +84,20 @@ void gol::GameGrid::Update()
 	switch (m_Algorithm) {
 	case LifeAlgorithm::SparseLife:
 		m_Data = SparseLife(m_Data, {0, 0, m_Width, m_Height});
+		m_Generation++;
 		break;
 	case LifeAlgorithm::HashLife:
+		if (!m_HashLifeData)
+			m_HashLifeData = HashQuadtree{ m_Data };
+		auto updateInfo = m_HashLifeData->NextGeneration({ 0, 0, m_Width, m_Height });
+		m_Generation += updateInfo.Generations;
+		m_HashLifeData = std::move(updateInfo.Data);
+		m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
 		break;
 	}
 
+	m_CacheInvalidated = true;
 	m_Population = m_Data.size();
-	m_Generation++;
 }
 
 bool gol::GameGrid::Toggle(int32_t x, int32_t y)
@@ -171,7 +178,7 @@ gol::LifeHashSet gol::GameGrid::ReadRegion(const Rect& region) const
 void gol::GameGrid::ClearRegion(const Rect& region)
 {
 	m_Population -= std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
-	m_ResetCache = true;
+	m_CacheInvalidated = true;
 }
 
 void gol::GameGrid::ClearData(const std::vector<Vec2>& data, Vec2 offset)
@@ -180,7 +187,7 @@ void gol::GameGrid::ClearData(const std::vector<Vec2>& data, Vec2 offset)
 	{
 		m_Population -= m_Data.erase({ vec.X + offset.X, vec.Y + offset.Y });
 	}
-	m_ResetCache = true;
+	m_CacheInvalidated = true;
 }
 
 gol::LifeHashSet gol::GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
@@ -213,7 +220,7 @@ void gol::GameGrid::RotateGrid(bool clockwise)
 		newSet.insert(Vec2 { static_cast<int32_t>(result.X), static_cast<int32_t>(result.Y) });
 	}
 	std::swap(m_Width, m_Height);
-	m_ResetCache = true;
+	m_CacheInvalidated = true;
 	m_Data = std::move(newSet);
 }
 
@@ -240,7 +247,7 @@ void gol::GameGrid::FlipGrid(bool vertical)
 				newData.insert({m_Width - 1 - pos.X, pos.Y});
 		}
 	}
-	m_ResetCache = true;
+	m_CacheInvalidated = true;
 	m_Data = std::move(newData);
 }
 

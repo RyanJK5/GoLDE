@@ -1,4 +1,9 @@
-add_executable(GOLTest Testing.cpp)
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+add_executable(GOLTest ${SOURCES})
+
+# Modern GTest discovery
+include(GoogleTest)
+gtest_discover_tests(GOLTest)
 
 target_link_libraries(GOLTest PRIVATE
     GOLCoreLib  
@@ -12,6 +17,12 @@ target_link_libraries(GOLTest PRIVATE
     nfd
     OpenGL::GL
     GTest::gtest_main
+)
+
+add_custom_command(TARGET GOLTest POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/universes
+        $<TARGET_FILE_DIR:GOLTest>/universes
 )
 
 

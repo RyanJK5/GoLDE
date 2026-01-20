@@ -28,33 +28,55 @@ namespace gol
         uint64_t Hash;
         bool IsEmpty;
     
-        constexpr LifeNode(
-            const LifeNode* nw, 
-            const LifeNode* ne, 
-            const LifeNode* sw, 
-            const LifeNode* se,
+		constexpr LifeNode(
+			const LifeNode* nw,
+			const LifeNode* ne,
+			const LifeNode* sw,
+			const LifeNode* se,
 			bool isLeaf = false
-        )
-            : NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se), Hash(0ULL), IsEmpty(false)
-        {
-            if (!isLeaf)
-            {
-                auto check = [](const LifeNode* n) { return n == nullptr || n->IsEmpty; };
-                IsEmpty = check(nw) && check(ne) && check(sw) && check(se);
-            }
+		)
+		: NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se), Hash(0ULL), IsEmpty(false)
+		{
+			if (!isLeaf)
+			{
+				auto check = [](const LifeNode* n) { return n == nullptr || n->IsEmpty; };
+				IsEmpty = check(nw) && check(ne) && check(sw) && check(se);
+			}
 
-            if consteval {} else 
-            {
-                Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(NorthWest));
-                Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(NorthEast));
-                Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthWest));
-                Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthEast));
-            }
+			if consteval {}
+			else
+			{
+				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(NorthWest));
+				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(NorthEast));
+				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthWest));
+				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthEast));
+			}
+		}
+    };
+
+	struct NodeUpdateInfo
+	{
+		const LifeNode* Node;
+		int32_t Generations;
+	};
+
+    struct LifeNodeEqual 
+    {
+        using is_transparent = void;
+        bool operator()(const LifeNode* lhs, const LifeNode* rhs) const 
+        {
+            if (lhs == rhs) return true;
+            if (!lhs || !rhs) return false;
+            return lhs->NorthWest == rhs->NorthWest &&
+                   lhs->NorthEast == rhs->NorthEast &&
+                   lhs->SouthWest == rhs->SouthWest &&
+                   lhs->SouthEast == rhs->SouthEast;
         }
     };
 
     struct LifeNodeHash 
     {
+        using is_transparent = void;
     	size_t operator()(const gol::LifeNode* node) const;
     };
 
@@ -66,13 +88,15 @@ namespace gol
 
 namespace gol 
 {
-    class HashQuadtree 
+	struct HashLifeUpdateInfo;
+
+    class HashQuadtree
     {
     private:
         template <typename T>    
         class IteratorImpl {    
         private:
-            struct StackFrame {
+            struct LifeNodeData {
                 const LifeNode* node;
                 Vec2 position;
                 int32_t size;
@@ -101,13 +125,13 @@ namespace gol
             IteratorImpl(const LifeNode* root, Vec2 offset, int32_t size, bool isEnd);
             void AdvanceToNext();
         private:
-            std::stack<StackFrame> m_Stack;
+            std::stack<LifeNodeData> m_Stack;
             value_type m_Current;
             bool m_IsEnd;
         };
     public:
         HashQuadtree() = default;
-        HashQuadtree(const LifeHashSet& data);
+		HashQuadtree(const LifeHashSet& data, Vec2 offset = {});
     public:
         using Iterator = IteratorImpl<Vec2>;
         using ConstIterator = IteratorImpl<const Vec2>;
@@ -120,38 +144,45 @@ namespace gol
         ConstIterator begin() const;
         ConstIterator end() const;
 
-        void Advance(const Rect& bounds);
+        [[no_discard]] HashLifeUpdateInfo NextGeneration(const Rect& bounds = {}) const;
+
+		int32_t CalculateDepth() const;
+		int32_t CalculateTreeSize() const;
+
+		bool operator==(const HashQuadtree& other) const;
+		bool operator!=(const HashQuadtree& other) const;
     private:
-        const LifeNode* AdvanceNode(const LifeNode* node, int32_t level);
+		HashQuadtree(const LifeNode* root, Vec2 offset);
+
+		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
+		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
+
+        const LifeNode* AdvanceNode(const LifeNode* node, int32_t level) const;
 
         const LifeNode* FindOrCreate(
             const LifeNode* nw, 
             const LifeNode* ne, 
             const LifeNode* sw,
             const LifeNode* se
-        );
+        ) const;
 
         const LifeNode* BuildTreeRegion(
             std::span<Vec2> cells, 
             Vec2 pos, int32_t size);
 
-        const LifeNode* EmptyTree(int32_t size);
+        const LifeNode* EmptyTree(int32_t size) const;
 
 	    const LifeNode* BuildTree(const LifeHashSet& data);
 
-		const LifeNode* CenteredSubnode(const LifeNode& node);
+		const LifeNode* CenteredHorizontal(const LifeNode& west, const LifeNode& east) const;
 
-		const LifeNode* CenteredHorizontal(const LifeNode& west, const LifeNode& east);
+		const LifeNode* CenteredVertical(const LifeNode& north, const LifeNode& south) const;
 
-		const LifeNode* CenteredVertical(const LifeNode& north, const LifeNode& south);
+		const LifeNode* CenteredSubNode(const LifeNode& node) const;
 
-		const LifeNode* CenteredSubSubNode(const LifeNode& node);
+		const LifeNode* AdvanceBase(const LifeNode* node) const;
 
-		const LifeNode* AdvanceBase(const LifeNode* node);
-
-		const LifeNode* AdvanceFast(const LifeNode* node, int32_t level);
-
-		int32_t CalculateTreeSize() const;
+		const LifeNode* AdvanceFast(const LifeNode* node, int32_t level) const;
     private:
 		struct QuadKey
 		{
@@ -168,22 +199,27 @@ namespace gol
 			size_t operator()(const QuadKey& key) const noexcept;
 		};
 
-        ankerl::unordered_dense::map<QuadKey, const LifeNode*, QuadHash> m_TreeBuilderCache {};
-        ankerl::unordered_dense::map<int32_t, const LifeNode*> m_EmptyNodeCache {};
+		ankerl::unordered_dense::map<QuadKey, const LifeNode*, QuadHash> m_TreeBuilderCache {};
+        mutable ankerl::unordered_dense::map<int32_t, const LifeNode*> m_EmptyNodeCache {};
 	private:
+		inline static ankerl::unordered_dense::map<const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> s_NodeMap{};
 
-        ankerl::unordered_dense::map<const LifeNode*, const LifeNode*, LifeNodeHash> m_NodeMap {};
+		inline static std::vector<std::unique_ptr<LifeNode>> s_NodeStorage{};
 
-        std::vector<std::unique_ptr<LifeNode>> m_NodeStorage {};
-        
         const LifeNode* m_Root = FalseNode;        
         Vec2 m_RootOffset;    
     };
 
+	struct HashLifeUpdateInfo
+	{
+		HashQuadtree Data;
+		uint64_t Generations = 1;
+	};
+
     extern template class HashQuadtree::IteratorImpl<Vec2>;
     extern template class HashQuadtree::IteratorImpl<const Vec2>;
 
-    template <typename T>
+	template <typename T>
 	HashQuadtree::IteratorImpl<T>::IteratorImpl(
 		const LifeNode* root, Vec2 offset, int32_t size, bool isEnd)
 		: m_Current(offset), m_IsEnd(isEnd)

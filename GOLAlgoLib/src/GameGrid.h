@@ -67,16 +67,18 @@ namespace gol
 		const LifeHashSet& Data() const;
 	private:
 		LifeAlgorithm m_Algorithm;
+
 		LifeHashSet m_Data;
+		std::optional<HashQuadtree> m_HashLifeData;
 
 		mutable std::set<Vec2> m_SortedData;
-		mutable bool m_ResetCache = true;
+		mutable bool m_CacheInvalidated = true;
 
 		int32_t m_Width;
 		int32_t m_Height;
 
-		int64_t m_Population = 0;
-		int64_t m_Generation = 0;
+		uint64_t m_Population = 0;
+		uint64_t m_Generation = 0;
 	};
 }
 

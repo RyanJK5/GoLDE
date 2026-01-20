@@ -63,7 +63,7 @@ namespace gol::RLEEncoder
 	template <std::unsigned_integral StorageType>
 	inline std::vector<StorageType> EncodeRegion(const GameGrid& grid, const Rect& region, Vec2 offset)
 	{
-		constexpr StorageType largestValue = std::numeric_limits<StorageType>::max() >> (2 * sizeof(StorageType));
+		constexpr static StorageType largestValue = std::numeric_limits<StorageType>::max() >> (2 * sizeof(StorageType));
 
 		auto encoded = std::vector<StorageType> {};
 			
@@ -95,7 +95,7 @@ namespace gol::RLEEncoder
 
 			if (!running)
 			{
-				StorageType count = static_cast<StorageType>((region.Height * (pos.X - runStart.X) + pos.Y - runStart.Y) - 1);
+				auto count = static_cast<StorageType>((region.Height * (pos.X - runStart.X) + pos.Y - runStart.Y) - 1);
 				if (count > largestValue)
 					throw std::invalid_argument("Specified region contains data that is too large");
 				if (count > 0)
@@ -111,7 +111,7 @@ namespace gol::RLEEncoder
 			if (nextPos.Y >= region.Y + region.Height - offset.Y)
 			{
 				nextPos.X++;
-				nextPos.Y = region.Y;
+				nextPos.Y = region.Y - offset.Y;
 			}
 
 			if (!region.InBounds(nextPos + offset) || grid.Data().find(nextPos + offset) == grid.Data().end())

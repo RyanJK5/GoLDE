@@ -69,7 +69,7 @@ namespace gol
 
 		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args) const;
 
-		RectDouble GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const;
+		RectF GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const;
 	private:
 		struct GridLineInfo
 		{

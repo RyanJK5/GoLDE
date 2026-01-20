@@ -27,9 +27,10 @@ gol::LifeHashSet gol::SparseLife(std::span<const Vec2> data, const Rect& bounds)
 
 	LifeHashSet newSet{};
 	newSet.reserve(neighborCount.size());
+	const LifeHashSet current(data.begin(), data.end());
 	for (auto&& [pos, neighbors] : neighborCount)
 	{
-		if (neighbors == 3 || (neighbors == 2 && std::ranges::contains(data, pos)))
+		if (neighbors == 3 || (neighbors == 2 && current.contains(pos)))
 			newSet.insert(pos);
 	}
 

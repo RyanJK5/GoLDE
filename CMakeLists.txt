@@ -8,10 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "Using C++ standard: C++${CMAKE_CXX_STANDARD}")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_compile_options(/std:c++latest)
+    add_compile_options(/std:c++latest /WX)
 # Ensure proper C++23 flags for GCC/Clang
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-std=c++23)
+    add_compile_options(-std=c++23 -Werror)
     
     # Debug build flags for GCC/Clang
     set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -Wall -Wextra -Wpedantic -fno-omit-frame-pointer")
@@ -52,5 +52,5 @@ add_subdirectory(GOLAlgoLib)
 add_subdirectory(GOLGraphicsLib)
 add_subdirectory(GOLGuiLib)
 add_subdirectory(GameOfLife)
-add_subdirectory(GOLRunner)
+add_subdirectory(GOLExecutable)
 add_subdirectory(GOLTest)
