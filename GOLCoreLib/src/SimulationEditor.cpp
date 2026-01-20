@@ -334,8 +334,7 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_SelectionManager.Deselect(m_Grid);
             if (result.State == SimulationState::Paint)
                 m_InitialGrid = m_Grid;
-            for (int32_t i = 0; i < *result.StepCount; i++)
-                m_Grid.Update();
+            m_Grid.Update(*result.StepCount);
             return m_Grid.Dead() ? SimulationState::Empty : SimulationState::Paused;
         }
     }

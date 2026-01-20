@@ -26,7 +26,7 @@ namespace gol
 	template class HashQuadtree::IteratorImpl<const Vec2>;
 
 	HashQuadtree::HashQuadtree(const LifeHashSet& data, Vec2 offset, int64_t stepSize)
-		: m_MaxAdvance(stepSize)
+		: m_MaxAdvance(MaxAdvanceOf(stepSize))
 	{
 		if (data.empty())
 			return;
@@ -35,10 +35,10 @@ namespace gol
 		m_RootOffset += offset;
 	}
 
-	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2 offset, int64_t stepSize)
+	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2 offset, int64_t maxAdvance)
 		: m_Root(root)
 		, m_RootOffset(offset)
-		, m_MaxAdvance(stepSize)
+		, m_MaxAdvance(maxAdvance)
 	{ }
 
 	int32_t HashQuadtree::CalculateDepth() const
@@ -205,7 +205,7 @@ namespace gol
 	{
 		if (node == FalseNode)
 			return { FalseNode, 0 };
-		if (level <= 3)
+		if (level <= 2)
 			return AdvanceFast(node, level);
 
 		constexpr int subdivisions = 8;

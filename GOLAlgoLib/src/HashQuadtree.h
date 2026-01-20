@@ -149,10 +149,12 @@ namespace gol
 		int32_t CalculateDepth() const;
 		int32_t CalculateTreeSize() const;
 
+		constexpr int32_t StepCount() const;
+
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;
     private:
-		HashQuadtree(const LifeNode* root, Vec2 offset, int64_t stepSize = 0);
+		HashQuadtree(const LifeNode* root, Vec2 offset, int64_t maxAdvance);
 
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
@@ -185,6 +187,8 @@ namespace gol
 		NodeUpdateInfo AdvanceSlow(const LifeNode* node, int32_t level) const;
 
 		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level) const;
+
+		constexpr static int64_t MaxAdvanceOf(int64_t stepSize);
     private:
 		struct QuadKey
 		{
@@ -210,7 +214,7 @@ namespace gol
 
         const LifeNode* m_Root = FalseNode;        
         Vec2 m_RootOffset;    
-		int64_t m_MaxAdvance = 16; 
+		int64_t m_MaxAdvance = 0;
     };
 
 	struct HashLifeUpdateInfo
@@ -327,6 +331,23 @@ namespace gol
     {
 		return &m_Current;
 	}
+
+	constexpr int64_t HashQuadtree::MaxAdvanceOf(int64_t stepSize)
+	{
+		if (stepSize == 0)
+			return 0;
+
+		auto power = 0ULL;
+		while ((stepSize % (1ULL << power)) == 0)
+			power++;
+		return 1ULL << (power - 1ULL);
+	}
+
+	constexpr int32_t HashQuadtree::StepCount() const
+	{
+		return m_MaxAdvance;
+	}
+
 }
 
 #endif

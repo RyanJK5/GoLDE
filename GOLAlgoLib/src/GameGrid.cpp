@@ -79,16 +79,19 @@ const gol::LifeHashSet& gol::GameGrid::Data() const
 	return m_Data;
 }
 
-void gol::GameGrid::Update()
+void gol::GameGrid::Update(int64_t numSteps)
 {
 	switch (m_Algorithm) {
 	case LifeAlgorithm::SparseLife:
-		m_Data = SparseLife(m_Data, {0, 0, m_Width, m_Height});
-		m_Generation++;
+		for (auto i = 0; i < numSteps; i++)
+		{
+			m_Data = SparseLife(m_Data, {0, 0, m_Width, m_Height});
+			m_Generation++;
+		}
 		break;
 	case LifeAlgorithm::HashLife:
-		if (!m_HashLifeData)
-			m_HashLifeData = HashQuadtree{ m_Data, {0, 0}, 16 };
+		if (!m_HashLifeData || m_HashLifeData->StepCount() != numSteps)
+			m_HashLifeData = HashQuadtree{ m_Data, {0, 0}, numSteps };
 		auto updateInfo = m_HashLifeData->NextGeneration({ 0, 0, m_Width, m_Height });
 		m_Generation += updateInfo.Generations;
 		m_HashLifeData = std::move(updateInfo.Data);

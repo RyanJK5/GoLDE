@@ -57,7 +57,7 @@ namespace gol
 		const std::filesystem::path directory{ "universes" };
         CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles64.gol", 64);
         CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles64.gol", 16, 4, 16);
-        
+		CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles2.gol", 1, 1, 1);
     }
 
     TEST(HashQuadtreeTest, BigSquigglesTest)
