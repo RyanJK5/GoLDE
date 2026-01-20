@@ -12,20 +12,16 @@ namespace gol
     // Helper to verify the tree iterator yields exactly the expected points
     static void VerifyContent(HashQuadtree& tree, const LifeHashSet& expected)
     {
-        LifeHashSet actual;
+        LifeHashSet actual {};
 
         // Test range-based for loop
         for (const auto& pos : tree)
-        {
             actual.insert(pos);
-        }
 
         ASSERT_EQ(actual.size(), expected.size()) << "Tree yielded wrong number of cells";
 
         for (const auto& cell : expected)
-        {
             ASSERT_TRUE(actual.contains(cell)) << "Tree missing a cell that should be there";
-        }
     }
 
 	static void CheckAgainstFile(const std::filesystem::path& unevolved, const std::filesystem::path& evolved, uint64_t expectedGenerations)
