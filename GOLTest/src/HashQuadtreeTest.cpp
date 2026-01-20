@@ -24,31 +24,47 @@ namespace gol
             ASSERT_TRUE(actual.contains(cell)) << "Tree missing a cell that should be there";
     }
 
-	static void CheckAgainstFile(const std::filesystem::path& unevolved, const std::filesystem::path& evolved, uint64_t expectedGenerations)
-    {
-        ASSERT_TRUE(std::filesystem::exists(unevolved));
-        ASSERT_TRUE(std::filesystem::exists(evolved));
+	static void CheckAgainstFile(
+		const std::filesystem::path& unevolved, const std::filesystem::path& evolved,
+		uint64_t expectedGenerationsPerJump, int32_t numJumps = 1, int32_t stepSize = 0)
+	{
+		ASSERT_TRUE(std::filesystem::exists(unevolved));
+		ASSERT_TRUE(std::filesystem::exists(evolved));
+		ASSERT_GE(numJumps, 1);
 
-        const auto data1 = RLEEncoder::ReadRegion(unevolved);
-        const auto data2 = RLEEncoder::ReadRegion(evolved);
-        const HashQuadtree tree1{ data1->Grid.Data(), data1->Offset };
-        const HashQuadtree tree2{ data2->Grid.Data(), data2->Offset };
+		const auto data1 = RLEEncoder::ReadRegion(unevolved);
+		const auto data2 = RLEEncoder::ReadRegion(evolved);
+		HashQuadtree current{ data1->Grid.Data(), data1->Offset, stepSize };
+		const HashQuadtree expected{ data2->Grid.Data(), data2->Offset, stepSize };
 
-        const auto update = tree1.NextGeneration();
-        EXPECT_EQ(update.Generations, expectedGenerations) << "HashLife should advance by" << expectedGenerations << " generations";
-        EXPECT_EQ(update.Data, tree2);
-    }
+		uint64_t totalGenerations = 0;
+		for (int32_t i = 0; i < numJumps; ++i)
+		{
+			const auto update = current.NextGeneration();
+			EXPECT_EQ(update.Generations, expectedGenerationsPerJump)
+				<< "HashLife should advance by " << expectedGenerationsPerJump << " generations per jump";
+			current = update.Data;
+			totalGenerations += update.Generations;
+		}
+
+		EXPECT_EQ(current, expected);
+		EXPECT_EQ(totalGenerations, expectedGenerationsPerJump * static_cast<uint64_t>(numJumps))
+			<< "Total generations advanced should match expectation";
+	}
 
     TEST(HashQuadtreeTest, SquigglesTest)
     {
 		const std::filesystem::path directory{ "universes" };
         CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles64.gol", 64);
+        CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles64.gol", 16, 4, 16);
+        
     }
 
     TEST(HashQuadtreeTest, BigSquigglesTest)
     {
         const std::filesystem::path directory{ "universes" };
         CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles256.gol", 256);
+        CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles256.gol", 32, 8, 32);
     }
 
     TEST(HashQuadtreeTest, RectTest)

@@ -88,7 +88,7 @@ void gol::GameGrid::Update()
 		break;
 	case LifeAlgorithm::HashLife:
 		if (!m_HashLifeData)
-			m_HashLifeData = HashQuadtree{ m_Data };
+			m_HashLifeData = HashQuadtree{ m_Data, {0, 0}, 16 };
 		auto updateInfo = m_HashLifeData->NextGeneration({ 0, 0, m_Width, m_Height });
 		m_Generation += updateInfo.Generations;
 		m_HashLifeData = std::move(updateInfo.Data);

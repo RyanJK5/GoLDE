@@ -13,11 +13,6 @@
 
 namespace gol 
 {
-    static constexpr uint64_t HashCombine(uint64_t seed, uint64_t v) 
-    {
-        return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
-    }
-
     struct LifeNode 
     {
         const LifeNode* NorthWest;
@@ -51,6 +46,11 @@ namespace gol
 				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthWest));
 				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthEast));
 			}
+		}
+	private:
+		static constexpr uint64_t HashCombine(uint64_t seed, uint64_t v)
+		{
+			return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
 		}
     };
 
@@ -131,7 +131,7 @@ namespace gol
         };
     public:
         HashQuadtree() = default;
-		HashQuadtree(const LifeHashSet& data, Vec2 offset = {});
+		HashQuadtree(const LifeHashSet& data, Vec2 offset = {}, int64_t stepSize = 0);
     public:
         using Iterator = IteratorImpl<Vec2>;
         using ConstIterator = IteratorImpl<const Vec2>;
@@ -152,12 +152,12 @@ namespace gol
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;
     private:
-		HashQuadtree(const LifeNode* root, Vec2 offset);
+		HashQuadtree(const LifeNode* root, Vec2 offset, int64_t stepSize = 0);
 
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
 
-        const LifeNode* AdvanceNode(const LifeNode* node, int32_t level) const;
+		NodeUpdateInfo AdvanceNode(const LifeNode* node, int32_t level) const;
 
         const LifeNode* FindOrCreate(
             const LifeNode* nw, 
@@ -182,7 +182,9 @@ namespace gol
 
 		const LifeNode* AdvanceBase(const LifeNode* node) const;
 
-		const LifeNode* AdvanceFast(const LifeNode* node, int32_t level) const;
+		NodeUpdateInfo AdvanceSlow(const LifeNode* node, int32_t level) const;
+
+		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level) const;
     private:
 		struct QuadKey
 		{
@@ -208,6 +210,7 @@ namespace gol
 
         const LifeNode* m_Root = FalseNode;        
         Vec2 m_RootOffset;    
+		int64_t m_MaxAdvance = 16; 
     };
 
 	struct HashLifeUpdateInfo

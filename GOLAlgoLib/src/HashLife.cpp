@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <print>
 #include <unordered_dense.h>
@@ -24,7 +25,8 @@ namespace gol
 	template class HashQuadtree::IteratorImpl<Vec2>;
 	template class HashQuadtree::IteratorImpl<const Vec2>;
 
-	HashQuadtree::HashQuadtree(const LifeHashSet& data, Vec2 offset)
+	HashQuadtree::HashQuadtree(const LifeHashSet& data, Vec2 offset, int64_t stepSize)
+		: m_MaxAdvance(stepSize)
 	{
 		if (data.empty())
 			return;
@@ -33,9 +35,10 @@ namespace gol
 		m_RootOffset += offset;
 	}
 
-	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2 offset)
+	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2 offset, int64_t stepSize)
 		: m_Root(root)
 		, m_RootOffset(offset)
+		, m_MaxAdvance(stepSize)
 	{ }
 
 	int32_t HashQuadtree::CalculateDepth() const
@@ -183,47 +186,134 @@ namespace gol
 		);
 	}
 
-	const LifeNode* HashQuadtree::AdvanceNode(const LifeNode* node, int32_t level) const
+	NodeUpdateInfo HashQuadtree::AdvanceNode(const LifeNode* node, int32_t level) const
 	{
+		if (node == FalseNode || level < 2)
+			return { node, 0 };
+
+		const auto maxAdvance = m_MaxAdvance;
+		if (maxAdvance > 0)
+		{
+			const auto span = 1LL << level;
+			if ((span / 4) > maxAdvance)
+				return AdvanceSlow(node, level);
+		}
 		return AdvanceFast(node, level);
 	}
 
-	const LifeNode* HashQuadtree::AdvanceFast(const LifeNode* node, int32_t level) const
+	NodeUpdateInfo HashQuadtree::AdvanceSlow(const LifeNode* node, int32_t level) const
 	{
+		if (node == FalseNode)
+			return { FalseNode, 0 };
+		if (level <= 3)
+			return AdvanceFast(node, level);
+
+		constexpr int subdivisions = 8;
+		const auto index = [subdivisions](int x, int y)
+		{
+			return y * subdivisions + x;
+		};
+
+		std::array<const LifeNode*, subdivisions * subdivisions> segments{};
+		const auto fetchSegment = [&](int x, int y) -> const LifeNode*
+		{
+			const LifeNode* current = node;
+			for (int bit = 2; bit >= 0 && current != FalseNode; --bit)
+			{
+				const bool east = (x >> bit) & 1;
+				const bool south = (y >> bit) & 1;
+				if (south)
+					current = east ? current->SouthEast : current->SouthWest;
+				else
+					current = east ? current->NorthEast : current->NorthWest;
+				if (current == nullptr)
+					break;
+			}
+			return current;
+		};
+
+		for (int y = 0; y < subdivisions; ++y)
+		{
+			for (int x = 0; x < subdivisions; ++x)
+			{
+				segments[index(x, y)] = fetchSegment(x, y);
+			}
+		}
+
+		const auto combine2x2 = [&](int startX, int startY) -> const LifeNode*
+		{
+			return FindOrCreate(
+				segments[index(startX, startY)],
+				segments[index(startX + 1, startY)],
+				segments[index(startX, startY + 1)],
+				segments[index(startX + 1, startY + 1)]
+			);
+		};
+
+		const auto buildWindow = [&](int startX, int startY) -> const LifeNode*
+		{
+			const auto* nw = combine2x2(startX, startY);
+			const auto* ne = combine2x2(startX + 2, startY);
+			const auto* sw = combine2x2(startX, startY + 2);
+			const auto* se = combine2x2(startX + 2, startY + 2);
+			return FindOrCreate(nw, ne, sw, se);
+		};
+
+		const auto* window00 = buildWindow(1, 1);
+		const auto* window01 = buildWindow(3, 1);
+		const auto* window10 = buildWindow(1, 3);
+		const auto* window11 = buildWindow(3, 3);
+
+		const auto result00 = AdvanceNode(window00, level - 1);
+		const auto result01 = AdvanceNode(window01, level - 1);
+		const auto result10 = AdvanceNode(window10, level - 1);
+		const auto result11 = AdvanceNode(window11, level - 1);
+
+		const auto generations = result00.Generations;
+		const auto* combined = FindOrCreate(result00.Node, result01.Node, result10.Node, result11.Node);
+		return { combined, generations };
+	}
+
+	NodeUpdateInfo HashQuadtree::AdvanceFast(const LifeNode* node, int32_t level) const
+	{
+		if (node == FalseNode)
+			return { FalseNode, 0 };
+
 		if (auto itr = s_NodeMap.find(node); itr != s_NodeMap.end() && itr->second != nullptr)
-			return itr->second;
+		{
+			const auto generations = 1 << (level - 2);
+			return { itr->second, generations };
+		}
 
 		if (level == 2) 
 		{
 			const auto* base = AdvanceBase(node);
 			s_NodeMap[node] = base;
-			return base;
+			return { base, 1 };
 		}
 		
-		const auto* n00 = AdvanceNode(node->NorthWest, level - 1);
-		const auto* n01 = AdvanceNode(CenteredHorizontal(*node->NorthWest, *node->NorthEast), level - 1);
-        const auto* n02 = AdvanceNode(node->NorthEast, level - 1);
-		const auto* n10 = AdvanceNode(CenteredVertical(*node->NorthWest, *node->SouthWest), level - 1);
-		const auto* n11 = AdvanceNode(CenteredSubNode(*node), level - 1);
-		const auto* n12 = AdvanceNode(CenteredVertical(*node->NorthEast, *node->SouthEast), level - 1);
-        const auto* n20 = AdvanceNode(node->SouthWest, level - 1);
-		const auto* n21 = AdvanceNode(CenteredHorizontal(*node->SouthWest, *node->SouthEast), level - 1);
-		const auto* n22 = AdvanceNode(node->SouthEast, level - 1);
+		const auto n00 = AdvanceNode(node->NorthWest, level - 1);
+		const auto n01 = AdvanceNode(CenteredHorizontal(*node->NorthWest, *node->NorthEast), level - 1);
+		const auto n02 = AdvanceNode(node->NorthEast, level - 1);
+		const auto n10 = AdvanceNode(CenteredVertical(*node->NorthWest, *node->SouthWest), level - 1);
+		const auto n11 = AdvanceNode(CenteredSubNode(*node), level - 1);
+		const auto n12 = AdvanceNode(CenteredVertical(*node->NorthEast, *node->SouthEast), level - 1);
+		const auto n20 = AdvanceNode(node->SouthWest, level - 1);
+		const auto n21 = AdvanceNode(CenteredHorizontal(*node->SouthWest, *node->SouthEast), level - 1);
+		const auto n22 = AdvanceNode(node->SouthEast, level - 1);
 
-		const auto* result = FindOrCreate(
-			AdvanceNode(FindOrCreate(n00, n01, n10, n11), level - 1),
-			AdvanceNode(FindOrCreate(n01, n02, n11, n12), level - 1),
-			AdvanceNode(FindOrCreate(n10, n11, n20, n21), level - 1),
-			AdvanceNode(FindOrCreate(n11, n12, n21, n22), level - 1)
-		);
+		const auto tl = AdvanceNode(FindOrCreate(n00.Node, n01.Node, n10.Node, n11.Node), level - 1);
+		const auto tr = AdvanceNode(FindOrCreate(n01.Node, n02.Node, n11.Node, n12.Node), level - 1);
+		const auto bl = AdvanceNode(FindOrCreate(n10.Node, n11.Node, n20.Node, n21.Node), level - 1);
+		const auto br = AdvanceNode(FindOrCreate(n11.Node, n12.Node, n21.Node, n22.Node), level - 1);
+
+		const auto* result = FindOrCreate(tl.Node, tr.Node, bl.Node, br.Node);
 		s_NodeMap[node] = result;
-		return result;
+		const auto generations = 1 << (level - 2);
+		return { result, generations };
 	}
 
-	static auto notEmpty(const LifeNode* n)
-	{
-		return n != FalseNode && !n->IsEmpty;
-	};
+	
 
 	bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const
 	{
@@ -231,6 +321,11 @@ namespace gol
 			return false;
 		if (level <= 2)
 			return true;
+
+		constexpr static auto notEmpty = [](const LifeNode* n)
+		{
+			return n != FalseNode && !n->IsEmpty;
+		};
 
 		const auto* nw = node->NorthWest;
 		if (notEmpty(nw)) 
@@ -308,7 +403,7 @@ namespace gol
 		auto size = std::max(1, CalculateTreeSize());
 		auto offset = m_RootOffset;
 
-		const auto expand = [&]()
+		while (NeedsExpansion(root, level)) 
 		{
 			root = ExpandUniverse(root, level);
 			const auto delta = std::max(1, size / 2);
@@ -316,10 +411,6 @@ namespace gol
 			offset.Y -= delta;
 			level++;
 			size <<= 1;
-		};
-		while (NeedsExpansion(root, level)) 
-		{
-			expand();
 		}
 
 		const auto advanced = AdvanceNode(root, level);
@@ -327,7 +418,12 @@ namespace gol
 		offset.X += centerDelta;
 		offset.Y += centerDelta;
 
-		return { .Data = { advanced, offset }, .Generations = 1ULL << (level - 2ULL) };
+		const auto quadtree = HashQuadtree{ advanced.Node, offset, m_MaxAdvance };
+		return HashLifeUpdateInfo
+		{ 
+			.Data = quadtree, 
+			.Generations = static_cast<uint64_t>(std::max(0, advanced.Generations)) 
+		};
 	}
 
 	size_t HashQuadtree::QuadHash::operator()(const QuadKey& key) const noexcept
