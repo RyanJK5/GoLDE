@@ -28,38 +28,37 @@ namespace gol
         }
     }
 
-    TEST(HashQuadtreeTest, SquigglesTest)
+	static void CheckAgainstFile(const std::filesystem::path& unevolved, const std::filesystem::path& evolved, uint64_t expectedGenerations)
     {
-        const std::filesystem::path directory{ "universes" };
-        ASSERT_TRUE(std::filesystem::exists(directory));
+        ASSERT_TRUE(std::filesystem::exists(unevolved));
+        ASSERT_TRUE(std::filesystem::exists(evolved));
 
-        const auto data1 = RLEEncoder::ReadRegion(directory / "squiggles1.gol");
-        const auto data2 = RLEEncoder::ReadRegion(directory / "squiggles64.gol");
-
-        const HashQuadtree tree1{ data1->Grid.Data(), data1->Offset  };
+        const auto data1 = RLEEncoder::ReadRegion(unevolved);
+        const auto data2 = RLEEncoder::ReadRegion(evolved);
+        const HashQuadtree tree1{ data1->Grid.Data(), data1->Offset };
         const HashQuadtree tree2{ data2->Grid.Data(), data2->Offset };
 
         const auto update = tree1.NextGeneration();
-
-        EXPECT_EQ(update.Generations, 64) << "HashLife should advance by 64 generations";
+        EXPECT_EQ(update.Generations, expectedGenerations) << "HashLife should advance by" << expectedGenerations << " generations";
         EXPECT_EQ(update.Data, tree2);
+    }
+
+    TEST(HashQuadtreeTest, SquigglesTest)
+    {
+		const std::filesystem::path directory{ "universes" };
+        CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles64.gol", 64);
+    }
+
+    TEST(HashQuadtreeTest, BigSquigglesTest)
+    {
+        const std::filesystem::path directory{ "universes" };
+        CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles256.gol", 256);
     }
 
     TEST(HashQuadtreeTest, RectTest)
     {
         const std::filesystem::path directory{ "universes" };
-        ASSERT_TRUE(std::filesystem::exists(directory));
-
-        const auto data1 = RLEEncoder::ReadRegion(directory / "rect1.gol");
-        const auto data2 = RLEEncoder::ReadRegion(directory / "rect32.gol");
-
-        const HashQuadtree tree1{ data1->Grid.Data(), data1->Offset };
-        const HashQuadtree tree2{ data2->Grid.Data(), data2->Offset };
-
-        const auto update = tree1.NextGeneration();
-
-        EXPECT_EQ(update.Generations, 4) << "HashLife should advance by 32 generations";
-        EXPECT_EQ(update.Data, tree2);
+		CheckAgainstFile(directory / "rect1.gol", directory / "rect4.gol", 4);
     }
 
     TEST(HashQuadtreeTest, EmptyTree)
