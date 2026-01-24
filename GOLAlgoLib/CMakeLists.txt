@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "src/*.h")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 message(STATUS "GOLAlgoLib sources found: ${SOURCES}")
 message(STATUS "GOLAlgoLib headers found: ${HEADERS}")
@@ -12,7 +12,7 @@ add_library(GOLAlgoLib STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(GOLAlgoLib
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_link_libraries(GOLAlgoLib

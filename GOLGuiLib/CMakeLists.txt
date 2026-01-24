@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "src/*.h")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 message(STATUS "GOLGuiLib sources found: ${SOURCES}")
 
@@ -7,10 +7,10 @@ add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(GOLGuiLib
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dialogs
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/widgets
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/misc
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/widgets
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/misc
 )
 
 target_link_libraries(GOLGuiLib

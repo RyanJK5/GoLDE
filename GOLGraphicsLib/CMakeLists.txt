@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "src/*.h")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 message(STATUS "GOLGraphicsLib sources: ${SOURCES}")
 
@@ -7,7 +7,7 @@ add_library(GOLGraphicsLib STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(GOLGraphicsLib
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 target_link_libraries(GOLGraphicsLib

@@ -90,9 +90,9 @@ void gol::GameGrid::Update(int64_t numSteps)
 		}
 		break;
 	case LifeAlgorithm::HashLife:
-		if (!m_HashLifeData || m_HashLifeData->StepCount() != numSteps)
-			m_HashLifeData = HashQuadtree{ m_Data, {0, 0}, numSteps };
-		auto updateInfo = m_HashLifeData->NextGeneration({ 0, 0, m_Width, m_Height });
+		if (!m_HashLifeData)
+			m_HashLifeData = HashQuadtree{ m_Data, {0, 0} };
+		auto updateInfo = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps);
 		m_Generation += updateInfo.Generations;
 		m_HashLifeData = std::move(updateInfo.Data);
 		m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();

@@ -13,7 +13,9 @@
 
 namespace gol 
 {
-    struct LifeNode 
+	constexpr int64_t MaxAdvanceOf(int64_t stepSize);
+	
+	struct LifeNode 
     {
         const LifeNode* NorthWest;
         const LifeNode* NorthEast;
@@ -57,7 +59,7 @@ namespace gol
 	struct NodeUpdateInfo
 	{
 		const LifeNode* Node;
-		int32_t Generations;
+		int64_t Generations;
 	};
 
     struct LifeNodeEqual 
@@ -131,50 +133,48 @@ namespace gol
         };
     public:
         HashQuadtree() = default;
-		HashQuadtree(const LifeHashSet& data, Vec2 offset = {}, int64_t stepSize = 0);
+		HashQuadtree(const LifeHashSet& data, Vec2 offset = {});
     public:
         using Iterator = IteratorImpl<Vec2>;
         using ConstIterator = IteratorImpl<const Vec2>;
 
         bool empty() const;
 
-        Iterator begin();
-        Iterator end();
+		Iterator begin();
+		Iterator end();
 
-        ConstIterator begin() const;
-        ConstIterator end() const;
+		ConstIterator begin() const;
+		ConstIterator end() const;
 
-        [[no_discard]] HashLifeUpdateInfo NextGeneration(const Rect& bounds = {}) const;
+        HashLifeUpdateInfo NextGeneration(const Rect& bounds = {}, int64_t maxAdvance = 0) const;
 
 		int32_t CalculateDepth() const;
 		int32_t CalculateTreeSize() const;
 
-		constexpr int32_t StepCount() const;
-
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;
     private:
-		HashQuadtree(const LifeNode* root, Vec2 offset, int64_t maxAdvance);
+		HashQuadtree(const LifeNode* root, Vec2 offset);
 
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
 
-		NodeUpdateInfo AdvanceNode(const LifeNode* node, int32_t level) const;
+		NodeUpdateInfo AdvanceNode(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
 
-        const LifeNode* FindOrCreate(
+		const LifeNode* FindOrCreate(
             const LifeNode* nw, 
             const LifeNode* ne, 
             const LifeNode* sw,
             const LifeNode* se
         ) const;
 
-        const LifeNode* BuildTreeRegion(
+		const LifeNode* BuildTreeRegion(
             std::span<Vec2> cells, 
             Vec2 pos, int32_t size);
 
-        const LifeNode* EmptyTree(int32_t size) const;
+		const LifeNode* EmptyTree(int32_t size) const;
 
-	    const LifeNode* BuildTree(const LifeHashSet& data);
+		const LifeNode* BuildTree(const LifeHashSet& data);
 
 		const LifeNode* CenteredHorizontal(const LifeNode& west, const LifeNode& east) const;
 
@@ -184,11 +184,9 @@ namespace gol
 
 		const LifeNode* AdvanceBase(const LifeNode* node) const;
 
-		NodeUpdateInfo AdvanceSlow(const LifeNode* node, int32_t level) const;
+		NodeUpdateInfo AdvanceSlow(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
 
-		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level) const;
-
-		constexpr static int64_t MaxAdvanceOf(int64_t stepSize);
+		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
     private:
 		struct QuadKey
 		{
@@ -204,23 +202,24 @@ namespace gol
 
 			size_t operator()(const QuadKey& key) const noexcept;
 		};
+	private:
+		inline static ankerl::unordered_dense::map<
+			const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> 
+		s_NodeMap {};
 
+		inline static std::vector<std::unique_ptr<LifeNode>> s_NodeStorage {};
+	private:
 		ankerl::unordered_dense::map<QuadKey, const LifeNode*, QuadHash> m_TreeBuilderCache {};
         mutable ankerl::unordered_dense::map<int32_t, const LifeNode*> m_EmptyNodeCache {};
-	private:
-		inline static ankerl::unordered_dense::map<const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> s_NodeMap{};
-
-		inline static std::vector<std::unique_ptr<LifeNode>> s_NodeStorage{};
-
-        const LifeNode* m_Root = FalseNode;        
+        
+		const LifeNode* m_Root = FalseNode;        
         Vec2 m_RootOffset;    
-		int64_t m_MaxAdvance = 0;
     };
 
 	struct HashLifeUpdateInfo
 	{
 		HashQuadtree Data;
-		uint64_t Generations = 1;
+		int64_t Generations = 1;
 	};
 
     extern template class HashQuadtree::IteratorImpl<Vec2>;
@@ -332,7 +331,7 @@ namespace gol
 		return &m_Current;
 	}
 
-	constexpr int64_t HashQuadtree::MaxAdvanceOf(int64_t stepSize)
+	constexpr int64_t MaxAdvanceOf(int64_t stepSize)
 	{
 		if (stepSize == 0)
 			return 0;
@@ -342,12 +341,6 @@ namespace gol
 			power++;
 		return 1ULL << (power - 1ULL);
 	}
-
-	constexpr int32_t HashQuadtree::StepCount() const
-	{
-		return m_MaxAdvance;
-	}
-
 }
 
 #endif

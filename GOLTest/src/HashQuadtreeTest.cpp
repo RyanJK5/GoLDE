@@ -34,13 +34,13 @@ namespace gol
 
 		const auto data1 = RLEEncoder::ReadRegion(unevolved);
 		const auto data2 = RLEEncoder::ReadRegion(evolved);
-		HashQuadtree current{ data1->Grid.Data(), data1->Offset, stepSize };
-		const HashQuadtree expected{ data2->Grid.Data(), data2->Offset, stepSize };
+		HashQuadtree current{ data1->Grid.Data(), data1->Offset };
+		const HashQuadtree expected{ data2->Grid.Data(), data2->Offset };
 
 		uint64_t totalGenerations = 0;
 		for (int32_t i = 0; i < numJumps; ++i)
 		{
-			const auto update = current.NextGeneration();
+            const auto update = current.NextGeneration({}, stepSize);
 			EXPECT_EQ(update.Generations, expectedGenerationsPerJump)
 				<< "HashLife should advance by " << expectedGenerationsPerJump << " generations per jump";
 			current = update.Data;

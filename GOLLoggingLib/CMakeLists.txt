@@ -1,11 +1,11 @@
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "src/*.h")
+file(GLOB_RECURSE HEADERS "include/*.h")
 
 add_library(GOLLoggingLib STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(GOLLoggingLib
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 # GOLLoggingLib uses GL/glew.h for GL_DEBUG macros
