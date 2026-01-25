@@ -34,7 +34,7 @@ namespace gol
 		Rect BoundingBox() const;
 		
 		bool InBounds(int32_t x, int32_t y) const { return InBounds({ x, y }); }
-		bool InBounds(Vec2 pos) const { return !Bounded() || Rect(0, 0, m_Width, m_Height).InBounds(pos); }
+		bool InBounds(Vec2 pos) const { return !Bounded() || Rect{ 0, 0, m_Width, m_Height }.InBounds(pos); }
 
 		int64_t Generation() const { return m_Generation; }
 		int64_t Population() const { return m_Population; }
@@ -65,10 +65,13 @@ namespace gol
 
 		const std::set<Vec2>& SortedData() const;
 		const LifeHashSet& Data() const;
+		std::variant<std::reference_wrapper<const LifeHashSet>, std::reference_wrapper<const HashQuadtree>> IterableData() const;
+	private:
+		void ValidateCache(bool validateSorted) const;
 	private:
 		LifeAlgorithm m_Algorithm;
 
-		LifeHashSet m_Data;
+		mutable LifeHashSet m_Data;
 		std::optional<HashQuadtree> m_HashLifeData;
 
 		mutable std::set<Vec2> m_SortedData;

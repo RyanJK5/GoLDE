@@ -57,7 +57,7 @@ namespace gol
 
 		void RescaleFrameBuffer(const Rect& windowBounds, const Rect& viewportBounds);
 
-		void DrawGrid(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args);
+		void DrawGrid(Vec2 offset, std::ranges::input_range auto&& grid, const GraphicsHandlerArgs& args);
 		void DrawSelection(const Rect& region, const GraphicsHandlerArgs& info);
 		void ClearBackground(const GraphicsHandlerArgs& args);
 
@@ -67,7 +67,7 @@ namespace gol
 	private:
 		void InitGridBuffer();
 
-		std::vector<float> GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args) const;
+		std::vector<float> GenerateGLBuffer(Vec2 offset, std::ranges::input_range auto&& grid, const GraphicsHandlerArgs& args) const;
 
 		RectF GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const;
 	private:
@@ -102,10 +102,14 @@ namespace gol
 	};
 }
 
-std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args) const
+template <typename T>
+concept HasSize = requires(T a) { a.size(); };
+
+std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, std::ranges::input_range auto&& grid, const GraphicsHandlerArgs& args) const
 {
 	std::vector<float> result {};
-	result.reserve(grid.size() * 2);
+	if constexpr(HasSize<decltype(grid)>)
+		result.reserve(grid.size() * 2);
 	for (const Vec2& vec : grid)
 	{
 		result.push_back(vec.X + offset.X);
@@ -115,7 +119,7 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, const std
 	return result;
 }
 
-void gol::GraphicsHandler::DrawGrid(Vec2 offset, const std::ranges::input_range auto& grid, const GraphicsHandlerArgs& args)
+void gol::GraphicsHandler::DrawGrid(Vec2 offset, std::ranges::input_range auto&& grid, const GraphicsHandlerArgs& args)
 {
 	FrameBufferBinder binder { m_FrameBuffer };
 

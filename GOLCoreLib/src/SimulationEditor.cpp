@@ -133,7 +133,13 @@ gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandl
         if (m_Grid.Dead() && !m_SelectionManager.GridAlive())
             return SimulationState::Empty;
     }
-    m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
+
+	m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
+    const auto data = m_Grid.IterableData();
+    if (std::holds_alternative<std::reference_wrapper<const LifeHashSet>>(data))
+        m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const LifeHashSet>>(data).get(), args);
+    else
+        m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const HashQuadtree>>(data).get(), args);
     return SimulationState::Simulation;
 }
 
@@ -413,7 +419,7 @@ void gol::SimulationEditor::PasteSelection()
             "to paste without potential performance issues.\n"
             "Are you sure you want to continue?"
             , pasteResult.error())
-            ;
+        ;
     }
 }
 

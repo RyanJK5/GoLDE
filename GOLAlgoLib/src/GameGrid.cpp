@@ -65,18 +65,23 @@ gol::Rect gol::GameGrid::BoundingBox() const
 const std::set<gol::Vec2>& gol::GameGrid::SortedData() const
 {
 	if (m_CacheInvalidated)
-	{
-		m_SortedData.clear();
-		for (auto& pos : m_Data)
-			m_SortedData.insert(pos);
-		m_CacheInvalidated = false;
-	}
+		ValidateCache(true);
 	return m_SortedData;
 }
 
 const gol::LifeHashSet& gol::GameGrid::Data() const
 {
+	if (m_CacheInvalidated && m_HashLifeData)
+		ValidateCache(false);
 	return m_Data;
+}
+
+std::variant<std::reference_wrapper<const gol::LifeHashSet>, std::reference_wrapper<const gol::HashQuadtree>> gol::GameGrid::IterableData() const
+{
+	if (m_Algorithm == LifeAlgorithm::HashLife && m_HashLifeData)
+		return std::ref(*m_HashLifeData);
+	else
+		return std::ref(m_Data);
 }
 
 void gol::GameGrid::Update(int64_t numSteps)
@@ -95,7 +100,6 @@ void gol::GameGrid::Update(int64_t numSteps)
 		auto updateInfo = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps);
 		m_Generation += updateInfo.Generations;
 		m_HashLifeData = std::move(updateInfo.Data);
-		m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
 		break;
 	}
 
@@ -264,4 +268,12 @@ std::optional<bool> gol::GameGrid::Get(Vec2 pos) const
 	if (!InBounds(pos))
 		return std::nullopt;
 	return m_Data.find(pos) != m_Data.end();
+}
+
+void gol::GameGrid::ValidateCache(bool validateSorted) const
+{
+	if (m_HashLifeData)
+		m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
+	if (validateSorted)
+		m_SortedData = m_Data | std::ranges::to<std::set<Vec2>>();
 }
