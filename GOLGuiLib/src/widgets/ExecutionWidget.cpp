@@ -28,6 +28,7 @@ gol::GameAction gol::StartButton::Action(const EditorResult& state) const
 	case Paint:      return GameAction::Start;
 	case Paused:     return GameAction::Resume;
 	case Simulation: return GameAction::Pause;
+	default:         assert(false && "Illegal simulation state passed to StartButton");
 	}
 	std::unreachable();
 }

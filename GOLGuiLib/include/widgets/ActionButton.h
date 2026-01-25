@@ -97,10 +97,6 @@ namespace gol
 		{ }
 	protected:
 		virtual ActType Action(const EditorResult&) const override final { return m_Action; }
-		
-		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(const EditorResult& state) const = 0;
-		virtual	bool Enabled(const EditorResult& state) const = 0;
 	private:
 		ActType m_Action;
 	};

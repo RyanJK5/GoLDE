@@ -3,8 +3,6 @@ project(GameOfLife VERSION 1.0 LANGUAGES CXX)
 
 include(CTest) # enables ctest integration via BUILD_TESTING/enable_testing
 
-include(CTest)
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -29,7 +27,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Sanitizers ENABLED - AddressSanitizer and UndefinedBehaviorSanitizer")
     set(SANITIZER_FLAGS "-fsanitize=address -fsanitize=undefined -fsanitize=leak")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
     set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${SANITIZER_FLAGS}")
     

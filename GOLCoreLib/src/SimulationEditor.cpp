@@ -336,6 +336,8 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
                 m_InitialGrid = m_Grid;
             m_Grid.Update(*result.StepCount);
             return m_Grid.Dead() ? SimulationState::Empty : SimulationState::Paused;
+        default:
+			assert(false && "Invalid GameAction passed to UpdateState");
         }
     }
 
@@ -376,6 +378,8 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             return result.State;
         case Close:
             return result.State;
+        default:
+			assert(false && "Invalid EditorAction passed to UpdateState");
         }
 	}
 

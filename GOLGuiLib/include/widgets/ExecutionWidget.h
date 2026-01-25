@@ -72,8 +72,6 @@ namespace gol
 	class ExecutionWidget : public Widget
 	{
 	public:
-        ExecutionWidget() = default;
-
         ExecutionWidget(const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>& shortcuts)
             : m_StartButton   (shortcuts)
             , m_ClearButton   (shortcuts.at(GameAction::Clear   ))

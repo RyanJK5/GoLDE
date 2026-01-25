@@ -78,8 +78,10 @@ gol::SimulationControlResult gol::FileWidget::UpdateImpl(const EditorResult& sta
 			return FileDialog::SaveFileDialog("gol", state.CurrentFilePath.string());
 		case Load:
 			return FileDialog::OpenFileDialog("gol", "");
+		default:
+			return std::unexpected{ FileDialogFailure { FileFailureType::Error, "Unknown action" } };
 		}
-		return std::unexpected { FileDialogFailure { FileFailureType::Error, "Unknown action" } };
+		std::unreachable();
 	}();
 
 	if (!filePath)

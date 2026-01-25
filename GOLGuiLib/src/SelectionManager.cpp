@@ -295,6 +295,7 @@ std::optional<gol::VersionChange> gol::SelectionManager::HandleAction(SelectionA
     case Rotate:     return this->Rotate(true);
     case FlipVertically: [[fallthrough]];
 	case FlipHorizontally: return this->Flip(action);
+	default: assert(false && "Invalid action passed to HandleAction");
     }
     return std::nullopt;
 }
@@ -322,6 +323,8 @@ void gol::SelectionManager::HandleVersionChange(EditorAction undoRedo, GameGrid&
             else
                 grid = GameGrid(grid, change.GridResize->second);
             return;
+        default:
+			assert(false && "Invalid EditorAction passed to HandleVersionChange");
         }
     }
 
@@ -341,6 +344,8 @@ void gol::SelectionManager::HandleVersionChange(EditorAction undoRedo, GameGrid&
                     grid.Set(pos.X, pos.Y, false);
             }
             return;
+        default:
+			assert(false && "Invalid GameAction passed to HandleVersionChange");
 		}
     }
 
@@ -405,6 +410,8 @@ void gol::SelectionManager::HandleVersionChange(EditorAction undoRedo, GameGrid&
         
         this->Deselect(grid);
         return;
+    default:
+		assert(false && "Invalid action passed to HandleVersionChange");
     }
 }
 

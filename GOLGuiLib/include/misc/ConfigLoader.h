@@ -39,7 +39,7 @@ namespace gol::StyleLoader
 
 	enum class SectionType
 	{
-		None, StyleColors, ImGUIStyle, Shortcuts
+		StyleColors, ImGUIStyle, Shortcuts
 	};
 
 	enum class YAMLErrorType
@@ -373,7 +373,7 @@ namespace gol::StyleLoader
 		int32_t indentWidth = 0;
 		int32_t lineNum = 0;
 
-		auto section = SectionType::None;
+		std::optional<SectionType> section { };
 		auto output = StyleInfo<Vec> { };
 
 		while (std::getline(input, line))
@@ -391,67 +391,70 @@ namespace gol::StyleLoader
 			int32_t depth = indentWidth != 0 ? (std::distance(line.begin(), start) / indentWidth) : 0;
 
 			if (depth == 0)
-				section = SectionType::None;
+				section = std::nullopt;
 
-			switch (section)
+			if (section)
 			{
-			using enum SectionType;
-			case StyleColors:
-			{
-				auto result = ReadColorPair<Vec>(lineNum, line, start);
-				if (!result)
-					return std::unexpected<YAMLError>(result.error());
-				output.StyleColors[result->first] = result->second;
-			}	break;
-			case ImGUIStyle:
-			{
-				auto result = ReadPair<ImGuiCol_, StyleColor>(
-					lineNum, line, start, 
-					MakeConverter(AttributeDefinitions), 
-					MakeConverter(ColorDefinitions)
-				);
-				if (!result)
-					return std::unexpected<YAMLError>(result.error());
-				output.AttributeColors[result->first] = result->second;
-			}	break;
-			case Shortcuts:
-			{
+				switch (*section)
 				{
-					auto result = ReadListPair<GameAction, ImGuiKeyChord>(
+				using enum SectionType;
+				case StyleColors:
+				{
+					auto result = ReadColorPair<Vec>(lineNum, line, start);
+					if (!result)
+						return std::unexpected<YAMLError>(result.error());
+					output.StyleColors[result->first] = result->second;
+				}	break;
+				case ImGUIStyle:
+				{
+					auto result = ReadPair<ImGuiCol_, StyleColor>(
 						lineNum, line, start, 
-						MakeConverter(Actions::GameActionDefinitions),
-						MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
+						MakeConverter(AttributeDefinitions), 
+						MakeConverter(ColorDefinitions)
 					);
-					if (result)
+					if (!result)
+						return std::unexpected<YAMLError>(result.error());
+					output.AttributeColors[result->first] = result->second;
+				}	break;
+				case Shortcuts:
+				{
 					{
-						output.Shortcuts[result->first] = result->second;
-						break;
-					}
-				} {
-					auto result = ReadListPair<EditorAction, ImGuiKeyChord>(
-						lineNum, line, start,
-						MakeConverter(Actions::EditorActionDefinitions),
-						MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
-					);
-					if (result)
-					{
-						output.Shortcuts[result->first] = result->second;
-						break;
-					}
-				} {
-					auto result = ReadListPair<SelectionAction, ImGuiKeyChord>(
-						lineNum, line, start,
-						MakeConverter(Actions::SelectionActionDefinitions),
-						MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
-					);
-					if (result)
-					{
-						output.Shortcuts[result->first] = result->second;
-						break;
-					}
-					return std::unexpected<YAMLError>(result.error());
-				} 
-			}
+						auto result = ReadListPair<GameAction, ImGuiKeyChord>(
+							lineNum, line, start, 
+							MakeConverter(Actions::GameActionDefinitions),
+							MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
+						);
+						if (result)
+						{
+							output.Shortcuts[result->first] = result->second;
+							break;
+						}
+					} {
+						auto result = ReadListPair<EditorAction, ImGuiKeyChord>(
+							lineNum, line, start,
+							MakeConverter(Actions::EditorActionDefinitions),
+							MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
+						);
+						if (result)
+						{
+							output.Shortcuts[result->first] = result->second;
+							break;
+						}
+					} {
+						auto result = ReadListPair<SelectionAction, ImGuiKeyChord>(
+							lineNum, line, start,
+							MakeConverter(Actions::SelectionActionDefinitions),
+							MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions)
+						);
+						if (result)
+						{
+							output.Shortcuts[result->first] = result->second;
+							break;
+						}
+						return std::unexpected<YAMLError>(result.error());
+					} 
+				}
+				}
 			}
 
 			auto end = std::find_if(line.rbegin(), line.rend(), [](char c) { return !std::isspace(c); });
