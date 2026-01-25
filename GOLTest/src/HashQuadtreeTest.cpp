@@ -5,6 +5,7 @@
 #include <print>
 
 #include "HashQuadtree.h"
+#include "LifeAlgorithm.h"
 #include "RLEEncoder.h"
 
 namespace gol
@@ -420,5 +421,36 @@ namespace gol
         // Sum coordinates
         const auto sumX = std::ranges::fold_left(tree | std::views::transform([](auto p) { return p.X; }), 0, std::plus<>{});
         EXPECT_EQ(sumX, 13);
+    }
+
+    TEST(HashQuadtreeTest, SlowAdvanceSingleStepDyingPattern)
+    {
+        LifeHashSet cells{
+            { 0, 0 }, { 7, 0 },
+            { 0, 7 }, { 7, 7 }
+        };
+        HashQuadtree tree{ cells };
+
+        EXPECT_GE(tree.CalculateDepth(), 3) << "Tree must be deep enough to trigger slow advance";
+
+        const auto update = tree.NextGeneration({}, 1);
+        EXPECT_EQ(update.Generations, 1);
+        EXPECT_TRUE(update.Data.empty()) << "All isolated cells should die after one generation";
+    }
+
+    TEST(HashQuadtreeTest, HashLifeSlowAdvanceConsistency)
+    {
+        LifeHashSet cells{
+            { 0, 0 }, { 7, 0 },
+            { 0, 7 }, { 7, 7 }
+        };
+        HashQuadtree tree{ cells };
+
+        const auto directUpdate = tree.NextGeneration({}, 1);
+        const auto hashLifeUpdate = HashLife(tree, {}, 1);
+
+        EXPECT_EQ(directUpdate.Generations, 1);
+        EXPECT_EQ(hashLifeUpdate.Generations, 1);
+        EXPECT_EQ(directUpdate.Data, hashLifeUpdate.Data);
     }
 }

@@ -36,6 +36,13 @@ namespace gol
 		return node->Hash;
 	}
 
+	size_t HashQuadtree::SlowHash::operator()(const SlowKey& key) const noexcept
+	{
+		size_t hash = LifeNodeHash{}(key.Node);
+		hash ^= ankerl::unordered_dense::hash<int32_t>{}(key.MaxAdvance) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		return hash;
+	}
+
 	template class HashQuadtree::IteratorImpl<Vec2>;
 	template class HashQuadtree::IteratorImpl<const Vec2>;
 
@@ -218,8 +225,10 @@ namespace gol
 			return { FalseNode, 0 };
 		if (level <= 2)
 			return AdvanceFast(node, level, maxAdvance);
+		if (const auto it = s_SlowCache.find({ node, maxAdvance }); it != s_SlowCache.end())
+			return { it->second, maxAdvance };
 
-		constexpr static int subdivisions = 8;
+		constexpr static auto subdivisions = 8;
 		constexpr static auto index = [](int x, int y)
 		{
 			return y * subdivisions + x;
@@ -246,9 +255,7 @@ namespace gol
 		for (int y = 0; y < subdivisions; ++y)
 		{
 			for (int x = 0; x < subdivisions; ++x)
-			{
 				segments[index(x, y)] = fetchSegment(x, y);
-			}
 		}
 
 		const auto combine2x2 = [&](int startX, int startY) -> const LifeNode*
@@ -282,6 +289,8 @@ namespace gol
 
 		const auto generations = result00.Generations;
 		const auto* combined = FindOrCreate(result00.Node, result01.Node, result10.Node, result11.Node);
+
+		s_SlowCache[{ node, generations }] = combined;
 		return { combined, generations };
 	}
 
@@ -290,7 +299,7 @@ namespace gol
 		if (node == FalseNode)
 			return { FalseNode, 0 };
 
-		if (auto itr = s_NodeMap.find(node); itr != s_NodeMap.end() && itr->second != nullptr)
+		if (const auto itr = s_NodeMap.find(node); itr != s_NodeMap.end() && itr->second != nullptr)
 		{
 			const auto generations = 1 << (level - 2);
 			return { itr->second, generations };
@@ -408,7 +417,7 @@ namespace gol
 		if (m_Root == FalseNode)
 			return {};
 
-		const LifeNode* root = m_Root;
+		const auto* root = m_Root;
 		
 		auto level = CalculateDepth();
 		auto size = std::max(1, CalculateTreeSize());
@@ -433,7 +442,7 @@ namespace gol
 		return HashLifeUpdateInfo
 		{ 
 			.Data = quadtree, 
-			.Generations = static_cast<int64_t>(std::max(0LL, advanced.Generations)) 
+			.Generations = (std::max(static_cast<int64_t>(0), advanced.Generations))
 		};
 	}
 
@@ -447,7 +456,7 @@ namespace gol
 		if (size <= 1)
 			return FalseNode;
 
-        if (auto it = m_EmptyNodeCache.find(size); it != m_EmptyNodeCache.end()) 
+        if (const auto it = m_EmptyNodeCache.find(size); it != m_EmptyNodeCache.end()) 
             return it->second;
 
 		auto child = EmptyTree(size / 2);

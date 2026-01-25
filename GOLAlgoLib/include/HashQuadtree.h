@@ -190,22 +190,35 @@ namespace gol
     private:
 		struct QuadKey
 		{
-			Vec2 offset;
-			Vec2 pos;
-			int32_t size;
+			Vec2 Offset;
+			Vec2 Pos;
+			int32_t Size = 0;
 			auto operator<=>(const QuadKey&) const = default;
+		};
+
+		struct SlowKey
+		{
+			const LifeNode* Node;
+			int64_t MaxAdvance = 0;
+			auto operator<=>(const SlowKey&) const = default;
+		};
+
+		struct SlowHash
+		{
+			size_t operator()(const SlowKey& key) const noexcept;
 		};
 
 		struct QuadHash
 		{
-			using is_avalanching = void;  // Tells unordered_dense we provide good mixing
-
 			size_t operator()(const QuadKey& key) const noexcept;
 		};
 	private:
 		inline static ankerl::unordered_dense::map<
 			const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> 
 		s_NodeMap {};
+		inline static ankerl::unordered_dense::map<
+			SlowKey, const LifeNode*, SlowHash>
+			s_SlowCache {};
 
 		inline static std::vector<std::unique_ptr<LifeNode>> s_NodeStorage {};
 	private:
