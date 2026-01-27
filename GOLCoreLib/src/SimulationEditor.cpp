@@ -88,6 +88,8 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
     if (controlArgs.TickDelayMs)
         m_TickDelayMs = *controlArgs.TickDelayMs;
 
+    m_StepCount = controlArgs.StepCount;
+
     if (controlArgs.Action && ((activeOverride && *activeOverride) || displayResult.Selected))
         m_State = UpdateState(controlArgs);
 
@@ -129,7 +131,7 @@ gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandl
     if (elapsed >= m_TickDelayMs)
     {
         GL_DEBUG(m_LastTime = glfwGetTime());
-        m_Grid.Update();
+        m_Grid.Update(m_StepCount);
         if (m_Grid.Dead() && !m_SelectionManager.GridAlive())
             return SimulationState::Empty;
     }
@@ -340,7 +342,7 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_SelectionManager.Deselect(m_Grid);
             if (result.State == SimulationState::Paint)
                 m_InitialGrid = m_Grid;
-            m_Grid.Update(*result.StepCount);
+            m_Grid.Update(result.StepCount);
             return m_Grid.Dead() ? SimulationState::Empty : SimulationState::Paused;
         default:
 			assert(false && "Invalid GameAction passed to UpdateState");

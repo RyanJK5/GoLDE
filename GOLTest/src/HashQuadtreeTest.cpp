@@ -453,4 +453,374 @@ namespace gol
         EXPECT_EQ(hashLifeUpdate.Generations, 1);
         EXPECT_EQ(directUpdate.Data, hashLifeUpdate.Data);
     }
+
+    // ========== Tests for Vec2L refactoring and bounds checking ==========
+
+    TEST(HashQuadtreeTest, Vec2LInternalStoragePositiveCoordinates)
+    {
+        // Test that Vec2L internal storage correctly handles positive coordinates
+        LifeHashSet cells{ {100, 200}, {150, 250} };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Verify all cells are returned correctly (converted from Vec2L to Vec2)
+        ASSERT_EQ(actual.size(), 2);
+        EXPECT_TRUE(actual.contains({100, 200}));
+        EXPECT_TRUE(actual.contains({150, 250}));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LInternalStorageNegativeCoordinates)
+    {
+        // Test that Vec2L internal storage correctly handles negative coordinates
+        LifeHashSet cells{ {-100, -200}, {-50, -75} };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Verify all cells with negative coordinates are returned correctly
+        ASSERT_EQ(actual.size(), 2);
+        EXPECT_TRUE(actual.contains({-100, -200}));
+        EXPECT_TRUE(actual.contains({-50, -75}));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LMixedSignCoordinates)
+    {
+        // Test that Vec2L internal storage correctly handles mixed sign coordinates
+        LifeHashSet cells{
+            {-500, 500},
+            {500, -500},
+            {-1000, -1000},
+            {1000, 1000}
+        };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Verify all cells with mixed signs are returned correctly
+        ASSERT_EQ(actual.size(), 4);
+        EXPECT_TRUE(actual.contains({-500, 500}));
+        EXPECT_TRUE(actual.contains({500, -500}));
+        EXPECT_TRUE(actual.contains({-1000, -1000}));
+        EXPECT_TRUE(actual.contains({1000, 1000}));
+    }
+
+    TEST(HashQuadtreeTest, BoundsCheckingAtInt32Max)
+    {
+        // Test bounds checking at the maximum int32 value
+        constexpr int32_t maxInt32 = std::numeric_limits<int32_t>::max();
+        const LifeHashSet cells{ {maxInt32, maxInt32} };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Cell at max int32 should be included
+        ASSERT_EQ(actual.size(), 1);
+        EXPECT_TRUE(actual.contains({maxInt32, maxInt32}));
+    }
+
+    TEST(HashQuadtreeTest, BoundsCheckingAtInt32Min)
+    {
+        // Test bounds checking at the minimum int32 value
+        constexpr int32_t minInt32 = std::numeric_limits<int32_t>::min();
+        const LifeHashSet cells{ {minInt32, minInt32} };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Cell at min int32 should be included
+        ASSERT_EQ(actual.size(), 1);
+        EXPECT_TRUE(actual.contains({minInt32, minInt32}));
+    }
+
+    TEST(HashQuadtreeTest, BoundsCheckingNearInt32Boundaries)
+    {
+        // Test bounds checking with coordinates near int32 boundaries
+        constexpr static int32_t maxInt32 = std::numeric_limits<int32_t>::max();
+        constexpr static int32_t minInt32 = std::numeric_limits<int32_t>::min();
+        
+        const LifeHashSet cells{
+            {maxInt32 - 1, maxInt32 - 1},
+            {minInt32 + 1, minInt32 + 1},
+            {maxInt32 - 100, minInt32 + 100}
+        };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // All cells within bounds should be included
+        ASSERT_EQ(actual.size(), 3);
+        EXPECT_TRUE(actual.contains({ maxInt32 - 1, maxInt32 - 1 }));
+        EXPECT_TRUE(actual.contains({ minInt32 + 1, minInt32 + 1 }));
+        EXPECT_TRUE(actual.contains({ maxInt32 - 100, minInt32 + 100 }));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LOffsetHandling)
+    {
+        // Test that Vec2L offsets are correctly computed and used during iteration
+        LifeHashSet cells{ {5000, 6000}, {5100, 6100} };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Verify that the offset is correctly applied
+        ASSERT_EQ(actual.size(), 2);
+        EXPECT_TRUE(actual.contains({5000, 6000}));
+        EXPECT_TRUE(actual.contains({5100, 6100}));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LConversionConsistency)
+    {
+        // Test that conversion from Vec2L back to Vec2 is consistent
+        const std::vector<Vec2> originalCells{
+            {0, 0}, {100, 100}, {-100, -100}, {50, -50}, {-50, 50}
+        };
+
+        LifeHashSet input;
+        for (const auto& cell : originalCells)
+            input.insert(cell);
+
+        HashQuadtree tree{ input };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // Verify that all original cells are preserved through conversion
+        ASSERT_EQ(actual.size(), originalCells.size());
+        for (const auto& cell : originalCells)
+            EXPECT_TRUE(actual.contains(cell));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LWithLargeOffsets)
+    {
+        // Test Vec2L handling with large offset values
+        constexpr int32_t largeOffset = 1000000;
+        const LifeHashSet cells{
+            {largeOffset, largeOffset},
+            {largeOffset + 10, largeOffset + 20}
+        };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        ASSERT_EQ(actual.size(), 2);
+        EXPECT_TRUE(actual.contains({largeOffset, largeOffset}));
+        EXPECT_TRUE(actual.contains({largeOffset + 10, largeOffset + 20}));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LNegativeLargeOffsets)
+    {
+        // Test Vec2L handling with large negative offset values
+        constexpr int32_t largeNegativeOffset = -1000000;
+        const LifeHashSet cells{
+            {largeNegativeOffset, largeNegativeOffset},
+            {largeNegativeOffset - 10, largeNegativeOffset - 20}
+        };
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        ASSERT_EQ(actual.size(), 2);
+        EXPECT_TRUE(actual.contains({largeNegativeOffset, largeNegativeOffset}));
+        EXPECT_TRUE(actual.contains({largeNegativeOffset - 10, largeNegativeOffset - 20}));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LWithExplicitConstructorOffset)
+    {
+        // Test that explicit offset parameter in constructor is correctly added to computed offset
+        LifeHashSet cells{ {100, 100}, {200, 200} };
+        Vec2 explicitOffset{ 50, 50 };
+        
+        // Create tree without explicit offset
+        HashQuadtree tree1{ cells };
+        
+        // Create tree with explicit offset
+        HashQuadtree tree2{ cells, explicitOffset };
+
+        LifeHashSet actual1, actual2;
+        for (const auto& pos : tree1) actual1.insert(pos);
+        for (const auto& pos : tree2) actual2.insert(pos);
+
+        // Both trees should have same number of cells
+        ASSERT_EQ(actual1.size(), 2);
+        ASSERT_EQ(actual2.size(), 2);
+        
+        // tree1 should have cells at {100, 100} and {200, 200}
+        EXPECT_TRUE(actual1.contains({100, 100}));
+        EXPECT_TRUE(actual1.contains({200, 200}));
+        
+        // tree2 should have cells offset by {50, 50}: {150, 150} and {250, 250}
+        EXPECT_TRUE(actual2.contains({150, 150}));
+        EXPECT_TRUE(actual2.contains({250, 250}));
+    }
+
+    TEST(HashQuadtreeTest, Vec2LCopyConstructorPreservesInternalState)
+    {
+        // Test that copying a tree preserves Vec2L internal state correctly
+        LifeHashSet cells{ {-500, 500}, {500, -500} };
+        HashQuadtree tree1{ cells };
+
+        HashQuadtree tree2 = tree1;
+
+        LifeHashSet actual1, actual2;
+        for (const auto& pos : tree1) actual1.insert(pos);
+        for (const auto& pos : tree2) actual2.insert(pos);
+
+        // Both trees should yield the same cells
+        EXPECT_EQ(actual1, actual2);
+        ASSERT_EQ(actual1.size(), 2);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LMoveConstructorPreservesInternalState)
+    {
+        // Test that moving a tree preserves Vec2L internal state correctly
+        LifeHashSet cells{ {-500, 500}, {500, -500} };
+        HashQuadtree tree1{ cells };
+
+        LifeHashSet expectedCells;
+        for (const auto& pos : tree1) expectedCells.insert(pos);
+
+        HashQuadtree tree2 = std::move(tree1);
+
+        LifeHashSet actualFromMoved;
+        for (const auto& pos : tree2) actualFromMoved.insert(pos);
+
+        // Moved tree should yield the same cells
+        EXPECT_EQ(expectedCells, actualFromMoved);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LIteratorComparison)
+    {
+        // Test that iterator comparison works correctly with Vec2 values converted from Vec2L
+        LifeHashSet cells{ {100, 200}, {300, 400} };
+        HashQuadtree tree{ cells };
+
+        auto it1 = tree.begin();
+        auto it2 = tree.begin();
+
+        // Both iterators should start at the same position
+        EXPECT_EQ(it1, it2);
+        EXPECT_FALSE(it1 != it2);
+
+        // They should dereference to the same value
+        EXPECT_EQ(*it1, *it2);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LIteratorAdvancementWithBounds)
+    {
+        // Test that iterator advancement correctly handles Vec2L positions within bounds
+        LifeHashSet cells{ {100, 100}, {200, 200}, {300, 300} };
+        HashQuadtree tree{ cells };
+
+        size_t count = 0;
+        for (const auto& pos : tree) {
+            count++;
+            // All positions should be within int32 bounds
+            EXPECT_GE(pos.X, std::numeric_limits<int32_t>::min());
+            EXPECT_LE(pos.X, std::numeric_limits<int32_t>::max());
+            EXPECT_GE(pos.Y, std::numeric_limits<int32_t>::min());
+            EXPECT_LE(pos.Y, std::numeric_limits<int32_t>::max());
+        }
+
+        EXPECT_EQ(count, 3);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LEqualityComparison)
+    {
+        // Test that two trees with identical cells are equal after Vec2L->Vec2 conversion
+        LifeHashSet cells1{ {10, 20}, {30, 40}, {-50, -60} };
+        LifeHashSet cells2{ {10, 20}, {30, 40}, {-50, -60} };
+
+        HashQuadtree tree1{ cells1 };
+        HashQuadtree tree2{ cells2 };
+
+        EXPECT_EQ(tree1, tree2);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LEmptyTreeBoundsCheck)
+    {
+        // Test that empty tree bounds checking doesn't affect iteration
+        LifeHashSet cells;
+        HashQuadtree tree{ cells };
+
+        size_t count = 0;
+        for ([[maybe_unused]] const auto& pos : tree) {
+            count++;
+        }
+
+        EXPECT_EQ(count, 0);
+        EXPECT_EQ(tree.begin(), tree.end());
+    }
+
+    TEST(HashQuadtreeTest, Vec2LDensePatternWithVaryingCoordinates)
+    {
+        // Test Vec2L handling with a dense pattern using various coordinate ranges
+        LifeHashSet cells;
+        
+        // Add cells across different coordinate ranges
+        for (int x = -100; x <= 100; x += 50) {
+            for (int y = -100; y <= 100; y += 50) {
+                cells.insert({x, y});
+            }
+        }
+
+        HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree)
+            actual.insert(pos);
+
+        // All cells should be preserved
+        EXPECT_EQ(actual, cells);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LNextGenerationPreservesCoordinates)
+    {
+        // Test that NextGeneration correctly preserves coordinates through Vec2L->Vec2 conversion
+        LifeHashSet blockCells{ {0, 0}, {1, 0}, {0, 1}, {1, 1} };
+        HashQuadtree tree{ blockCells };
+
+        auto update = tree.NextGeneration();
+        LifeHashSet resultCells;
+        for (const auto& pos : update.Data)
+            resultCells.insert(pos);
+
+        // Block should remain stable
+        EXPECT_EQ(resultCells, blockCells);
+    }
+
+    TEST(HashQuadtreeTest, Vec2LIteratorConstness)
+    {
+        // Test that const iterators correctly handle Vec2L conversion
+        const LifeHashSet cells{ {100, 200}, {-100, -200} };
+        const HashQuadtree tree{ cells };
+
+        LifeHashSet actual;
+        for (const auto& pos : tree) {
+            actual.insert(pos);
+        }
+
+        ASSERT_EQ(actual.size(), 2);
+        EXPECT_TRUE(actual.contains({100, 200}));
+        EXPECT_TRUE(actual.contains({-100, -200}));
+    }
 }

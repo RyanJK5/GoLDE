@@ -3,6 +3,7 @@
 
 #include <filesystem>
 
+#include "LifeAlgorithm.h"
 #include "GameEnums.h"
 
 namespace gol
@@ -11,6 +12,7 @@ namespace gol
 	{
 		std::filesystem::path CurrentFilePath;
 		SimulationState State = SimulationState::Paint;
+		LifeAlgorithm Algorithm = LifeAlgorithm::SparseLife;
 		bool Active = true;
 		bool Closing = false;
 		bool SelectionActive = false;

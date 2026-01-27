@@ -16,25 +16,39 @@ gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& sta
 {
     ImGui::Text("Step Count");
 
+    if (m_HyperSpeed)
+    {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+    }
+
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 3.f * 2.f + 5);
     ImGui::InputInt("##label", &m_StepCount, 1, BigStep);
     ImGui::PopStyleVar();
 
+    if (m_HyperSpeed)
+    {
+        ImGui::PopItemFlag();
+        ImGui::PopStyleVar();
+	}
+
+
     if (m_StepCount < 1)
         m_StepCount = 1;
-    if (m_StepCount >= StepWarning)
-        ImGui::SetItemTooltip("Stepping with large values may cause lag!");
 
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
     auto result = m_Button.Update(state);
+
+	ImGui::Checkbox("Enable Hyper Speed", &m_HyperSpeed);
+
     ImGui::Separator();
     ImGui::PopStyleVar();
 
     return 
     {
         .Action = result.Action,
-        .StepCount = m_StepCount,
-        .FromShortcut = result.FromShortcut
+        .StepCount = m_HyperSpeed ? 0 : m_StepCount,
+        .FromShortcut = result.FromShortcut,
     };
 }

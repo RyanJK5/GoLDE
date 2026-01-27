@@ -127,6 +127,7 @@ namespace gol
 	};
 
 	using Vec2 = GenericVec<int32_t>;
+	using Vec2L = GenericVec<int64_t>;
 
 	using Size2 = GenericSize<int32_t>;
 

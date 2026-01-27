@@ -31,7 +31,6 @@ namespace gol
 	{
     public:
         static constexpr int32_t BigStep = 10;
-        static constexpr int32_t StepWarning = 100;
 	public:
         StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
             : m_Button(shortcuts)
@@ -42,6 +41,7 @@ namespace gol
 		SimulationControlResult UpdateImpl(const EditorResult& state);
 	private:
         int32_t m_StepCount = 1;
+		bool m_HyperSpeed = false;
 
         StepButton m_Button;
 	};

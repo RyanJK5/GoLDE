@@ -1,11 +1,13 @@
 #ifndef __HashQuadtree_h__
 #define __HashQuadtree_h__
 
+#include <deque>
 #include <iterator>
 #include <ranges>
 #include <cstddef>
 #include <cstdint>
 #include <stack>
+#include <limits>
 #include <unordered_dense.h>
 
 #include "Graphics2D.h"
@@ -100,10 +102,23 @@ namespace gol
         private:
             struct LifeNodeData {
                 const LifeNode* node;
-                Vec2 position;
-                int32_t size;
+                Vec2L position;
+                int64_t size;
                 uint8_t quadrant;
             };
+
+			constexpr static bool IsInBounds(Vec2L pos)
+            {
+                constexpr static auto maxInt32 = static_cast<int64_t>(std::numeric_limits<int32_t>::max());
+                constexpr static auto minInt32 = static_cast<int64_t>(std::numeric_limits<int32_t>::min());
+                return pos.X >= minInt32 && pos.X <= maxInt32 && pos.Y >= minInt32 && pos.Y <= maxInt32;
+            }
+
+            constexpr static Vec2 ConvertToVec2(Vec2L pos)
+            {
+                return Vec2{static_cast<int32_t>(pos.X), static_cast<int32_t>(pos.Y)};
+            }
+
         public:
             using iterator_category = std::input_iterator_tag;
             using difference_type   = std::ptrdiff_t;
@@ -124,7 +139,7 @@ namespace gol
             reference operator*() const;
             pointer operator->() const;
         private:
-            IteratorImpl(const LifeNode* root, Vec2 offset, int32_t size, bool isEnd);
+            IteratorImpl(const LifeNode* root, Vec2L offset, int64_t size, bool isEnd);
             void AdvanceToNext();
         private:
             std::stack<LifeNodeData> m_Stack;
@@ -149,12 +164,12 @@ namespace gol
         HashLifeUpdateInfo NextGeneration(const Rect& bounds = {}, int64_t maxAdvance = 0) const;
 
 		int32_t CalculateDepth() const;
-		int32_t CalculateTreeSize() const;
+		int64_t CalculateTreeSize() const;
 
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;
     private:
-		HashQuadtree(const LifeNode* root, Vec2 offset);
+		HashQuadtree(const LifeNode* root, Vec2L offset);
 
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
@@ -169,10 +184,10 @@ namespace gol
         ) const;
 
 		const LifeNode* BuildTreeRegion(
-            std::span<Vec2> cells, 
-            Vec2 pos, int32_t size);
+            std::span<Vec2L> cells, 
+            Vec2L pos, int64_t size);
 
-		const LifeNode* EmptyTree(int32_t size) const;
+		const LifeNode* EmptyTree(int64_t size) const;
 
 		const LifeNode* BuildTree(const LifeHashSet& data);
 
@@ -188,14 +203,6 @@ namespace gol
 
 		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
     private:
-		struct QuadKey
-		{
-			Vec2 Offset;
-			Vec2 Pos;
-			int32_t Size = 0;
-			auto operator<=>(const QuadKey&) const = default;
-		};
-
 		struct SlowKey
 		{
 			const LifeNode* Node;
@@ -207,26 +214,20 @@ namespace gol
 		{
 			size_t operator()(const SlowKey& key) const noexcept;
 		};
-
-		struct QuadHash
-		{
-			size_t operator()(const QuadKey& key) const noexcept;
-		};
 	private:
 		inline static ankerl::unordered_dense::map<
-			const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> 
-		s_NodeMap {};
+				const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> 
+			s_NodeMap {};
 		inline static ankerl::unordered_dense::map<
-			SlowKey, const LifeNode*, SlowHash>
+				SlowKey, const LifeNode*, SlowHash>
 			s_SlowCache {};
-
-		inline static std::vector<std::unique_ptr<LifeNode>> s_NodeStorage {};
+		inline static ankerl::unordered_dense::map<int64_t, const LifeNode*> 
+			s_EmptyNodeCache {};
+		inline static std::deque<LifeNode>
+			s_NodeStorage {};
 	private:
-		ankerl::unordered_dense::map<QuadKey, const LifeNode*, QuadHash> m_TreeBuilderCache {};
-        mutable ankerl::unordered_dense::map<int32_t, const LifeNode*> m_EmptyNodeCache {};
-        
 		const LifeNode* m_Root = FalseNode;        
-        Vec2 m_RootOffset;    
+        Vec2L m_RootOffset;    
     };
 
 	struct HashLifeUpdateInfo
@@ -240,8 +241,8 @@ namespace gol
 
 	template <typename T>
 	HashQuadtree::IteratorImpl<T>::IteratorImpl(
-		const LifeNode* root, Vec2 offset, int32_t size, bool isEnd)
-		: m_Current(offset), m_IsEnd(isEnd)
+		const LifeNode* root, Vec2L offset, int64_t size, bool isEnd)
+		: m_Current{}, m_IsEnd(isEnd)
 	{
 		if (!isEnd && root != FalseNode) {
 			m_Stack.push({root, offset, size, 0});
@@ -258,9 +259,13 @@ namespace gol
 			// If we're at a leaf (size == 1)
 			if (frame.size == 1) {
 				if (frame.node == TrueNode) {
-					m_Current = frame.position;
+					if (IsInBounds(frame.position)) {
+						m_Current = ConvertToVec2(frame.position);
+						m_Stack.pop();
+						return;  // Found a live cell within bounds
+					}
 					m_Stack.pop();
-					return;  // Found a live cell
+					continue;
 				}
 				m_Stack.pop();
 				continue;

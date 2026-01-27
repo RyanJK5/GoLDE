@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <array>
-#include <memory>
 #include <print>
 #include <unordered_dense.h>
 #include <vector>
@@ -52,10 +51,10 @@ namespace gol
 			return;
 		
 		m_Root = BuildTree(data);
-		m_RootOffset += offset;
+		m_RootOffset += Vec2L{static_cast<int64_t>(offset.X), static_cast<int64_t>(offset.Y)};
 	}
 
-	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2 offset)
+	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2L offset)
 		: m_Root(root)
 		, m_RootOffset(offset)
 	{ }
@@ -91,11 +90,11 @@ namespace gol
 		return !(*this == other);
 	}
 
-	int32_t HashQuadtree::CalculateTreeSize() const
+	int64_t HashQuadtree::CalculateTreeSize() const
 	{
 		if (m_Root == FalseNode)
 			return 0;
-		return 1 << CalculateDepth();
+		return 1LL << CalculateDepth();
 	}
 
 	bool HashQuadtree::empty() const
@@ -108,7 +107,7 @@ namespace gol
 		if (m_Root == FalseNode)
 			return end();
 		
-		int32_t size = CalculateTreeSize();
+		const auto size = CalculateTreeSize();
 		return Iterator { m_Root, m_RootOffset, size, false };
 	}
 
@@ -122,7 +121,7 @@ namespace gol
 		if (m_Root == FalseNode)
 			return end();
 		
-		int32_t size = CalculateTreeSize();
+		const auto size = CalculateTreeSize();
 		return ConstIterator(m_Root, m_RootOffset, size, false);
 	}
 
@@ -137,10 +136,9 @@ namespace gol
 		if (auto itr = s_NodeMap.find(&toFind); itr != s_NodeMap.end()) 
 			return itr->first;
 
-		auto node = std::make_unique<LifeNode>(nw, ne, sw, se);
-		s_NodeStorage.push_back(std::move(node));
-		s_NodeMap[s_NodeStorage.back().get()] = nullptr;
-		return s_NodeStorage.back().get();
+		s_NodeStorage.emplace_back(nw, ne, sw, se);
+		s_NodeMap[&s_NodeStorage.back()] = nullptr;
+		return &s_NodeStorage.back();
 	}
 
 	const LifeNode* HashQuadtree::CenteredHorizontal(const LifeNode& west, const LifeNode& east) const
@@ -301,7 +299,7 @@ namespace gol
 
 		if (const auto itr = s_NodeMap.find(node); itr != s_NodeMap.end() && itr->second != nullptr)
 		{
-			const auto generations = 1 << (level - 2);
+			const auto generations = 1LL << (level - 2);
 			return { itr->second, generations };
 		}
 
@@ -329,7 +327,7 @@ namespace gol
 
 		const auto* result = FindOrCreate(tl.Node, tr.Node, bl.Node, br.Node);
 		s_NodeMap[node] = result;
-		const auto generations = 1 << (level - 2);
+		const auto generations = 1LL << (level - 2);
 		return { result, generations };
 	}
 
@@ -397,12 +395,12 @@ namespace gol
 	const LifeNode* HashQuadtree::ExpandUniverse(const LifeNode* node, int32_t level) const
 	{
 		if (node == FalseNode)
-			return EmptyTree(1 << (level + 1));
+			return EmptyTree(1LL << (level + 1));
 
 		if (node == TrueNode)
 			return FindOrCreate(FalseNode, FalseNode, FalseNode, TrueNode);
 
-		const auto childSize = level > 0 ? (1 << (level - 1)) : 1;
+		const auto childSize = level > 0 ? (1LL << (level - 1)) : 1LL;
 		const auto* empty = EmptyTree(childSize);
 		const auto* expandedNW = FindOrCreate(empty, empty, empty, node->NorthWest);
 		const auto* expandedNE = FindOrCreate(empty, empty, node->NorthEast, empty);
@@ -420,21 +418,26 @@ namespace gol
 		const auto* root = m_Root;
 		
 		auto level = CalculateDepth();
-		auto size = std::max(1, CalculateTreeSize());
+		auto size = std::max(1LL, CalculateTreeSize());
 		auto offset = m_RootOffset;
 
 		while (NeedsExpansion(root, level)) 
 		{
 			root = ExpandUniverse(root, level);
-			const auto delta = std::max(1, size / 2);
+			const auto delta = std::max(1LL, size / 2);
 			offset.X -= delta;
 			offset.Y -= delta;
 			level++;
-			size <<= 1;
+			size <<= 1LL;
 		}
 
+		if (level >= 63)
+			return HashLifeUpdateInfo{
+				.Data = *this, 
+				.Generations = 0 
+			};
 		const auto advanced = AdvanceNode(root, level, maxAdvance);
-		const auto centerDelta = std::max(1, size / 4);
+		const auto centerDelta = std::max(1LL, size / 4);
 		offset.X += centerDelta;
 		offset.Y += centerDelta;
 
@@ -446,28 +449,23 @@ namespace gol
 		};
 	}
 
-	size_t HashQuadtree::QuadHash::operator()(const QuadKey& key) const noexcept
-	{
-		return ankerl::unordered_dense::detail::wyhash::hash(&key, sizeof(key));
-	}
-
-	const LifeNode* HashQuadtree::EmptyTree(int32_t size) const
+	const LifeNode* HashQuadtree::EmptyTree(int64_t size) const
 	{
 		if (size <= 1)
 			return FalseNode;
 
-        if (const auto it = m_EmptyNodeCache.find(size); it != m_EmptyNodeCache.end()) 
+        if (const auto it = s_EmptyNodeCache.find(size); it != s_EmptyNodeCache.end()) 
             return it->second;
 
 		auto child = EmptyTree(size / 2);
 		auto result = FindOrCreate(child, child, child, child);
-        m_EmptyNodeCache[size] = result;
+        s_EmptyNodeCache[size] = result;
         return result;
 	}
 
 	const LifeNode* HashQuadtree::BuildTreeRegion(
-		std::span<Vec2> cells,
-		Vec2 pos, int32_t size)
+		std::span<Vec2L> cells,
+		Vec2L pos, int64_t size)
 	{
 		if (cells.empty())
 			return EmptyTree(size);
@@ -479,12 +477,14 @@ namespace gol
 		const auto midY = pos.Y + half;
 		const auto midX = pos.X + half;
 		
-		auto itY = std::partition(cells.begin(), cells.end(), [midY](const Vec2& v) { return v.Y < midY; });
-		std::span<Vec2> north = {cells.begin(), itY};
-		std::span<Vec2> south = {itY, cells.end()};
+		using std::ranges::partition;
+
+		const auto itY = partition(cells, [midY](const Vec2L& v) { return v.Y < midY; }).begin();
+		const std::span<Vec2L> north {cells.begin(), itY};
+		const std::span<Vec2L> south {itY, cells.end()};
 		
-		auto itNorthX = std::partition(north.begin(), north.end(), [midX](const Vec2& v) { return v.X < midX; });
-		auto itSouthX = std::partition(south.begin(), south.end(), [midX](const Vec2& v) { return v.X < midX; });
+		const auto itNorthX = partition(north, [midX](const Vec2L& v) { return v.X < midX; }).begin();
+		const auto itSouthX = partition(south, [midX](const Vec2L& v) { return v.X < midX; }).begin();
 
 		return FindOrCreate(
 			BuildTreeRegion({north.begin(), itNorthX}, {pos.X, pos.Y}, half),
@@ -498,22 +498,28 @@ namespace gol
 	{
 		if (cells.empty())
 		{
-			m_RootOffset = {0, 0};
+			m_RootOffset = Vec2L{0, 0};
 			return FalseNode;
 		}
 
 		const auto& [minX, maxX] = std::ranges::minmax_element(cells, 
-			[](const Vec2& a, const Vec2& b) { return a.X < b.X; });
+			[](Vec2 a, Vec2 b) { return a.X < b.X; });
 		const auto& [minY, maxY] = std::ranges::minmax_element(cells, 
-			[](const Vec2& a, const Vec2& b) { return a.Y < b.Y; });
+			[](Vec2 a, Vec2 b) { return a.Y < b.Y; });
 		
-		const auto neighborhoodSize = std::max(maxX->X - minX->X, maxY->Y - minY->Y) + 1;
-		const auto gridExponent = static_cast<int32_t>(std::ceil(std::log2(neighborhoodSize)));
-		const auto gridSize = 1 << gridExponent;
+		const auto neighborhoodSize = std::max(
+			static_cast<int64_t>(maxX->X) - minX->X, 
+			static_cast<int64_t>(maxY->Y) - minY->Y) + 1;
+		const auto gridExponent = static_cast<int64_t>(std::ceil(std::log2(neighborhoodSize)));
+		const auto gridSize = 1LL << gridExponent;
 		
-        m_RootOffset = {minX->X, minY->Y};
+        m_RootOffset = Vec2L{static_cast<int64_t>(minX->X), static_cast<int64_t>(minY->Y)};
 		
-		std::vector<Vec2> cellVec{ cells.begin(), cells.end() };
+		std::vector<Vec2L> cellVec;
+		cellVec.reserve(cells.size());
+		for (const auto& cell : cells)
+			cellVec.emplace_back(static_cast<int64_t>(cell.X), static_cast<int64_t>(cell.Y));
+
 		return BuildTreeRegion(cellVec, m_RootOffset, gridSize);
 	}
 }

@@ -92,6 +92,8 @@ namespace gol
 		double m_TickDelayMs = DefaultTickDelayMs;
 		double m_LastTime = 0;
 
+		int64_t m_StepCount = 1;
+
 		EditorMode m_EditorMode = EditorMode::None;
 	};
 }

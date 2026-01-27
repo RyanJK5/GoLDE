@@ -98,7 +98,12 @@ void gol::GameGrid::Update(int64_t numSteps)
 		if (!m_HashLifeData)
 			m_HashLifeData = HashQuadtree{ m_Data, {0, 0} };
 		auto updateInfo = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps);
-		m_Generation += updateInfo.Generations;
+		
+		if (std::numeric_limits<int64_t>::max() - updateInfo.Generations < m_Generation)
+			m_Generation = std::numeric_limits<int64_t>::max();
+		else
+			m_Generation += updateInfo.Generations;
+	
 		m_HashLifeData = std::move(updateInfo.Data);
 		break;
 	}
