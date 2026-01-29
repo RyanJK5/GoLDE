@@ -69,13 +69,11 @@ namespace gol
 		
 		m_Root = BuildTree(data);
 		m_RootOffset += {static_cast<int64_t>(offset.X), static_cast<int64_t>(offset.Y)};
-		m_Depth = CalculateDepth();
 	}
 
 	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2L offset, int32_t depth)
 		: m_Root(root)
 		, m_RootOffset(offset)
-		, m_Depth(depth)
 	{ }
 
 	int32_t HashQuadtree::CalculateDepth() const
@@ -461,7 +459,6 @@ namespace gol
 		offset.Y += centerDelta;
 
 		const auto quadtree = HashQuadtree{ advanced.Node, offset, depth };
-		std::println("{} ? {}", depth, m_Depth);
 		return HashLifeUpdateInfo
 		{ 
 			.Data = quadtree, 
