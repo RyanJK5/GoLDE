@@ -44,7 +44,7 @@ gol::Rect gol::GameGrid::BoundingBox() const
 
 	auto least = Vec2 { std::numeric_limits<int32_t>::max(), std::numeric_limits<int32_t>::max() };
 	auto most = Vec2  { std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::min() };
-	for (const auto& value : m_Data)
+	for (const auto value : m_Data)
 	{
 		least.X = std::min(least.X, value.X);
 		least.Y = std::min(least.Y, value.Y);
@@ -189,7 +189,7 @@ gol::LifeHashSet gol::GameGrid::ReadRegion(const Rect& region) const
 
 void gol::GameGrid::ClearRegion(const Rect& region)
 {
-	m_Population -= std::erase_if(m_Data, [region](const Vec2& pos) { return region.InBounds(pos); });
+	m_Population -= std::erase_if(m_Data, [region](Vec2 pos) { return region.InBounds(pos); });
 	m_CacheInvalidated = true;
 }
 
@@ -241,7 +241,7 @@ void gol::GameGrid::FlipGrid(bool vertical)
 	LifeHashSet newData;
 	if (!Bounded())
 	{
-		for (const auto& pos : m_Data)
+		for (const auto pos : m_Data)
 		{
 			if (vertical)
 				newData.insert({ pos.X, -pos.Y });

@@ -15,8 +15,6 @@
 
 namespace gol 
 {
-	constexpr int64_t MaxAdvanceOf(int64_t stepSize);
-	
 	struct LifeNode 
     {
         const LifeNode* NorthWest;
@@ -37,22 +35,24 @@ namespace gol
 		: NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se), Hash(0ULL), IsEmpty(false)
 		{
 			if (!isLeaf)
-			{
-				auto check = [](const LifeNode* n) { return n == nullptr || n->IsEmpty; };
-				IsEmpty = check(nw) && check(ne) && check(sw) && check(se);
-			}
+				IsEmpty = CheckEmpty(nw) && CheckEmpty(ne) && CheckEmpty(sw) && CheckEmpty(se);
 
 			if consteval {}
 			else
 			{
-				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(NorthWest));
-				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(NorthEast));
-				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthWest));
-				Hash = HashCombine(Hash, reinterpret_cast<uint64_t>(SouthEast));
+				Hash = HashCombine(Hash, std::bit_cast<uint64_t>(NorthWest));
+				Hash = HashCombine(Hash, std::bit_cast<uint64_t>(NorthEast));
+				Hash = HashCombine(Hash, std::bit_cast<uint64_t>(SouthWest));
+				Hash = HashCombine(Hash, std::bit_cast<uint64_t>(SouthEast));
 			}
 		}
 	private:
-		static constexpr uint64_t HashCombine(uint64_t seed, uint64_t v)
+		constexpr static bool CheckEmpty(const LifeNode* n)
+		{
+			return n == nullptr || n->IsEmpty;
+		}
+
+		constexpr static uint64_t HashCombine(uint64_t seed, uint64_t v)
 		{
 			return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
 		}
@@ -169,7 +169,7 @@ namespace gol
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;
     private:
-		HashQuadtree(const LifeNode* root, Vec2L offset);
+		HashQuadtree(const LifeNode* root, Vec2L offset, int32_t depth);
 
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
@@ -185,7 +185,8 @@ namespace gol
 
 		const LifeNode* BuildTreeRegion(
             std::span<Vec2L> cells, 
-            Vec2L pos, int64_t size);
+            Vec2L pos, int64_t size
+		);
 
 		const LifeNode* EmptyTree(int64_t size) const;
 
@@ -227,7 +228,7 @@ namespace gol
 			s_NodeStorage {};
 	private:
 		const LifeNode* m_Root = FalseNode;        
-        Vec2L m_RootOffset;    
+        Vec2L m_RootOffset;
     };
 
 	struct HashLifeUpdateInfo
@@ -242,7 +243,7 @@ namespace gol
 	template <typename T>
 	HashQuadtree::IteratorImpl<T>::IteratorImpl(
 		const LifeNode* root, Vec2L offset, int64_t size, bool isEnd)
-		: m_Current{}, m_IsEnd(isEnd)
+		: m_Current(), m_IsEnd(isEnd)
 	{
 		if (!isEnd && root != FalseNode) {
 			m_Stack.push({root, offset, size, 0});
@@ -347,17 +348,6 @@ namespace gol
 	typename HashQuadtree::IteratorImpl<T>::pointer HashQuadtree::IteratorImpl<T>::operator->() const
     {
 		return &m_Current;
-	}
-
-	constexpr int64_t MaxAdvanceOf(int64_t stepSize)
-	{
-		if (stepSize == 0)
-			return 0;
-
-		auto power = 0ULL;
-		while ((stepSize % (1ULL << power)) == 0)
-			power++;
-		return 1ULL << (power - 1ULL);
 	}
 }
 

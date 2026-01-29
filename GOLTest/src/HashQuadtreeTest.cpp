@@ -16,12 +16,12 @@ namespace gol
         LifeHashSet actual {};
 
         // Test range-based for loop
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         ASSERT_EQ(actual.size(), expected.size()) << "Tree yielded wrong number of cells";
 
-        for (const auto& cell : expected)
+        for (const auto cell : expected)
             ASSERT_TRUE(actual.contains(cell)) << "Tree missing a cell that should be there";
     }
 
@@ -187,7 +187,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         // Test with std::algorithms
-        auto count = std::count_if(tree.begin(), tree.end(), [](const Vec2& v)
+        auto count = std::count_if(tree.begin(), tree.end(), [](Vec2 v)
         {
             return v.X > 1; // Should find {2,2} and {3,3}
         });
@@ -227,7 +227,7 @@ namespace gol
         tree = update.Data;
 
         LifeHashSet actual;
-        for (const auto& p : tree) actual.insert(p);
+        for (const auto p : tree) actual.insert(p);
 
         // Blinker should still be vertical
         ASSERT_EQ(actual.size(), 3);
@@ -250,14 +250,14 @@ namespace gol
         EXPECT_GT(update.Generations, 0);
 
         LifeHashSet actual;
-        for (const auto& p : update.Data) actual.insert(p);
+        for (const auto p : update.Data) actual.insert(p);
 
         // Glider should survive (5 cells)
         EXPECT_EQ(actual.size(), 5);
 
         // And should have moved from original position
         bool sameAsStart = true;
-        for (const auto& cell : start)
+        for (const auto cell : start)
         {
             if (!actual.contains(cell))
             {
@@ -324,10 +324,8 @@ namespace gol
 
         // Ensure we can iterate over a const tree using range-based for
         size_t count = 0;
-        for ([[maybe_unused]] const auto& cell : tree) 
-        {
+        for ([[maybe_unused]] const auto cell : tree) 
             count++;
-        }
         EXPECT_EQ(count, 2);
 
         // Explicitly check ConstIterator type
@@ -379,7 +377,7 @@ namespace gol
         tree = update.Data;
         
         EXPECT_EQ(std::ranges::distance(tree), 4);
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
         {
             EXPECT_GE(pos.X, far);
             EXPECT_GE(pos.Y, far);
@@ -415,7 +413,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         // Filter and count using ranges
-        auto filtered = tree | std::views::filter([](const auto& p) { return p.X < 5; });
+        auto filtered = tree | std::views::filter([](const auto p) { return p.X < 5; });
         EXPECT_EQ(std::ranges::distance(filtered), 3);
 
         // Sum coordinates
@@ -463,7 +461,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Verify all cells are returned correctly (converted from Vec2L to Vec2)
@@ -479,7 +477,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Verify all cells with negative coordinates are returned correctly
@@ -500,7 +498,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Verify all cells with mixed signs are returned correctly
@@ -519,7 +517,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Cell at max int32 should be included
@@ -535,7 +533,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Cell at min int32 should be included
@@ -557,7 +555,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // All cells within bounds should be included
@@ -574,7 +572,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Verify that the offset is correctly applied
@@ -591,18 +589,18 @@ namespace gol
         };
 
         LifeHashSet input;
-        for (const auto& cell : originalCells)
+        for (const auto cell : originalCells)
             input.insert(cell);
 
         HashQuadtree tree{ input };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // Verify that all original cells are preserved through conversion
         ASSERT_EQ(actual.size(), originalCells.size());
-        for (const auto& cell : originalCells)
+        for (const auto cell : originalCells)
             EXPECT_TRUE(actual.contains(cell));
     }
 
@@ -617,7 +615,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         ASSERT_EQ(actual.size(), 2);
@@ -636,7 +634,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         ASSERT_EQ(actual.size(), 2);
@@ -657,8 +655,8 @@ namespace gol
         HashQuadtree tree2{ cells, explicitOffset };
 
         LifeHashSet actual1, actual2;
-        for (const auto& pos : tree1) actual1.insert(pos);
-        for (const auto& pos : tree2) actual2.insert(pos);
+        for (const auto pos : tree1) actual1.insert(pos);
+        for (const auto pos : tree2) actual2.insert(pos);
 
         // Both trees should have same number of cells
         ASSERT_EQ(actual1.size(), 2);
@@ -682,8 +680,8 @@ namespace gol
         HashQuadtree tree2 = tree1;
 
         LifeHashSet actual1, actual2;
-        for (const auto& pos : tree1) actual1.insert(pos);
-        for (const auto& pos : tree2) actual2.insert(pos);
+        for (const auto pos : tree1) actual1.insert(pos);
+        for (const auto pos : tree2) actual2.insert(pos);
 
         // Both trees should yield the same cells
         EXPECT_EQ(actual1, actual2);
@@ -697,12 +695,12 @@ namespace gol
         HashQuadtree tree1{ cells };
 
         LifeHashSet expectedCells;
-        for (const auto& pos : tree1) expectedCells.insert(pos);
+        for (const auto pos : tree1) expectedCells.insert(pos);
 
         HashQuadtree tree2 = std::move(tree1);
 
         LifeHashSet actualFromMoved;
-        for (const auto& pos : tree2) actualFromMoved.insert(pos);
+        for (const auto pos : tree2) actualFromMoved.insert(pos);
 
         // Moved tree should yield the same cells
         EXPECT_EQ(expectedCells, actualFromMoved);
@@ -732,7 +730,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         size_t count = 0;
-        for (const auto& pos : tree) {
+        for (const auto pos : tree) {
             count++;
             // All positions should be within int32 bounds
             EXPECT_GE(pos.X, std::numeric_limits<int32_t>::min());
@@ -763,9 +761,9 @@ namespace gol
         HashQuadtree tree{ cells };
 
         size_t count = 0;
-        for ([[maybe_unused]] const auto& pos : tree) {
+        for ([[maybe_unused]] const auto pos : tree) 
             count++;
-        }
+        
 
         EXPECT_EQ(count, 0);
         EXPECT_EQ(tree.begin(), tree.end());
@@ -786,7 +784,7 @@ namespace gol
         HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree)
+        for (const auto pos : tree)
             actual.insert(pos);
 
         // All cells should be preserved
@@ -801,7 +799,7 @@ namespace gol
 
         auto update = tree.NextGeneration();
         LifeHashSet resultCells;
-        for (const auto& pos : update.Data)
+        for (const auto pos : update.Data)
             resultCells.insert(pos);
 
         // Block should remain stable
@@ -815,7 +813,7 @@ namespace gol
         const HashQuadtree tree{ cells };
 
         LifeHashSet actual;
-        for (const auto& pos : tree) {
+        for (const auto pos : tree) {
             actual.insert(pos);
         }
 
