@@ -110,7 +110,7 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, std::rang
 	std::vector<float> result {};
 	if constexpr(HasSize<decltype(grid)>)
 		result.reserve(grid.size() * 2);
-	for (const Vec2& vec : grid)
+	for (const auto vec : grid)
 	{
 		result.push_back(vec.X + offset.X);
 		result.push_back(vec.Y + offset.Y);
