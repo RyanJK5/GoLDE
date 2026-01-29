@@ -251,7 +251,7 @@ void gol::GameGrid::FlipGrid(bool vertical)
 	}
 	else
 	{
-		for (const auto& pos : m_Data)
+		for (const auto pos : m_Data)
 		{
 			if (vertical)
 				newData.insert({ pos.X, m_Height - 1 - pos.Y });
