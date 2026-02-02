@@ -1,6 +1,7 @@
 #ifndef __HashQuadtree_h__
 #define __HashQuadtree_h__
 
+#include <bitset>
 #include <deque>
 #include <iterator>
 #include <ranges>
@@ -15,6 +16,12 @@
 
 namespace gol 
 {
+	template <int32_t Size>
+	constexpr static int32_t Index2D(int32_t x, int32_t y)
+	{
+		return y * Size + x;
+	}
+
 	struct LifeNode 
     {
         const LifeNode* NorthWest;
@@ -118,7 +125,7 @@ namespace gol
             {
                 return Vec2{static_cast<int32_t>(pos.X), static_cast<int32_t>(pos.Y)};
             }
-
+			
         public:
             using iterator_category = std::input_iterator_tag;
             using difference_type   = std::ptrdiff_t;
@@ -197,6 +204,9 @@ namespace gol
 		const LifeNode* CenteredVertical(const LifeNode& north, const LifeNode& south) const;
 
 		const LifeNode* CenteredSubNode(const LifeNode& node) const;
+
+		template <int32_t Size, typename T>
+		const LifeNode* Combine2x2(const T& nodes, int32_t topLeftX, int32_t topLeftY) const;
 
 		const LifeNode* AdvanceBase(const LifeNode* node) const;
 
@@ -349,6 +359,32 @@ namespace gol
     {
 		return &m_Current;
 	}
+
+	template <int32_t Size, typename T>
+	const LifeNode* HashQuadtree::Combine2x2(const T& nodes, int32_t topLeftX, int32_t topLeftY) const
+	{
+
+		if constexpr(std::is_same_v<T, std::bitset<Size * Size>>)
+		{
+			constexpr static auto toNode = [](bool live) { return live ? TrueNode : FalseNode; };
+			return FindOrCreate(
+				toNode(nodes[Index2D<Size>(topLeftX, topLeftY)]),
+				toNode(nodes[Index2D<Size>(topLeftX + 1, topLeftY)]),
+				toNode(nodes[Index2D<Size>(topLeftX, topLeftY + 1)]),
+				toNode(nodes[Index2D<Size>(topLeftX + 1, topLeftY + 1)])
+			);
+		}
+		else
+		{
+			return FindOrCreate(
+				nodes[Index2D<Size>(topLeftX, topLeftY)],
+				nodes[Index2D<Size>(topLeftX + 1, topLeftY)],
+				nodes[Index2D<Size>(topLeftX, topLeftY + 1)],
+				nodes[Index2D<Size>(topLeftX + 1, topLeftY + 1)]
+			);
+		}
+	}
+
 }
 
 #endif
