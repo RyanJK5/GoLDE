@@ -3,7 +3,7 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 
 message(STATUS "GOLCoreLib sources found: ${SOURCES}")
 
-add_library(GOLCoreLib STATIC ${SOURCES} ${HEADERS})
+add_library(GOLCoreLib STATIC ${SOURCES} ${HEADERS} "include/SimulationWorker.h" "src/SimulationWorker.cpp")
 
 target_include_directories(GOLCoreLib
     PUBLIC

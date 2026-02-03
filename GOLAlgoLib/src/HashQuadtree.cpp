@@ -150,7 +150,7 @@ namespace gol
 	const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se) const
 	{
 		LifeNode toFind { nw, ne, sw, se };
-		if (auto itr = s_NodeMap.find(&toFind); itr != s_NodeMap.end()) 
+		if (const auto itr = s_NodeMap.find(&toFind); itr != s_NodeMap.end()) 
 			return itr->first;
 
 		s_NodeStorage.emplace_back(nw, ne, sw, se);
@@ -193,7 +193,7 @@ namespace gol
 	{
 		constexpr static auto gridSize = 4;
 		const std::array cells = 
-		{ 
+		{
 			node->NorthWest->NorthWest, node->NorthWest->NorthEast, node->NorthEast->NorthWest, node->NorthEast->NorthEast,
 			node->NorthWest->SouthWest, node->NorthWest->SouthEast, node->NorthEast->SouthWest, node->NorthEast->SouthEast,
 			node->SouthWest->NorthWest, node->SouthWest->NorthEast, node->SouthEast->NorthWest, node->SouthEast->NorthEast,

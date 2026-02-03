@@ -29,6 +29,7 @@ gol::SimulationEditor::SimulationEditor(uint32_t id, const std::filesystem::path
     : m_EditorID(id)
     , m_CurrentFilePath(path)
     , m_Grid(gridSize)
+    , m_Worker(std::make_unique<SimulationWorker>())
     , m_Graphics(
         std::filesystem::path("resources") / "shader", 
         windowSize.Width, windowSize.Height,
@@ -86,9 +87,8 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
 	}
 
     if (controlArgs.TickDelayMs)
-        m_TickDelayMs = *controlArgs.TickDelayMs;
-
-    m_StepCount = controlArgs.StepCount;
+        m_Worker->SetTickDelayMs(*controlArgs.TickDelayMs);
+    m_Worker->SetStepCount(controlArgs.StepCount);
 
     if (controlArgs.Action && ((activeOverride && *activeOverride) || displayResult.Selected))
         m_State = UpdateState(controlArgs);
@@ -127,17 +127,10 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
 
 gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args)
 {
-    GL_DEBUG(auto elapsed = (glfwGetTime() - m_LastTime) * 1000);
-    if (elapsed >= m_TickDelayMs)
-    {
-        GL_DEBUG(m_LastTime = glfwGetTime());
-        m_Grid.Update(m_StepCount);
-        if (m_Grid.Dead() && !m_SelectionManager.GridAlive())
-            return SimulationState::Empty;
-    }
+    const auto snapshot = m_Worker->GetResult();
 
-	m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
-    const auto data = m_Grid.IterableData();
+    //m_Graphics.DrawGrid({ 0, 0 }, snapshot->Data(), args);
+    const auto data = snapshot->IterableData();
     if (std::holds_alternative<std::reference_wrapper<const LifeHashSet>>(data))
         m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const LifeHashSet>>(data).get(), args);
     else
@@ -228,8 +221,12 @@ gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bo
 
     splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 1);
     ImGui::SetCursorPos(ImGui::GetWindowContentRegionMin());
-    ImGui::Text("%s", std::format("Generation: {}", m_Grid.Generation()).c_str());
-    ImGui::Text("%s", std::format("Population: {}", m_Grid.Population() + m_SelectionManager.SelectedPopulation()).c_str());
+
+	const auto snapshot = m_Worker->GetResult();
+    const auto generation = snapshot ? snapshot->Generation() : m_Grid.Generation();
+    const auto population = snapshot ? snapshot->Population() : m_Grid.Population();
+    ImGui::Text("%s", std::format("Generation: {}", generation).c_str());
+    ImGui::Text("%s", std::format("Population: {}", population + m_SelectionManager.SelectedPopulation()).c_str());
 
     if (m_SelectionManager.CanDrawSelection())
     {
@@ -314,8 +311,9 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
         case Start:
             m_SelectionManager.Deselect(m_Grid);
             m_InitialGrid = m_Grid;
-            return SimulationState::Simulation;
+            return StartSimulation();
         case Clear:
+            StopSimulation();
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_VersionManager.PushChange({
                 .Action = GameAction::Clear,
@@ -326,19 +324,23 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_Grid = GameGrid { m_Grid.Size() };
             return SimulationState::Paint;
         case Reset:
+            StopSimulation();
             m_SelectionManager.Deselect(m_Grid);
             m_Grid = m_InitialGrid;
             return SimulationState::Paint;
         case Restart:
+            StopSimulation();
             m_SelectionManager.Deselect(m_Grid);
             m_Grid = m_InitialGrid;
-            return SimulationState::Simulation;
+            return StartSimulation();
         case Pause:
+            StopSimulation();
             return SimulationState::Paused;
         case Resume:
             m_SelectionManager.Deselect(m_Grid);
-            return SimulationState::Simulation;
+            return StartSimulation();
         case Step:
+            StopSimulation();
             m_SelectionManager.Deselect(m_Grid);
             if (result.State == SimulationState::Paint)
                 m_InitialGrid = m_Grid;
@@ -404,6 +406,18 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
     return result.State;
 }
 
+gol::SimulationState gol::SimulationEditor::StartSimulation()
+{
+    m_Worker->Start(m_Grid);
+    return SimulationState::Simulation;
+}
+
+void gol::SimulationEditor::StopSimulation()
+{
+    if (m_State == SimulationState::Simulation)
+        m_Grid = m_Worker->Stop();
+}
+
 void gol::SimulationEditor::PasteSelection()
 {
     auto gridPos = CursorGridPos();
@@ -456,7 +470,7 @@ gol::SimulationState gol::SimulationEditor::ResizeGrid(const gol::SimulationCont
         .GridResize = { { m_Grid, *result.NewDimensions } }
     });
 
-    m_Grid = GameGrid(std::move(m_Grid), *result.NewDimensions);
+    m_Grid = GameGrid{ std::move(m_Grid), *result.NewDimensions };
     if (m_SelectionManager.CanDrawSelection())
     {
         auto selection = m_SelectionManager.SelectionBounds();

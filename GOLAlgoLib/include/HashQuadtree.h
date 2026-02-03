@@ -226,15 +226,15 @@ namespace gol
 			size_t operator()(const SlowKey& key) const noexcept;
 		};
 	private:
-		inline static ankerl::unordered_dense::map<
+		inline static thread_local ankerl::unordered_dense::map<
 				const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> 
 			s_NodeMap {};
-		inline static ankerl::unordered_dense::map<
+		inline static thread_local ankerl::unordered_dense::map<
 				SlowKey, const LifeNode*, SlowHash>
 			s_SlowCache {};
-		inline static ankerl::unordered_dense::map<int64_t, const LifeNode*> 
+		inline static thread_local ankerl::unordered_dense::map<int64_t, const LifeNode*>
 			s_EmptyNodeCache {};
-		inline static std::deque<LifeNode>
+		inline static thread_local std::deque<LifeNode>
 			s_NodeStorage {};
 	private:
 		const LifeNode* m_Root = FalseNode;        

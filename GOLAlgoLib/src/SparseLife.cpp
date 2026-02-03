@@ -13,10 +13,10 @@ gol::LifeHashSet gol::SparseLife(std::span<const Vec2> data, const Rect& bounds)
 	neighborCount.reserve(data.size() * 8);
 	for (auto&& pos : data)
 	{
-		for (int32_t i = 0; i < 8; ++i)
+		for (auto i = 0; i < 8; ++i)
 		{
-			int32_t x = pos.X + dx[i];
-			int32_t y = pos.Y + dy[i];
+			const auto x = pos.X + dx[i];
+			const auto y = pos.Y + dy[i];
 
 			if (bounds.Width > 0 && bounds.Height > 0 && !bounds.InBounds(x, y))
 				continue;
@@ -27,7 +27,7 @@ gol::LifeHashSet gol::SparseLife(std::span<const Vec2> data, const Rect& bounds)
 
 	LifeHashSet newSet{};
 	newSet.reserve(neighborCount.size());
-	const LifeHashSet current(data.begin(), data.end());
+	const LifeHashSet current{ data.begin(), data.end() };
 	for (auto&& [pos, neighbors] : neighborCount)
 	{
 		if (neighbors == 3 || (neighbors == 2 && current.contains(pos)))

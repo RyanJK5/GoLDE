@@ -14,6 +14,7 @@
 #include "PresetSelectionResult.h"
 #include "SelectionManager.h"
 #include "SimulationControlResult.h"
+#include "SimulationWorker.h"
 #include "VersionManager.h"
 #include "WarnWindow.h"
 
@@ -48,6 +49,9 @@ namespace gol
 		SimulationState PaintUpdate(const GraphicsHandlerArgs& args);
 		SimulationState PauseUpdate(const GraphicsHandlerArgs& args);
 
+		SimulationState StartSimulation();
+		void StopSimulation();
+
 		void UpdateVersion(const SimulationControlResult& args);
 
 		DisplayResult DisplaySimulation(bool grabFocus);
@@ -74,6 +78,8 @@ namespace gol
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
 
+		std::unique_ptr<SimulationWorker> m_Worker;
+
 		SelectionManager m_SelectionManager;
 		VersionManager m_VersionManager;
 
@@ -89,11 +95,6 @@ namespace gol
 		Vec2F m_LeftDeltaLast;
 		Vec2F m_RightDeltaLast;
 		
-		double m_TickDelayMs = DefaultTickDelayMs;
-		double m_LastTime = 0;
-
-		int64_t m_StepCount = 1;
-
 		EditorMode m_EditorMode = EditorMode::None;
 	};
 }
