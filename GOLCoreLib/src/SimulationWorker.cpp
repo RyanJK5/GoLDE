@@ -1,7 +1,6 @@
 #include "SimulationWorker.h"
 
 #include <chrono>
-using namespace std::chrono_literals;
 
 namespace gol
 {
@@ -10,11 +9,11 @@ namespace gol
 		m_Running = false;
 	}
 
-
-	void SimulationWorker::Start(const GameGrid& initialGrid)
+	void SimulationWorker::Start(GameGrid& initialGrid)
 	{
 		m_Running = true;
 
+		initialGrid.PrepareCopy();
 		auto bufferA = std::make_shared<GameGrid>(initialGrid);
 		auto bufferB = std::make_shared<GameGrid>(initialGrid);
 		auto bufferC = std::make_shared<GameGrid>(initialGrid);
@@ -36,6 +35,7 @@ namespace gol
 				nextFrame += std::chrono::milliseconds{ m_TickDelayMs.load(std::memory_order_relaxed) };
 				std::this_thread::sleep_until(nextFrame);
 			}
+			m_Snapshot.load(std::memory_order_acquire)->PrepareCopy();
 		} };
 	}
 
@@ -46,7 +46,7 @@ namespace gol
 			m_Thread.join();
 
 		auto shared = m_Snapshot.load(std::memory_order_acquire);
-		const auto ret = std::move(*shared);
+		auto ret = std::move(*shared);
 		m_Snapshot.store(nullptr, std::memory_order_release);
 		return ret;
 	}

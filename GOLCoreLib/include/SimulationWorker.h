@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "GameGrid.h"
+#include "HashQuadtree.h"
 
 namespace gol
 {
@@ -15,7 +16,7 @@ namespace gol
 	public:
 		~SimulationWorker();
 
-		void Start(const GameGrid& initialGrid);
+		void Start(GameGrid& initialGrid);
 		GameGrid Stop();
 
 		void SetStepCount(int64_t stepCount);

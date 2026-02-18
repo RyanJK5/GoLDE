@@ -50,7 +50,7 @@ namespace gol
 		SimulationState PauseUpdate(const GraphicsHandlerArgs& args);
 
 		SimulationState StartSimulation();
-		void StopSimulation();
+		void StopSimulation(bool stealGrid);
 
 		void UpdateVersion(const SimulationControlResult& args);
 

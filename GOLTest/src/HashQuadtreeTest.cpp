@@ -41,11 +41,10 @@ namespace gol
 		uint64_t totalGenerations = 0;
 		for (int32_t i = 0; i < numJumps; ++i)
 		{
-            const auto update = current.NextGeneration({}, stepSize);
-			EXPECT_EQ(update.Generations, expectedGenerationsPerJump)
+            const auto genCount = current.NextGeneration({}, stepSize);
+			EXPECT_EQ(genCount, expectedGenerationsPerJump)
 				<< "HashLife should advance by " << expectedGenerationsPerJump << " generations per jump";
-			current = update.Data;
-			totalGenerations += update.Generations;
+			totalGenerations += genCount;
 		}
 
 		EXPECT_EQ(current, expected);
@@ -81,8 +80,26 @@ namespace gol
 
         EXPECT_EQ(tree.begin(), tree.end()) << "Empty tree should only contain end iterator";
         EXPECT_TRUE(std::ranges::empty(tree)) << "Empty tree should satisfy std::ranges::empty";
+        EXPECT_EQ(tree.Population(), 0ULL);
 
         VerifyContent(tree, cells);
+    }
+
+    TEST(HashQuadtreeTest, PopulationMatchesLiveCells)
+    {
+        LifeHashSet singleCell{ {5, 5} };
+        HashQuadtree singleTree{ singleCell };
+        EXPECT_EQ(singleTree.Population(), 1ULL);
+
+        LifeHashSet blockCells{ {0, 0}, {1, 0}, {0, 1}, {1, 1} };
+        HashQuadtree blockTree{ blockCells };
+        EXPECT_EQ(blockTree.Population(), blockCells.size());
+
+        blockTree.NextGeneration();
+        EXPECT_EQ(blockTree.Population(), blockCells.size());
+
+        singleTree.NextGeneration({}, 1);
+        EXPECT_EQ(singleTree.Population(), 0ULL);
     }
 
     TEST(HashQuadtreeTest, SingleCell)
@@ -201,15 +218,13 @@ namespace gol
         HashQuadtree tree{ cells };
 
         // Should remain stable
-        auto update = tree.NextGeneration();
-        EXPECT_GE(update.Generations, 2); // At least 2 generations (level 3)
-        tree = update.Data;
+        auto gens = tree.NextGeneration();
+        EXPECT_GE(gens, 2); // At least 2 generations (level 3)
         VerifyContent(tree, cells);
 
         // Advance again
-        update = tree.NextGeneration();
-        EXPECT_GE(update.Generations, 2);
-        tree = update.Data;
+        gens = tree.NextGeneration();
+        EXPECT_GE(gens, 2);
         VerifyContent(tree, cells);
     }
 
@@ -219,13 +234,11 @@ namespace gol
         LifeHashSet start{ {0,0}, {0,1}, {0,2} };
         HashQuadtree tree(start);
 
-        auto update = tree.NextGeneration();
+        auto gens = tree.NextGeneration();
         // HashLife advances by 2^(k-2) steps. For k=3, steps=2.
         // A blinker's period is 2, so it should be back to start if steps is a multiple of 2.
-        EXPECT_EQ(update.Generations % 2, 0) << "HashLife should advance by a multiple of blinker period";
+        EXPECT_EQ(gens % 2, 0) << "HashLife should advance by a multiple of blinker period";
         
-        tree = update.Data;
-
         LifeHashSet actual;
         for (const auto p : tree) actual.insert(p);
 
@@ -246,11 +259,11 @@ namespace gol
         };
 
         HashQuadtree tree{ start };
-        auto update = tree.NextGeneration();
-        EXPECT_GT(update.Generations, 0);
+        auto gens = tree.NextGeneration();
+        EXPECT_GT(gens, 0);
 
         LifeHashSet actual;
-        for (const auto p : update.Data) actual.insert(p);
+        for (const auto p : tree) actual.insert(p);
 
         // Glider should survive (5 cells)
         EXPECT_EQ(actual.size(), 5);
@@ -341,12 +354,12 @@ namespace gol
         HashQuadtree tree1{ blockAtOrigin };
         HashQuadtree tree2{ blockAtDistance };
 
-        auto next1 = tree1.NextGeneration();
-        auto next2 = tree2.NextGeneration();
+        auto gens1 = tree1.NextGeneration();
+        auto gens2 = tree2.NextGeneration();
 
-        EXPECT_EQ(next1.Generations, next2.Generations) << "Translation should not affect step size";
-        EXPECT_EQ(std::ranges::distance(next1.Data), 4);
-        EXPECT_EQ(std::ranges::distance(next2.Data), 4);
+        EXPECT_EQ(gens1, gens2) << "Translation should not affect step size";
+        EXPECT_EQ(std::ranges::distance(tree1), 4);
+        EXPECT_EQ(std::ranges::distance(tree2), 4);
     }
 
     TEST(HashQuadtreeTest, UniverseHeatDeath)
@@ -355,26 +368,25 @@ namespace gol
         LifeHashSet cells{ {42, 42} };
         HashQuadtree tree{ cells };
 
-        const auto next = tree.NextGeneration();
+        const auto gens = tree.NextGeneration();
         
-        EXPECT_GT(next.Generations, 0);
-        EXPECT_TRUE(next.Data.empty());
-        EXPECT_EQ(next.Data.begin(), next.Data.end());
-        EXPECT_EQ(std::ranges::distance(next.Data), 0);
+        EXPECT_GT(gens, 0);
+        EXPECT_TRUE(tree.empty());
+        EXPECT_EQ(tree.begin(), tree.end());
+        EXPECT_EQ(std::ranges::distance(tree), 0);
     }
 
     TEST(HashQuadtreeTest, LargeCoordinateStability)
     {
         // Test with coordinates that might challenge bit-depth or offsets
-        const int32_t far = 1'000'000;
+        constexpr static int32_t far = 1'000'000;
         const LifeHashSet cells{ {far, far}, {far + 1, far}, {far, far + 1}, {far + 1, far + 1} };
         HashQuadtree tree{ cells };
 
         EXPECT_EQ(std::ranges::distance(tree), 4);
         
-        auto update = tree.NextGeneration();
-        EXPECT_GT(update.Generations, 0);
-        tree = update.Data;
+        auto gens = tree.NextGeneration();
+        EXPECT_GT(gens, 0);
         
         EXPECT_EQ(std::ranges::distance(tree), 4);
         for (const auto pos : tree)
@@ -402,8 +414,8 @@ namespace gol
         auto gen2 = tree2.NextGeneration();
         auto gen3 = tree3.NextGeneration();
         
-        EXPECT_EQ(gen2.Generations, gen3.Generations);
-        EXPECT_EQ(std::ranges::distance(gen2.Data), std::ranges::distance(gen3.Data));
+        EXPECT_EQ(gen2, gen3);
+        EXPECT_EQ(std::ranges::distance(tree2), std::ranges::distance(tree3));
     }
 
     TEST(HashQuadtreeTest, StandardViewComposition)
@@ -431,9 +443,9 @@ namespace gol
 
         EXPECT_GE(tree.CalculateDepth(), 3) << "Tree must be deep enough to trigger slow advance";
 
-        const auto update = tree.NextGeneration({}, 1);
-        EXPECT_EQ(update.Generations, 1);
-        EXPECT_TRUE(update.Data.empty()) << "All isolated cells should die after one generation";
+        const auto gens = tree.NextGeneration({}, 1);
+        EXPECT_EQ(gens, 1);
+        EXPECT_TRUE(tree.empty()) << "All isolated cells should die after one generation";
     }
 
     TEST(HashQuadtreeTest, HashLifeSlowAdvanceConsistency)
@@ -442,14 +454,16 @@ namespace gol
             { 0, 0 }, { 7, 0 },
             { 0, 7 }, { 7, 7 }
         };
-        HashQuadtree tree{ cells };
+        HashQuadtree tree1{ cells };
+        HashQuadtree tree2{ cells };
+        ASSERT_EQ(tree1, tree2);
 
-        const auto directUpdate = tree.NextGeneration({}, 1);
-        const auto hashLifeUpdate = HashLife(tree, {}, 1);
+        const auto directUpdate = tree1.NextGeneration({}, 1);
+        const auto hashLifeUpdate = HashLife(tree2, {}, 1);
 
-        EXPECT_EQ(directUpdate.Generations, 1);
-        EXPECT_EQ(hashLifeUpdate.Generations, 1);
-        EXPECT_EQ(directUpdate.Data, hashLifeUpdate.Data);
+        EXPECT_EQ(directUpdate, 1);
+        EXPECT_EQ(hashLifeUpdate, 1);
+        EXPECT_EQ(directUpdate, hashLifeUpdate);
     }
 
     // ========== Tests for Vec2L refactoring and bounds checking ==========
@@ -797,9 +811,9 @@ namespace gol
         LifeHashSet blockCells{ {0, 0}, {1, 0}, {0, 1}, {1, 1} };
         HashQuadtree tree{ blockCells };
 
-        auto update = tree.NextGeneration();
+        tree.NextGeneration();
         LifeHashSet resultCells;
-        for (const auto pos : update.Data)
+        for (const auto pos : tree)
             resultCells.insert(pos);
 
         // Block should remain stable

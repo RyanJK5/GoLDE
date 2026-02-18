@@ -15,7 +15,7 @@ namespace gol
 		SimulationState State = SimulationState::Empty;
 		std::optional<ActionVariant> Action;
 		
-		int32_t StepCount;
+		int64_t StepCount;
 		std::optional<Size2> NewDimensions;
 		std::optional<int32_t> TickDelayMs;
 		std::optional<std::filesystem::path> FilePath;

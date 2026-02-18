@@ -14,6 +14,8 @@ bool        gol::StepButton::Enabled(const EditorResult& state) const { return s
 
 gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& state)
 {
+    constexpr static auto SmallStep = 1;
+
     ImGui::Text("Step Count");
 
     if (m_HyperSpeed)
@@ -24,7 +26,7 @@ gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& sta
 
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 3.f * 2.f + 5);
-    ImGui::InputInt("##label", &m_StepCount, 1, BigStep);
+    ImGui::InputScalar("##label", ImGuiDataType_U64, &m_StepCount, &SmallStep, &BigStep);
     ImGui::PopStyleVar();
 
     if (m_HyperSpeed)
@@ -48,7 +50,7 @@ gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& sta
     return 
     {
         .Action = result.Action,
-        .StepCount = m_HyperSpeed ? 0 : m_StepCount,
+        .StepCount = m_HyperSpeed ? 0LL : m_StepCount,
         .FromShortcut = result.FromShortcut,
     };
 }

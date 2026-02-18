@@ -29,20 +29,29 @@ namespace gol
         const LifeNode* SouthWest;
         const LifeNode* SouthEast;
     
-        uint64_t Hash;
-        bool IsEmpty;
+        uint64_t Hash = 0ULL;
+		uint64_t Population = 0ULL;
+        bool IsEmpty = false;
     
 		constexpr LifeNode(
 			const LifeNode* nw,
 			const LifeNode* ne,
 			const LifeNode* sw,
 			const LifeNode* se,
-			bool isLeaf = false
-		)
-		: NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se), Hash(0ULL), IsEmpty(false)
+			bool isLeaf = false)
+			: NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se)
 		{
 			if (!isLeaf)
+			{
 				IsEmpty = CheckEmpty(nw) && CheckEmpty(ne) && CheckEmpty(sw) && CheckEmpty(se);
+				Population =
+					NodePopulation(nw) +
+					NodePopulation(ne) +
+					NodePopulation(sw) +
+					NodePopulation(se);
+			}
+			else
+				Population = 1;
 
 			if consteval {}
 			else
@@ -57,6 +66,11 @@ namespace gol
 		constexpr static bool CheckEmpty(const LifeNode* n)
 		{
 			return n == nullptr || n->IsEmpty;
+		}
+
+		constexpr static uint64_t NodePopulation(const LifeNode* n)
+		{
+			return n ? n->Population : 0ULL;
 		}
 
 		constexpr static uint64_t HashCombine(uint64_t seed, uint64_t v)
@@ -99,7 +113,31 @@ namespace gol
 
 namespace gol 
 {
-	struct HashLifeUpdateInfo;
+	struct SlowKey
+	{
+		const LifeNode* Node;
+		int64_t MaxAdvance = 0;
+		auto operator<=>(const SlowKey&) const = default;
+	};
+
+	struct SlowHash
+	{
+		size_t operator()(const SlowKey& key) const noexcept;
+	};
+
+	struct HashLifeCache
+	{
+		ankerl::unordered_dense::map<
+				const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual>
+			NodeMap{};
+		ankerl::unordered_dense::map<
+				SlowKey, const LifeNode*, SlowHash>
+			SlowCache{};
+		ankerl::unordered_dense::map<int64_t, const LifeNode*>
+			EmptyNodeCache{};
+		std::deque<LifeNode>
+			NodeStorage{};
+	};
 
     class HashQuadtree
     {
@@ -114,18 +152,38 @@ namespace gol
                 uint8_t quadrant;
             };
 
-			constexpr static bool IsInBounds(Vec2L pos)
-            {
-                constexpr static auto maxInt32 = static_cast<int64_t>(std::numeric_limits<int32_t>::max());
-                constexpr static auto minInt32 = static_cast<int64_t>(std::numeric_limits<int32_t>::min());
-                return pos.X >= minInt32 && pos.X <= maxInt32 && pos.Y >= minInt32 && pos.Y <= maxInt32;
-            }
-
             constexpr static Vec2 ConvertToVec2(Vec2L pos)
             {
                 return Vec2{static_cast<int32_t>(pos.X), static_cast<int32_t>(pos.Y)};
             }
-			
+
+			bool IsWithinBounds(Vec2L pos) const
+			{
+				constexpr static auto maxInt32 = static_cast<int64_t>(std::numeric_limits<int32_t>::max());
+				constexpr static auto minInt32 = static_cast<int64_t>(std::numeric_limits<int32_t>::min());
+				if (pos.X < minInt32 || pos.X > maxInt32 || pos.Y < minInt32 || pos.Y > maxInt32)
+					return false;
+				if (!m_UseBounds)
+					return true;
+				const auto left = static_cast<int64_t>(m_Bounds.X);
+				const auto top = static_cast<int64_t>(m_Bounds.Y);
+				const auto right = left + m_Bounds.Width;
+				const auto bottom = top + m_Bounds.Height;
+				return pos.X >= left && pos.X < right && pos.Y >= top && pos.Y < bottom;
+			}
+
+			bool IntersectsBounds(Vec2L pos, int64_t size) const
+			{
+				if (!m_UseBounds)
+					return true;
+				const auto left = static_cast<int64_t>(m_Bounds.X);
+				const auto top = static_cast<int64_t>(m_Bounds.Y);
+				const auto right = left + m_Bounds.Width;
+				const auto bottom = top + m_Bounds.Height;
+				const auto regionRight = pos.X + size;
+				const auto regionBottom = pos.Y + size;
+				return !(regionRight <= left || pos.X >= right || regionBottom <= top || pos.Y >= bottom);
+			}
         public:
             using iterator_category = std::input_iterator_tag;
             using difference_type   = std::ptrdiff_t;
@@ -135,7 +193,7 @@ namespace gol
 
             friend HashQuadtree;
 
-            IteratorImpl() : m_Current{}, m_IsEnd(true) {}
+			IteratorImpl() : m_Current{}, m_IsEnd(true), m_UseBounds(false), m_Bounds{} {}
 
             IteratorImpl<T>& operator++();
             IteratorImpl<T> operator++(int);
@@ -146,37 +204,51 @@ namespace gol
             reference operator*() const;
             pointer operator->() const;
         private:
-            IteratorImpl(const LifeNode* root, Vec2L offset, int64_t size, bool isEnd);
+			IteratorImpl(const LifeNode* root, Vec2L offset, int64_t size, bool isEnd, const Rect* bounds = nullptr);
             void AdvanceToNext();
         private:
             std::stack<LifeNodeData> m_Stack;
             value_type m_Current;
-            bool m_IsEnd;
+			bool m_IsEnd;
+			bool m_UseBounds;
+			Rect m_Bounds;
         };
     public:
         HashQuadtree() = default;
 		HashQuadtree(const LifeHashSet& data, Vec2 offset = {});
+
+		HashQuadtree(const HashQuadtree& other);
+		HashQuadtree& operator=(const HashQuadtree& other);
+
+		~HashQuadtree() = default;
     public:
         using Iterator = IteratorImpl<Vec2>;
         using ConstIterator = IteratorImpl<const Vec2>;
 
         bool empty() const;
-
+		
 		Iterator begin();
 		Iterator end();
 
 		ConstIterator begin() const;
 		ConstIterator end() const;
 
-        HashLifeUpdateInfo NextGeneration(const Rect& bounds = {}, int64_t maxAdvance = 0) const;
+		Iterator begin(const Rect& bounds);
+		ConstIterator begin(const Rect& bounds) const;
+
+		uint64_t Population() const;
+
+        int64_t NextGeneration(const Rect& bounds = {}, int64_t maxAdvance = 0);
 
 		int32_t CalculateDepth() const;
 		int64_t CalculateTreeSize() const;
 
+		void PrepareCopy();
+
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;
     private:
-		HashQuadtree(const LifeNode* root, Vec2L offset, int32_t depth);
+		void Copy(const HashQuadtree& other);
 
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
@@ -213,51 +285,34 @@ namespace gol
 		NodeUpdateInfo AdvanceSlow(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
 
 		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
-    private:
-		struct SlowKey
-		{
-			const LifeNode* Node;
-			int64_t MaxAdvance = 0;
-			auto operator<=>(const SlowKey&) const = default;
-		};
+	private:
+		static inline thread_local HashLifeCache s_Cache{};
 
-		struct SlowHash
-		{
-			size_t operator()(const SlowKey& key) const noexcept;
-		};
-	private:
-		inline static thread_local ankerl::unordered_dense::map<
-				const LifeNode*, const LifeNode*, LifeNodeHash, LifeNodeEqual> 
-			s_NodeMap {};
-		inline static thread_local ankerl::unordered_dense::map<
-				SlowKey, const LifeNode*, SlowHash>
-			s_SlowCache {};
-		inline static thread_local ankerl::unordered_dense::map<int64_t, const LifeNode*>
-			s_EmptyNodeCache {};
-		inline static thread_local std::deque<LifeNode>
-			s_NodeStorage {};
-	private:
+		mutable std::unique_ptr<LifeHashSet> m_TransferCache{};
+
 		const LifeNode* m_Root = FalseNode;        
         Vec2L m_RootOffset;
     };
-
-	struct HashLifeUpdateInfo
-	{
-		HashQuadtree Data;
-		int64_t Generations = 1;
-	};
 
     extern template class HashQuadtree::IteratorImpl<Vec2>;
     extern template class HashQuadtree::IteratorImpl<const Vec2>;
 
 	template <typename T>
 	HashQuadtree::IteratorImpl<T>::IteratorImpl(
-		const LifeNode* root, Vec2L offset, int64_t size, bool isEnd)
-		: m_Current(), m_IsEnd(isEnd)
+		const LifeNode* root, Vec2L offset, int64_t size, bool isEnd, const Rect* bounds)
+		: m_Current(), m_IsEnd(isEnd), m_UseBounds(bounds != nullptr), m_Bounds(bounds ? *bounds : Rect{})
 	{
-		if (!isEnd && root != FalseNode) {
-			m_Stack.push({root, offset, size, 0});
-			AdvanceToNext();
+		if (!isEnd && root != FalseNode)
+		{
+			if (!m_UseBounds || IntersectsBounds(offset, size))
+			{
+				m_Stack.push({root, offset, size, 0});
+				AdvanceToNext();
+			}
+			else
+			{
+				m_IsEnd = true;
+			}
 		}
 	}
 
@@ -270,7 +325,7 @@ namespace gol
 			// If we're at a leaf (size == 1)
 			if (frame.size == 1) {
 				if (frame.node == TrueNode) {
-					if (IsInBounds(frame.position)) {
+					if (IsWithinBounds(frame.position)) {
 						m_Current = ConvertToVec2(frame.position);
 						m_Stack.pop();
 						return;  // Found a live cell within bounds
@@ -312,7 +367,7 @@ namespace gol
 			}
             m_Stack.top().quadrant = frame.quadrant;
 			
-			if (child != FalseNode && !child->IsEmpty) {
+			if (child != FalseNode && !child->IsEmpty && IntersectsBounds(childPos, halfSize)) {
 				m_Stack.push({child, childPos, halfSize, 0});
 			}
 		}

@@ -1,6 +1,8 @@
 #ifndef __DrawManager_h__
 #define __DrawManager_h__
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <ranges>
@@ -108,12 +110,28 @@ concept HasSize = requires(T a) { a.size(); };
 std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, std::ranges::input_range auto&& grid, const GraphicsHandlerArgs& args) const
 {
 	std::vector<float> result {};
+
+	const auto gridInfo = CalculateGridLineInfo(offset, args);
+	const auto minCellX = gridInfo.UpperLeft.X / args.CellSize.Width;
+	const auto minCellY = gridInfo.UpperLeft.Y / args.CellSize.Height;
+	const auto maxCellX = std::ceil(gridInfo.LowerRight.X / args.CellSize.Width) - 1.f;
+	const auto maxCellY = std::ceil(gridInfo.LowerRight.Y / args.CellSize.Height) - 1.f;
+
 	if constexpr(HasSize<decltype(grid)>)
-		result.reserve(grid.size() * 2);
+	{
+		const auto visibleCapacity = static_cast<size_t>(
+			std::max<int32_t>(gridInfo.GridSize.Width, 0) * std::max<int32_t>(gridInfo.GridSize.Height, 0));
+		const auto reserveCount = std::min(static_cast<size_t>(grid.size()), visibleCapacity);
+		result.reserve(reserveCount * 2);
+	}
 	for (const auto vec : grid)
 	{
-		result.push_back(vec.X + offset.X);
-		result.push_back(vec.Y + offset.Y);
+		const auto x = vec.X + offset.X;
+		const auto y = vec.Y + offset.Y;
+		if (x < minCellX || x > maxCellX || y < minCellY || y > maxCellY)
+			continue;
+		result.push_back(static_cast<float>(x));
+		result.push_back(static_cast<float>(y));
 	}
 
 	return result;

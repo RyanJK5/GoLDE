@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <filesystem>
 #include <font-awesome/IconsFontAwesome7.h>
 #include <format>
@@ -94,7 +95,7 @@ gol::PresetSelection::PresetSelection(const std::filesystem::path& defaultPath, 
 	m_SearchText = SearchString(m_MaxFileName);
 }
 
-gol::PresetSelectionResult gol::PresetSelection::Update()
+gol::PresetSelectionResult gol::PresetSelection::Update(const EditorResult& info)
 {
     ImGui::Begin("Presets", nullptr, ImGuiWindowFlags_NoNav);
 
@@ -110,27 +111,45 @@ gol::PresetSelectionResult gol::PresetSelection::Update()
         if (result)
         {
             m_Library.clear();
+            m_DefaultPath = *result;
             ReadFiles(*result);
         }
     }
+    ImGui::SetItemTooltip("Select Folder");
+
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_ROTATE))
+    {
+        m_Library.clear();
+        ReadFiles(m_DefaultPath);
+	}
+    ImGui::SetItemTooltip("Refresh Presets");
 
     ImGui::PopStyleVar();
 
+	const bool enabled = info.State == SimulationState::Paint || info.State == SimulationState::Empty;
     auto retString = std::string {};
-
     auto cursorPos = ImGui::GetCursorPos();
-    size_t numAvailable = 0;
-    for (size_t i = 0; i < m_Library.size(); i++)
+    auto numAvailable = 0;
+
+    const auto windowBounds = RectF
+    {
+        Vec2F { cursorPos },
+        Size2F { static_cast<float>(TemplateDimensions.Width), static_cast<float>(TemplateDimensions.Height) }
+    };
+    const auto cellSize = std::min(windowBounds.Width / m_MaxGridDimensions.Width, windowBounds.Height / m_MaxGridDimensions.Height);
+    const auto spacing = ImGui::GetStyle().ItemSpacing;
+    const auto numPerRow = std::max(1, static_cast<int32_t>(std::floor(ImGui::GetContentRegionMax().x / (cellSize * m_MaxGridDimensions.Width + spacing.x))));
+
+    if (!enabled)
+    {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+    }
+    for (auto i = 0UZ; i < m_Library.size(); i++)
     {
 		if (!m_Library[i].FileName.contains(m_SearchText.Data))
             continue;
-
-        auto windowBounds = RectF
-        { 
-            Vec2F { cursorPos },
-            Size2F { static_cast<float>(TemplateDimensions.Width), static_cast<float>(TemplateDimensions.Height) }
-        };
-        auto cellSize = std::min(windowBounds.Width / m_MaxGridDimensions.Width, windowBounds.Height / m_MaxGridDimensions.Height);
 
         auto graphicsArgs = GraphicsHandlerArgs
         {
@@ -145,36 +164,38 @@ gol::PresetSelectionResult gol::PresetSelection::Update()
         m_Library[i].Graphics.ClearBackground(graphicsArgs);
 
         m_Library[i].Graphics.DrawGrid(
-            { 0, 0 },
+            Vec2{},
             m_Library[i].Grid.Data(),
             graphicsArgs
         );
 
-        if (numAvailable % TemplatesPerRow != 0)
+        if (numAvailable % numPerRow != 0)
             ImGui::SameLine();
         cursorPos = ImGui::GetCursorPos();
 
         ImGui::Image(
             static_cast<ImTextureID>(m_Library[i].Graphics.TextureID()),
             { windowBounds.Width, windowBounds.Height},
-            ImVec2(0, 1),
-            ImVec2(1, 0)
+            ImVec2{ 0, 1 },
+            ImVec2{ 1, 0 }
         );
         ImGui::SetItemTooltip("%s", std::format("{}.gol", m_Library[i].FileName).c_str());
 
         ImGui::SetCursorPos(cursorPos);
 
         if (ImGui::InvisibleButton(std::format("##{}", m_Library[i].FileName).c_str(), { windowBounds.Width, windowBounds.Height }))
-        {
             retString = RLEEncoder::EncodeRegion(m_Library[i].Grid, {{0, 0}, m_Library[i].Grid.Size()}).c_str();
-        }
 
         if (ImGui::IsItemHovered())
             m_Library[i].Graphics.DrawSelection({ {0, 0}, graphicsArgs.GridSize }, graphicsArgs);
 
         numAvailable++;
     }
-
+    if (!enabled)
+    {
+        ImGui::PopItemFlag();
+        ImGui::PopStyleVar();
+    }
     ImGui::End();
     return { .ClipboardText = retString };
 }

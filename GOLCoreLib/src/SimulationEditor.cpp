@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -10,6 +11,7 @@
 #include <limits>
 #include <locale>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <utility>
 #include <variant>
@@ -129,12 +131,36 @@ gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandl
 {
     const auto snapshot = m_Worker->GetResult();
 
-    //m_Graphics.DrawGrid({ 0, 0 }, snapshot->Data(), args);
     const auto data = snapshot->IterableData();
     if (std::holds_alternative<std::reference_wrapper<const LifeHashSet>>(data))
         m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const LifeHashSet>>(data).get(), args);
     else
-        m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const HashQuadtree>>(data).get(), args);
+    {
+        const auto& quadtree = std::get<std::reference_wrapper<const HashQuadtree>>(data).get();
+		const auto viewBounds = args.ViewportBounds;
+		const auto topLeftWorld = m_Graphics.Camera.ScreenToWorldPos(
+			Vec2F { static_cast<float>(viewBounds.X), static_cast<float>(viewBounds.Y) }, viewBounds);
+		const auto bottomRightWorld = m_Graphics.Camera.ScreenToWorldPos(
+			Vec2F { static_cast<float>(viewBounds.X + viewBounds.Width), static_cast<float>(viewBounds.Y + viewBounds.Height) }, viewBounds);
+		const auto minWorldX = std::min(topLeftWorld.x, bottomRightWorld.x);
+		const auto maxWorldX = std::max(topLeftWorld.x, bottomRightWorld.x);
+		const auto minWorldY = std::min(topLeftWorld.y, bottomRightWorld.y);
+		const auto maxWorldY = std::max(topLeftWorld.y, bottomRightWorld.y);
+		const auto minCellX = static_cast<int32_t>(std::floor(minWorldX / args.CellSize.Width));
+		const auto minCellY = static_cast<int32_t>(std::floor(minWorldY / args.CellSize.Height));
+		const auto maxCellX = static_cast<int32_t>(std::ceil(maxWorldX / args.CellSize.Width));
+		const auto maxCellY = static_cast<int32_t>(std::ceil(maxWorldY / args.CellSize.Height));
+		const auto visibleBounds = Rect
+		{
+			minCellX,
+			minCellY,
+			std::max(0, maxCellX - minCellX),
+			std::max(0, maxCellY - minCellY)
+		};
+
+		const auto visibleRange = std::ranges::subrange(quadtree.begin(visibleBounds), quadtree.end());
+        m_Graphics.DrawGrid({ 0, 0 }, visibleRange, args);
+    }
     return SimulationState::Simulation;
 }
 
@@ -313,7 +339,7 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_InitialGrid = m_Grid;
             return StartSimulation();
         case Clear:
-            StopSimulation();
+            StopSimulation(false);
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_VersionManager.PushChange({
                 .Action = GameAction::Clear,
@@ -324,23 +350,23 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_Grid = GameGrid { m_Grid.Size() };
             return SimulationState::Paint;
         case Reset:
-            StopSimulation();
+            StopSimulation(false);
             m_SelectionManager.Deselect(m_Grid);
             m_Grid = m_InitialGrid;
             return SimulationState::Paint;
         case Restart:
-            StopSimulation();
+            StopSimulation(false);
             m_SelectionManager.Deselect(m_Grid);
             m_Grid = m_InitialGrid;
             return StartSimulation();
         case Pause:
-            StopSimulation();
+            StopSimulation(true);
             return SimulationState::Paused;
         case Resume:
             m_SelectionManager.Deselect(m_Grid);
             return StartSimulation();
         case Step:
-            StopSimulation();
+            StopSimulation(true);
             m_SelectionManager.Deselect(m_Grid);
             if (result.State == SimulationState::Paint)
                 m_InitialGrid = m_Grid;
@@ -412,10 +438,15 @@ gol::SimulationState gol::SimulationEditor::StartSimulation()
     return SimulationState::Simulation;
 }
 
-void gol::SimulationEditor::StopSimulation()
+void gol::SimulationEditor::StopSimulation(bool stealGrid)
 {
     if (m_State == SimulationState::Simulation)
-        m_Grid = m_Worker->Stop();
+    {
+        if (stealGrid)
+            m_Grid = m_Worker->Stop();
+        else
+            m_Worker->Stop();
+    }
 }
 
 void gol::SimulationEditor::PasteSelection()
@@ -501,7 +532,7 @@ void gol::SimulationEditor::UpdateMouseState(Vec2 gridPos)
 
     if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsKeyDown(ImGuiKey_LeftShift) && !ImGui::IsKeyDown(ImGuiKey_RightShift))
     {
-        if (m_EditorMode == EditorMode::None)
+        if (m_EditorMode == EditorMode::None || m_EditorMode == EditorMode::Select)
         {
             m_EditorMode = *m_Grid.Get(gridPos.X, gridPos.Y) ? EditorMode::Delete : EditorMode::Insert;
             m_VersionManager.BeginPaintChange(gridPos, m_EditorMode == EditorMode::Insert);

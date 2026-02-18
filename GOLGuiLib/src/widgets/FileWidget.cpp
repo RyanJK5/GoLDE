@@ -81,7 +81,6 @@ gol::SimulationControlResult gol::FileWidget::UpdateImpl(const EditorResult& sta
 		default:
 			return std::unexpected{ FileDialogFailure { FileFailureType::Error, "Unknown action" } };
 		}
-		std::unreachable();
 	}();
 
 	if (!filePath)

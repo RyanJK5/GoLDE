@@ -13,7 +13,7 @@ namespace gol
 {
 	LifeHashSet SparseLife(std::span<const Vec2> data, const Rect& bounds);
 
-	HashLifeUpdateInfo HashLife(const HashQuadtree& data, const Rect& bounds, int64_t numSteps);
+	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps);
 
 	enum class LifeAlgorithm {
 		SparseLife,

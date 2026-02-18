@@ -22,6 +22,8 @@ namespace gol
 
 		GameGrid(const GameGrid& other, Size2 size);
 
+		void PrepareCopy();
+
 		void Update(int64_t numSteps = 1);
 
 		int32_t Width() const { return m_Width; }

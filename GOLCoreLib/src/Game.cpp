@@ -79,7 +79,7 @@ void gol::Game::Begin()
         BeginFrame();
         
         auto controlResult = m_Control.Update(m_State);
-        auto presetResult = m_PresetSelection.Update();
+        auto presetResult = m_PresetSelection.Update(m_State);
         UpdateEditors(controlResult, presetResult);
 
         EndFrame();
@@ -123,7 +123,7 @@ void gol::Game::UpdateEditors(SimulationControlResult& controlResult, const Pres
         std::swap(m_Editors[m_LastActive], m_Editors.back());
     m_LastActive = m_Editors.size() > 0
         ? m_Editors.size() - 1
-        : 0;
+        : 0UZ;
     if (m_Editors.size() == 0)
         m_State.State = SimulationState::None;
     for (size_t i = 0; i < m_Editors.size(); i++)

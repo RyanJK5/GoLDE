@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "EditorResult.h"
 #include "GameGrid.h"
 #include "Graphics2D.h"
 #include "GraphicsHandler.h"
@@ -45,11 +46,10 @@ namespace gol
 	{
 	public:
 		static constexpr Size2 TemplateDimensions = { 300, 300 };
-		static constexpr int32_t TemplatesPerRow = 5;
 	public:
 		PresetSelection(const std::filesystem::path& defaultPath, Size2 templateSize = TemplateDimensions);
 
-		PresetSelectionResult Update();
+		PresetSelectionResult Update(const EditorResult& info);
 	private:
 		void ReadFiles(const std::filesystem::path& path);
 

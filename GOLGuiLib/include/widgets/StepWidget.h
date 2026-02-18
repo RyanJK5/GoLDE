@@ -40,7 +40,7 @@ namespace gol
     private:
 		SimulationControlResult UpdateImpl(const EditorResult& state);
 	private:
-        int32_t m_StepCount = 1;
+        int64_t m_StepCount = 1;
 		bool m_HyperSpeed = false;
 
         StepButton m_Button;

@@ -26,23 +26,23 @@ namespace gol
 		return Pow2(power - 1ULL);
 	}
 
-	HashLifeUpdateInfo HashLife(const HashQuadtree& data, const Rect& bounds, int64_t numSteps)
+	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps)
 	{
 		if (numSteps == 0)
 			return data.NextGeneration(bounds, 0);
 
 		const auto maxAdvance = MaxAdvanceOf(numSteps);
 		
-		HashQuadtree ret { data };
 		auto generation = 0LL;
 		while (generation < numSteps)
 		{
-			auto updateInfo = ret.NextGeneration(bounds, maxAdvance);
-			ret = std::move(updateInfo.Data);
-			generation += updateInfo.Generations;
+			const auto gens = data.NextGeneration(bounds, maxAdvance);
+			if (gens == 0)
+				return generation;
+			generation += gens;
 		}
 
-		return { .Data = ret, .Generations = generation };
+		return generation;
 	}
 
 	size_t LifeNodeHash::operator()(const gol::LifeNode* node) const
@@ -52,10 +52,10 @@ namespace gol
 		return node->Hash;
 	}
 
-	size_t HashQuadtree::SlowHash::operator()(const SlowKey& key) const noexcept
+	size_t SlowHash::operator()(const SlowKey& key) const noexcept
 	{
 		size_t hash = LifeNodeHash{}(key.Node);
-		hash ^= ankerl::unordered_dense::hash<int32_t>{}(key.MaxAdvance) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= ankerl::unordered_dense::hash<int64_t>{}(key.MaxAdvance) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		return hash;
 	}
 
@@ -71,10 +71,41 @@ namespace gol
 		m_RootOffset += {static_cast<int64_t>(offset.X), static_cast<int64_t>(offset.Y)};
 	}
 
-	HashQuadtree::HashQuadtree(const LifeNode* root, Vec2L offset, int32_t depth)
-		: m_Root(root)
-		, m_RootOffset(offset)
-	{ }
+	HashQuadtree::HashQuadtree(const HashQuadtree& other)
+	{
+		Copy(other);
+	}
+
+	HashQuadtree& HashQuadtree::operator=(const HashQuadtree& other)
+	{
+		if (this != &other)
+			Copy(other);
+		return *this;
+	}
+
+	void HashQuadtree::Copy(const HashQuadtree& other)
+	{
+		m_Root = FalseNode;
+		m_RootOffset = other.m_RootOffset;
+
+		if (other.m_Root == FalseNode)
+			return;
+		
+		const auto data = [&]()
+		{
+			if (other.m_TransferCache)
+				return *other.m_TransferCache;
+			else
+				return other | std::ranges::to<LifeHashSet>();
+		}();
+		other.m_TransferCache = nullptr;
+		m_Root = BuildTree(data);
+	}
+
+	void HashQuadtree::PrepareCopy()
+	{
+		m_TransferCache = std::make_unique<LifeHashSet>(*this | std::ranges::to<LifeHashSet>());
+	}
 
 	int32_t HashQuadtree::CalculateDepth() const
 	{
@@ -119,6 +150,11 @@ namespace gol
           return m_Root == FalseNode || m_Root->IsEmpty;
 	}
 
+	uint64_t HashQuadtree::Population() const
+	{
+		return m_Root ? m_Root->Population : 0ULL;
+	}
+
 	HashQuadtree::Iterator HashQuadtree::begin()
 	{
 		if (m_Root == FalseNode)
@@ -139,7 +175,25 @@ namespace gol
 			return end();
 		
 		const auto size = CalculateTreeSize();
-		return ConstIterator(m_Root, m_RootOffset, size, false);
+		return ConstIterator{ m_Root, m_RootOffset, size, false };
+	}
+
+	HashQuadtree::Iterator HashQuadtree::begin(const Rect& bounds)
+	{
+		if (m_Root == FalseNode)
+			return end();
+
+		const auto size = CalculateTreeSize();
+		return Iterator { m_Root, m_RootOffset, size, false, &bounds };
+	}
+
+	HashQuadtree::ConstIterator HashQuadtree::begin(const Rect& bounds) const
+	{
+		if (m_Root == FalseNode)
+			return end();
+
+		const auto size = CalculateTreeSize();
+		return ConstIterator{ m_Root, m_RootOffset, size, false, &bounds };
 	}
 
 	HashQuadtree::ConstIterator HashQuadtree::end() const
@@ -150,12 +204,12 @@ namespace gol
 	const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se) const
 	{
 		LifeNode toFind { nw, ne, sw, se };
-		if (const auto itr = s_NodeMap.find(&toFind); itr != s_NodeMap.end()) 
+		if (const auto itr = s_Cache.NodeMap.find(&toFind); itr != s_Cache.NodeMap.end()) 
 			return itr->first;
 
-		s_NodeStorage.emplace_back(nw, ne, sw, se);
-		s_NodeMap[&s_NodeStorage.back()] = nullptr;
-		return &s_NodeStorage.back();
+		s_Cache.NodeStorage.emplace_back(nw, ne, sw, se);
+		s_Cache.NodeMap[&s_Cache.NodeStorage.back()] = nullptr;
+		return &s_Cache.NodeStorage.back();
 	}
 
 	const LifeNode* HashQuadtree::CenteredHorizontal(const LifeNode& west, const LifeNode& east) const
@@ -240,7 +294,7 @@ namespace gol
 			return { FalseNode, 0 };
 		if (level <= 2)
 			return AdvanceFast(node, level, maxAdvance);
-		if (const auto it = s_SlowCache.find({ node, maxAdvance }); it != s_SlowCache.end())
+		if (const auto it = s_Cache.SlowCache.find({ node, maxAdvance }); it != s_Cache.SlowCache.end())
 			return { it->second, maxAdvance };
 
 		constexpr static auto subdivisions = 8;
@@ -305,7 +359,7 @@ namespace gol
 		const auto generations = result00.Generations;
 		const auto* combined = FindOrCreate(result00.Node, result01.Node, result10.Node, result11.Node);
 
-		s_SlowCache[{ node, generations }] = combined;
+		s_Cache.SlowCache[{ node, generations }] = combined;
 		return { combined, generations };
 	}
 
@@ -314,7 +368,7 @@ namespace gol
 		if (node == FalseNode)
 			return { FalseNode, 0 };
 
-		if (const auto itr = s_NodeMap.find(node); itr != s_NodeMap.end() && itr->second != nullptr)
+		if (const auto itr = s_Cache.NodeMap.find(node); itr != s_Cache.NodeMap.end() && itr->second != nullptr)
 		{
 			const auto generations = Pow2(level - 2);
 			return { itr->second, generations };
@@ -323,7 +377,7 @@ namespace gol
 		if (level == 2) 
 		{
 			const auto* base = AdvanceBase(node);
-			s_NodeMap[node] = base;
+			s_Cache.NodeMap[node] = base;
 			return { base, 1 };
 		}
 		
@@ -343,7 +397,7 @@ namespace gol
 		const auto br = AdvanceNode(FindOrCreate(n11.Node, n12.Node, n21.Node, n22.Node), level - 1, maxAdvance);
 
 		const auto* result = FindOrCreate(tl.Node, tr.Node, bl.Node, br.Node);
-		s_NodeMap[node] = result;
+		s_Cache.NodeMap[node] = result;
 		const auto generations = Pow2(level - 2);
 		return { result, generations };
 	}
@@ -427,7 +481,7 @@ namespace gol
 		return FindOrCreate(expandedNW, expandedNE, expandedSW, expandedSE);
 	}
 
-	HashLifeUpdateInfo HashQuadtree::NextGeneration(const Rect& bounds, int64_t maxAdvance) const
+	int64_t HashQuadtree::NextGeneration([[maybe_unused]] const Rect& bounds, int64_t maxAdvance)
 	{
 		if (m_Root == FalseNode)
 			return {};
@@ -438,7 +492,7 @@ namespace gol
 		auto size = std::max(1LL, CalculateTreeSize());
 		auto offset = m_RootOffset;
 
-		while (NeedsExpansion(root, depth)) 
+		while (NeedsExpansion(root, depth) || (size / 4 < maxAdvance)) 
 		{
 			root = ExpandUniverse(root, depth);
 			const auto delta = std::max(1LL, size / 2);
@@ -449,21 +503,15 @@ namespace gol
 		}
 
 		if (depth >= 63)
-			return HashLifeUpdateInfo{
-				.Data = *this, 
-				.Generations = 0 
-			};
+			return 0;
 		const auto advanced = AdvanceNode(root, depth, maxAdvance);
 		const auto centerDelta = std::max(1LL, size / 4);
 		offset.X += centerDelta;
 		offset.Y += centerDelta;
 
-		const auto quadtree = HashQuadtree{ advanced.Node, offset, depth };
-		return HashLifeUpdateInfo
-		{ 
-			.Data = quadtree, 
-			.Generations = (std::max(static_cast<int64_t>(0), advanced.Generations))
-		};
+		m_Root = advanced.Node;
+		m_RootOffset = offset;
+		return std::max(static_cast<int64_t>(0), advanced.Generations);
 	}
 
 	const LifeNode* HashQuadtree::EmptyTree(int64_t size) const
@@ -471,12 +519,12 @@ namespace gol
 		if (size <= 1)
 			return FalseNode;
 
-        if (const auto it = s_EmptyNodeCache.find(size); it != s_EmptyNodeCache.end()) 
+        if (const auto it = s_Cache.EmptyNodeCache.find(size); it != s_Cache.EmptyNodeCache.end()) 
             return it->second;
 
 		const auto child = EmptyTree(size / 2);
 		const auto result = FindOrCreate(child, child, child, child);
-        s_EmptyNodeCache[size] = result;
+        s_Cache.EmptyNodeCache[size] = result;
         return result;
 	}
 

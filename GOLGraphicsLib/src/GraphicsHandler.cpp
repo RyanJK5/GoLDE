@@ -126,12 +126,12 @@ void gol::GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args)
     GL_DEBUG(glClearColor(m_BgColor.Red, m_BgColor.Green, m_BgColor.Blue, m_BgColor.Alpha));
     GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
     
-    auto gridScreenDimensions = Size2F
-    { 
-        args.GridSize.Width * args.CellSize.Width, 
-        args.GridSize.Height * args.CellSize.Height
+    Size2F gridScreenDimensions
+    {
+        static_cast<float>(args.GridSize.Width) * args.CellSize.Width, 
+        static_cast<float>(args.GridSize.Height) * args.CellSize.Height
     };
-    auto origin = Camera.WorldToScreenPos({ 0, 0 }, args.ViewportBounds, gridScreenDimensions);
+    auto origin = Camera.WorldToScreenPos(Vec2F{}, args.ViewportBounds, gridScreenDimensions);
     auto lowerRight = Camera.WorldToScreenPos({ gridScreenDimensions.Width, gridScreenDimensions.Height }, args.ViewportBounds, gridScreenDimensions);
     GL_DEBUG(glScissor(
         static_cast<int32_t>(origin.x), static_cast<int32_t>(origin.y),
@@ -245,7 +245,7 @@ void gol::GraphicsHandler::DrawGridLines(Vec2 offset, const GraphicsHandlerArgs&
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_DYNAMIC_DRAW));
     GL_DEBUG(glEnableVertexAttribArray(0));
     GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
-    GL_DEBUG(glDrawArrays(GL_LINES, 0, positions.size() / 2));
+    GL_DEBUG(glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(positions.size() / 2)));
 }
 
 gol::RectF gol::GraphicsHandler::GridToScreenBounds(const Rect& region, const GraphicsHandlerArgs& args) const

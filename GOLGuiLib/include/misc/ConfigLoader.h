@@ -108,9 +108,9 @@ namespace gol::StyleLoader
 	static const std::unordered_map<std::string_view, ImGuiKey> ShortcutDefinitions = {
 		{ "Ctrl",      ImGuiMod_Ctrl       },
 		{ "Shift",     ImGuiMod_Shift      },
-		{ "Enter",     ImGuiKey_Enter      },
-		{ "Space",     ImGuiKey_Space      },
-		{ "Esc",       ImGuiKey_Escape     },
+		{ "Alt",       ImGuiMod_Alt        },
+		{ "Super",     ImGuiMod_Super      },
+		
 		{ "A",         ImGuiKey_A          },
 		{ "B",         ImGuiKey_B          },
 		{ "C",         ImGuiKey_C          },
@@ -137,14 +137,88 @@ namespace gol::StyleLoader
 		{ "X",         ImGuiKey_X          },
 		{ "Y",         ImGuiKey_Y          },
 		{ "Z",         ImGuiKey_Z          },
+		
+		{ "0",         ImGuiKey_0          },
+		{ "1",         ImGuiKey_1          },
+		{ "2",         ImGuiKey_2          },
+		{ "3",         ImGuiKey_3          },
+		{ "4",         ImGuiKey_4          },
+		{ "5",         ImGuiKey_5          },
+		{ "6",         ImGuiKey_6          },
+		{ "7",         ImGuiKey_7          },
+		{ "8",         ImGuiKey_8          },
+		{ "9",         ImGuiKey_9          },
+		
+		{ "F1",        ImGuiKey_F1         },
+		{ "F2",        ImGuiKey_F2         },
+		{ "F3",        ImGuiKey_F3         },
+		{ "F4",        ImGuiKey_F4         },
+		{ "F5",        ImGuiKey_F5         },
+		{ "F6",        ImGuiKey_F6         },
+		{ "F7",        ImGuiKey_F7         },
+		{ "F8",        ImGuiKey_F8         },
+		{ "F9",        ImGuiKey_F9         },
+		{ "F10",       ImGuiKey_F10        },
+		{ "F11",       ImGuiKey_F11        },
+		{ "F12",       ImGuiKey_F12        },
+		
+		{ "Enter",     ImGuiKey_Enter      },
+		{ "Space",     ImGuiKey_Space      },
+		{ "Esc",       ImGuiKey_Escape     },
+		{ "Tab",       ImGuiKey_Tab        },
+		{ "Backspace", ImGuiKey_Backspace  },
+		{ "Delete",    ImGuiKey_Delete     },
+		{ "Insert",    ImGuiKey_Insert     },
+		
 		{ "Left",      ImGuiKey_LeftArrow  },
 		{ "Right",     ImGuiKey_RightArrow },
 		{ "Up",        ImGuiKey_UpArrow    },
 		{ "Down",      ImGuiKey_DownArrow  },
-		{ "Backspace", ImGuiKey_Backspace  },
-		{ "Delete",    ImGuiKey_Delete     }
+		{ "Home",      ImGuiKey_Home       },
+		{ "End",       ImGuiKey_End        },
+		{ "PageUp",    ImGuiKey_PageUp     },
+		{ "PageDown",  ImGuiKey_PageDown   },
+		
+		{ "Keypad0",   ImGuiKey_Keypad0    },
+		{ "Keypad1",   ImGuiKey_Keypad1    },
+		{ "Keypad2",   ImGuiKey_Keypad2    },
+		{ "Keypad3",   ImGuiKey_Keypad3    },
+		{ "Keypad4",   ImGuiKey_Keypad4    },
+		{ "Keypad5",   ImGuiKey_Keypad5    },
+		{ "Keypad6",   ImGuiKey_Keypad6    },
+		{ "Keypad7",   ImGuiKey_Keypad7    },
+		{ "Keypad8",   ImGuiKey_Keypad8    },
+		{ "Keypad9",   ImGuiKey_Keypad9    },
+		
+		{ "KeypadDecimal",  ImGuiKey_KeypadDecimal  },
+		{ "KeypadDivide",   ImGuiKey_KeypadDivide   },
+		{ "KeypadMultiply", ImGuiKey_KeypadMultiply },
+		{ "KeypadSubtract", ImGuiKey_KeypadSubtract },
+		{ "KeypadAdd",      ImGuiKey_KeypadAdd      },
+		{ "KeypadEnter",    ImGuiKey_KeypadEnter    },
+		{ "KeypadEqual",    ImGuiKey_KeypadEqual    },
+		
+		{ "'",             ImGuiKey_Apostrophe    },
+		{ ",",             ImGuiKey_Comma         },
+		{ "-",             ImGuiKey_Minus         },
+		{ ".",             ImGuiKey_Period        },
+		{ "/",             ImGuiKey_Slash         },
+		{ ";",             ImGuiKey_Semicolon     },
+		{ "=",             ImGuiKey_Equal         },
+		{ "LeftBracket",   ImGuiKey_LeftBracket   },
+		{ "\\",            ImGuiKey_Backslash     },
+		{ "RightBracket",  ImGuiKey_RightBracket  },
+		{ "`",             ImGuiKey_GraveAccent   },
+		
+		{ "CapsLock",      ImGuiKey_CapsLock      },
+		{ "ScrollLock",    ImGuiKey_ScrollLock    },
+		{ "NumLock",       ImGuiKey_NumLock       },
+		{ "PrintScreen",   ImGuiKey_PrintScreen   },
+		{ "Pause",         ImGuiKey_Pause         },
+		
+		{ "Menu",          ImGuiKey_Menu          }
 	};
-
+	
 	template <typename T>
 	using StringConverter = std::function<std::optional<T>(std::string_view)>;
 
@@ -370,7 +444,7 @@ namespace gol::StyleLoader
 		}
 
 		std::string line = "";
-		int32_t indentWidth = 0;
+		std::ptrdiff_t indentWidth = 0;
 		int32_t lineNum = 0;
 
 		std::optional<SectionType> section { };
@@ -388,7 +462,7 @@ namespace gol::StyleLoader
 
 			if (indentWidth == 0)
 				indentWidth = std::distance(line.begin(), start);
-			int32_t depth = indentWidth != 0 ? (std::distance(line.begin(), start) / indentWidth) : 0;
+			auto depth = indentWidth != 0 ? (std::distance(line.begin(), start) / indentWidth) : 0;
 
 			if (depth == 0)
 				section = std::nullopt;
