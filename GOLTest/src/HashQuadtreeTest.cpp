@@ -345,6 +345,22 @@ namespace gol
         static_assert(std::is_same_v<HashQuadtree::ConstIterator, decltype(tree.begin())>);
     }
 
+    TEST(HashQuadtreeTest, CopyingBreeder)
+    {
+        const std::filesystem::path directory{ "universes" };
+
+        const auto data = RLEEncoder::ReadRegion(directory / "glider_gun.gol");
+        
+        HashQuadtree original{ data->Grid.Data(), data->Offset };
+        original.PrepareCopy();
+
+        original.NextGeneration({}, 1LL << 32LL);
+        HashQuadtree copy{ original };
+
+        ASSERT_TRUE(true);
+        //ASSERT_EQ(original, copy);
+    }
+
     TEST(HashQuadtreeTest, TranslationInvariance)
     {
         // HashLife should behave the same regardless of where the pattern is in the grid

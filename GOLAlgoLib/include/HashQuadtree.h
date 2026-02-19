@@ -288,7 +288,7 @@ namespace gol
 	private:
 		static inline thread_local HashLifeCache s_Cache{};
 
-		mutable std::unique_ptr<LifeHashSet> m_TransferCache{};
+		mutable std::unique_ptr<HashLifeCache> m_TransferCache{};
 
 		const LifeNode* m_Root = FalseNode;        
         Vec2L m_RootOffset;

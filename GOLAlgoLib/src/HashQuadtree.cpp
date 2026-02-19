@@ -91,20 +91,57 @@ namespace gol
 		if (other.m_Root == FalseNode)
 			return;
 		
-		const auto data = [&]()
+		if (other.m_TransferCache)
 		{
-			if (other.m_TransferCache)
-				return *other.m_TransferCache;
-			else
-				return other | std::ranges::to<LifeHashSet>();
-		}();
-		other.m_TransferCache = nullptr;
-		m_Root = BuildTree(data);
+			s_Cache = *std::move(other.m_TransferCache);
+			m_Root = &s_Cache.NodeStorage.back();
+			other.m_TransferCache = nullptr;
+		}
+		else
+			m_Root = other.m_Root;
+	}
+
+	static const LifeNode* FindOrCreateFromCache(HashLifeCache& cache,
+		const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se)
+	{
+		LifeNode toFind{ nw, ne, sw, se };
+		if (const auto itr = cache.NodeMap.find(&toFind); itr != cache.NodeMap.end())
+			return itr->first;
+
+		cache.NodeStorage.emplace_back(nw, ne, sw, se);
+		cache.NodeMap[&cache.NodeStorage.back()] = nullptr;
+		return &cache.NodeStorage.back();
+	}
+
+	using TransferMap = ankerl::unordered_dense::map<const LifeNode*, const LifeNode*>;
+	static const LifeNode* BuildCache(
+		TransferMap& transferMap, 
+		HashLifeCache& cache, 
+		const LifeNode* original)
+	{
+		if (original == FalseNode)
+			return FalseNode;
+		if (original == TrueNode)
+			return TrueNode;
+
+		if (const auto it = transferMap.find(original); it != transferMap.end())
+			return it->second;
+
+		const auto* nw = BuildCache(transferMap, cache, original->NorthWest);
+		const auto* ne = BuildCache(transferMap, cache, original->NorthEast);
+		const auto* sw = BuildCache(transferMap, cache, original->SouthWest);
+		const auto* se = BuildCache(transferMap, cache, original->SouthEast);
+
+		const auto* ret = FindOrCreateFromCache(cache, nw, ne, sw, se);
+		transferMap[original] = ret;
+		return ret;
 	}
 
 	void HashQuadtree::PrepareCopy()
 	{
-		m_TransferCache = std::make_unique<LifeHashSet>(*this | std::ranges::to<LifeHashSet>());
+		TransferMap transferMap{};
+		m_TransferCache = std::make_unique<HashLifeCache>();
+		BuildCache(transferMap, *m_TransferCache, m_Root);
 	}
 
 	int32_t HashQuadtree::CalculateDepth() const
@@ -127,8 +164,8 @@ namespace gol
 		if (m_Root == other.m_Root && m_RootOffset == other.m_RootOffset)
 			return true;
 
-		auto hashSet1 = *this | std::ranges::to<LifeHashSet>();
-		auto hashSet2 = other | std::ranges::to<LifeHashSet>();
+		const auto hashSet1 = *this | std::ranges::to<LifeHashSet>();
+		const auto hashSet2 = other | std::ranges::to<LifeHashSet>();
 
 		return hashSet1 == hashSet2;
 	}
@@ -201,15 +238,10 @@ namespace gol
 		return ConstIterator{};
 	}
 
-	const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se) const
+	const LifeNode* HashQuadtree::FindOrCreate( 
+		const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se) const
 	{
-		LifeNode toFind { nw, ne, sw, se };
-		if (const auto itr = s_Cache.NodeMap.find(&toFind); itr != s_Cache.NodeMap.end()) 
-			return itr->first;
-
-		s_Cache.NodeStorage.emplace_back(nw, ne, sw, se);
-		s_Cache.NodeMap[&s_Cache.NodeStorage.back()] = nullptr;
-		return &s_Cache.NodeStorage.back();
+		return FindOrCreateFromCache(s_Cache, nw, ne, sw, se);
 	}
 
 	const LifeNode* HashQuadtree::CenteredHorizontal(const LifeNode& west, const LifeNode& east) const
