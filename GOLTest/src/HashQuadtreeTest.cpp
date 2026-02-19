@@ -41,7 +41,7 @@ namespace gol
 		uint64_t totalGenerations = 0;
 		for (int32_t i = 0; i < numJumps; ++i)
 		{
-            const auto genCount = current.NextGeneration({}, stepSize);
+            const auto genCount = current.Advance({}, stepSize);
 			EXPECT_EQ(genCount, expectedGenerationsPerJump)
 				<< "HashLife should advance by " << expectedGenerationsPerJump << " generations per jump";
 			totalGenerations += genCount;
@@ -95,10 +95,10 @@ namespace gol
         HashQuadtree blockTree{ blockCells };
         EXPECT_EQ(blockTree.Population(), blockCells.size());
 
-        blockTree.NextGeneration();
+        blockTree.Advance();
         EXPECT_EQ(blockTree.Population(), blockCells.size());
 
-        singleTree.NextGeneration({}, 1);
+        singleTree.Advance({}, 1);
         EXPECT_EQ(singleTree.Population(), 0ULL);
     }
 
@@ -218,12 +218,12 @@ namespace gol
         HashQuadtree tree{ cells };
 
         // Should remain stable
-        auto gens = tree.NextGeneration();
+        auto gens = tree.Advance();
         EXPECT_GE(gens, 2); // At least 2 generations (level 3)
         VerifyContent(tree, cells);
 
         // Advance again
-        gens = tree.NextGeneration();
+        gens = tree.Advance();
         EXPECT_GE(gens, 2);
         VerifyContent(tree, cells);
     }
@@ -234,7 +234,7 @@ namespace gol
         LifeHashSet start{ {0,0}, {0,1}, {0,2} };
         HashQuadtree tree(start);
 
-        auto gens = tree.NextGeneration();
+        auto gens = tree.Advance();
         // HashLife advances by 2^(k-2) steps. For k=3, steps=2.
         // A blinker's period is 2, so it should be back to start if steps is a multiple of 2.
         EXPECT_EQ(gens % 2, 0) << "HashLife should advance by a multiple of blinker period";
@@ -259,7 +259,7 @@ namespace gol
         };
 
         HashQuadtree tree{ start };
-        auto gens = tree.NextGeneration();
+        auto gens = tree.Advance();
         EXPECT_GT(gens, 0);
 
         LifeHashSet actual;
@@ -354,7 +354,7 @@ namespace gol
         HashQuadtree original{ data->Grid.Data(), data->Offset };
         original.PrepareCopy();
 
-        original.NextGeneration({}, 1LL << 32LL);
+        original.Advance({}, 1LL << 32LL);
         HashQuadtree copy{ original };
 
         ASSERT_TRUE(true);
@@ -370,8 +370,8 @@ namespace gol
         HashQuadtree tree1{ blockAtOrigin };
         HashQuadtree tree2{ blockAtDistance };
 
-        auto gens1 = tree1.NextGeneration();
-        auto gens2 = tree2.NextGeneration();
+        auto gens1 = tree1.Advance();
+        auto gens2 = tree2.Advance();
 
         EXPECT_EQ(gens1, gens2) << "Translation should not affect step size";
         EXPECT_EQ(std::ranges::distance(tree1), 4);
@@ -384,7 +384,7 @@ namespace gol
         LifeHashSet cells{ {42, 42} };
         HashQuadtree tree{ cells };
 
-        const auto gens = tree.NextGeneration();
+        const auto gens = tree.Advance();
         
         EXPECT_GT(gens, 0);
         EXPECT_TRUE(tree.empty());
@@ -401,7 +401,7 @@ namespace gol
 
         EXPECT_EQ(std::ranges::distance(tree), 4);
         
-        auto gens = tree.NextGeneration();
+        auto gens = tree.Advance();
         EXPECT_GT(gens, 0);
         
         EXPECT_EQ(std::ranges::distance(tree), 4);
@@ -427,8 +427,8 @@ namespace gol
         VerifyContent(tree3, cells);
         
         // Identity check via NextGeneration
-        auto gen2 = tree2.NextGeneration();
-        auto gen3 = tree3.NextGeneration();
+        auto gen2 = tree2.Advance();
+        auto gen3 = tree3.Advance();
         
         EXPECT_EQ(gen2, gen3);
         EXPECT_EQ(std::ranges::distance(tree2), std::ranges::distance(tree3));
@@ -459,7 +459,7 @@ namespace gol
 
         EXPECT_GE(tree.CalculateDepth(), 3) << "Tree must be deep enough to trigger slow advance";
 
-        const auto gens = tree.NextGeneration({}, 1);
+        const auto gens = tree.Advance({}, 1);
         EXPECT_EQ(gens, 1);
         EXPECT_TRUE(tree.empty()) << "All isolated cells should die after one generation";
     }
@@ -474,7 +474,7 @@ namespace gol
         HashQuadtree tree2{ cells };
         ASSERT_EQ(tree1, tree2);
 
-        const auto directUpdate = tree1.NextGeneration({}, 1);
+        const auto directUpdate = tree1.Advance({}, 1);
         const auto hashLifeUpdate = HashLife(tree2, {}, 1);
 
         EXPECT_EQ(directUpdate, 1);
@@ -827,7 +827,7 @@ namespace gol
         LifeHashSet blockCells{ {0, 0}, {1, 0}, {0, 1}, {1, 1} };
         HashQuadtree tree{ blockCells };
 
-        tree.NextGeneration();
+        tree.Advance();
         LifeHashSet resultCells;
         for (const auto pos : tree)
             resultCells.insert(pos);

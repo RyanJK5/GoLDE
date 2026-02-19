@@ -7,6 +7,8 @@ namespace gol
 	SimulationWorker::~SimulationWorker()
 	{
 		m_Running = false;
+		if (m_Thread.joinable())
+			m_Thread.join();
 	}
 
 	void SimulationWorker::Start(GameGrid& initialGrid)

@@ -2,6 +2,7 @@
 #include <array>
 #include <print>
 #include <unordered_dense.h>
+#include <cstdint>
 #include <vector>
 #include <span>
 
@@ -20,23 +21,23 @@ namespace gol
 		if (stepSize == 0)
 			return 0;
 
-		auto power = 0ULL;
-		while ((stepSize % Pow2(power)) == 0)
+		auto power = 0LL;
+		while (Pow2(power) <= stepSize)
 			power++;
-		return Pow2(power - 1ULL);
+		return Pow2(power - 1LL);
 	}
 
 	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps)
 	{
 		if (numSteps == 0)
-			return data.NextGeneration(bounds, 0);
+			return data.Advance(bounds, 0);
 
-		const auto maxAdvance = MaxAdvanceOf(numSteps);
-		
 		auto generation = 0LL;
 		while (generation < numSteps)
 		{
-			const auto gens = data.NextGeneration(bounds, maxAdvance);
+			const auto maxAdvance = MaxAdvanceOf(numSteps - generation);
+			
+			const auto gens = data.Advance(bounds, maxAdvance);
 			if (gens == 0)
 				return generation;
 			generation += gens;
@@ -54,9 +55,16 @@ namespace gol
 
 	size_t SlowHash::operator()(const SlowKey& key) const noexcept
 	{
-		size_t hash = LifeNodeHash{}(key.Node);
-		hash ^= ankerl::unordered_dense::hash<int64_t>{}(key.MaxAdvance) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		return hash;
+		uint64_t h1 = static_cast<uint64_t>(LifeNodeHash{}(key.Node));
+		uint64_t h2 = static_cast<uint64_t>(static_cast<uint64_t>(key.MaxAdvance) + 0x9e3779b97f4a7c15ULL);
+
+		uint64_t combined = h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1 << 6) + (h1 >> 2));
+
+		combined = (combined ^ (combined >> 30)) * 0xBF58476D1CE4E5B9ULL;
+		combined = (combined ^ (combined >> 27)) * 0x94D049BB133111EBULL;
+		combined = combined ^ (combined >> 31);
+
+		return static_cast<size_t>(combined);
 	}
 
 	template class HashQuadtree::IteratorImpl<Vec2>;
@@ -83,24 +91,6 @@ namespace gol
 		return *this;
 	}
 
-	void HashQuadtree::Copy(const HashQuadtree& other)
-	{
-		m_Root = FalseNode;
-		m_RootOffset = other.m_RootOffset;
-
-		if (other.m_Root == FalseNode)
-			return;
-		
-		if (other.m_TransferCache)
-		{
-			s_Cache = *std::move(other.m_TransferCache);
-			m_Root = &s_Cache.NodeStorage.back();
-			other.m_TransferCache = nullptr;
-		}
-		else
-			m_Root = other.m_Root;
-	}
-
 	static const LifeNode* FindOrCreateFromCache(HashLifeCache& cache,
 		const LifeNode* nw, const LifeNode* ne, const LifeNode* sw, const LifeNode* se)
 	{
@@ -115,8 +105,8 @@ namespace gol
 
 	using TransferMap = ankerl::unordered_dense::map<const LifeNode*, const LifeNode*>;
 	static const LifeNode* BuildCache(
-		TransferMap& transferMap, 
-		HashLifeCache& cache, 
+		TransferMap& transferMap,
+		HashLifeCache& cache,
 		const LifeNode* original)
 	{
 		if (original == FalseNode)
@@ -135,6 +125,24 @@ namespace gol
 		const auto* ret = FindOrCreateFromCache(cache, nw, ne, sw, se);
 		transferMap[original] = ret;
 		return ret;
+	}
+
+	void HashQuadtree::Copy(const HashQuadtree& other)
+	{
+		m_Root = FalseNode;
+		m_RootOffset = other.m_RootOffset;
+
+		if (other.m_Root == FalseNode)
+			return;
+		
+		if (other.m_TransferCache)
+		{
+			TransferMap transferMap{};
+			BuildCache(transferMap, s_Cache, &other.m_TransferCache->NodeStorage.back());
+			m_Root = &s_Cache.NodeStorage.back();
+		}
+		else
+			m_Root = other.m_Root;
 	}
 
 	void HashQuadtree::PrepareCopy()
@@ -513,7 +521,7 @@ namespace gol
 		return FindOrCreate(expandedNW, expandedNE, expandedSW, expandedSE);
 	}
 
-	int64_t HashQuadtree::NextGeneration([[maybe_unused]] const Rect& bounds, int64_t maxAdvance)
+	int64_t HashQuadtree::Advance([[maybe_unused]] const Rect& bounds, int64_t maxAdvance)
 	{
 		if (m_Root == FalseNode)
 			return {};

@@ -16,67 +16,6 @@
 #include "PresetSelectionResult.h"
 #include "RLEEncoder.h"
 
-gol::SearchString::SearchString(size_t length)
-    : Length(length), Data(new char[length + 1])
-{
-    for (size_t i = 0; i <= length; i++)
-    	Data[i] = '\0';
-}
-
-gol::SearchString::SearchString(const SearchString& other)
-{
-    Copy(other);
-}
-
-gol::SearchString::SearchString(SearchString&& other) noexcept
-{
-    Move(std::move(other));
-}
-
-gol::SearchString& gol::SearchString::operator=(const SearchString& other)
-{
-    if (this != &other)
-    {
-        Destroy();
-        Copy(other);
-    }
-    return *this;
-}
-
-gol::SearchString& gol::SearchString::operator=(SearchString&& other) noexcept
-{
-	if (this != &other)
-    {
-        Destroy();
-        Move(std::move(other));
-    }
-    return *this;
-}
-
-gol::SearchString::~SearchString()
-{
-    Destroy();
-}
-
-void gol::SearchString::Copy(const SearchString& other)
-{
-    Length = other.Length;
-    Data = new char[other.Length + 1];
-    for (size_t i = 0; i <= other.Length + 1; i++)
-        Data[i] = other.Data[i];
-}
-
-void gol::SearchString::Move(SearchString&& other)
-{
-    Length = std::exchange(other.Length, 0);
-    Data = std::exchange(other.Data, nullptr);
-}
-
-void gol::SearchString::Destroy()
-{
-    delete[] Data;
-}
-
 gol::PresetDisplay::PresetDisplay(const GameGrid& grid, const std::string& fileName, Size2 windowSize)
     : Grid(grid)
     , FileName(fileName)
@@ -92,7 +31,7 @@ gol::PresetSelection::PresetSelection(const std::filesystem::path& defaultPath, 
     , m_WindowSize(windowSize)
 {
 	ReadFiles(m_DefaultPath);
-	m_SearchText = SearchString(m_MaxFileName);
+    m_SearchText = InputString{ m_MaxFileName };
 }
 
 gol::PresetSelectionResult gol::PresetSelection::Update(const EditorResult& info)

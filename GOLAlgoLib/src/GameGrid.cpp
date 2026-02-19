@@ -168,16 +168,30 @@ namespace gol
 
 	GameGrid GameGrid::SubRegion(const Rect& region) const
 	{
-		auto result = GameGrid { region.Width, region.Height };
-		for (auto&& pos : m_Data)
+		const auto fillGrid = [region]<bool CheckBounds>(GameGrid& grid, std::ranges::input_range auto&& range)
 		{
-			if (region.InBounds(pos))
+			for (const auto pos : range)
 			{
-				result.m_Population++;
-				result.m_Data.insert(pos - region.Pos());
+				if constexpr(CheckBounds)
+				{
+					if (!region.InBounds(pos))
+						continue;
+				}
+				grid.m_Population++;
+				grid.m_Data.insert(pos - region.Pos());
 			}
+			return grid;
+		};
+
+		if (m_CacheInvalidated && m_HashLifeData)
+		{
+			GameGrid result{ region.Width, region.Height };
+			return fillGrid.operator()<false>(result, std::ranges::subrange(
+				m_HashLifeData->begin(region), m_HashLifeData->end())
+			);;
 		}
-		return result;
+		auto result = GameGrid { region.Width, region.Height };
+		return fillGrid.operator()<true>(result, m_Data);
 	}
 
 	LifeHashSet GameGrid::ReadRegion(const Rect& region) const
@@ -200,10 +214,8 @@ namespace gol
 
 	void GameGrid::ClearData(const std::vector<Vec2>& data, Vec2 offset)
 	{
-		for (auto& vec : data)
-		{
+		for (const auto vec : data)
 			m_Population -= m_Data.erase({ vec.X + offset.X, vec.Y + offset.Y });
-		}
 		m_CacheInvalidated = true;
 	}
 

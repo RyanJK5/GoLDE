@@ -127,6 +127,31 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
     };
 }
 
+void gol::SimulationEditor::DrawHashLifeData(const HashQuadtree& quadtree, const GraphicsHandlerArgs& args)
+{
+    const auto viewBounds = args.ViewportBounds;
+    const auto topLeftWorld = m_Graphics.Camera.ScreenToWorldPos(
+        Vec2F{ static_cast<float>(viewBounds.X), static_cast<float>(viewBounds.Y) }, viewBounds);
+    const auto bottomRightWorld = m_Graphics.Camera.ScreenToWorldPos(
+        Vec2F{ static_cast<float>(viewBounds.X + viewBounds.Width), static_cast<float>(viewBounds.Y + viewBounds.Height) }, viewBounds);
+    const auto [minWorldX, maxWorldX] = std::minmax(topLeftWorld.x, bottomRightWorld.x);
+    const auto [minWorldY, maxWorldY] = std::minmax(topLeftWorld.y, bottomRightWorld.y);
+    const auto minCellX = static_cast<int32_t>(std::floor(minWorldX / args.CellSize.Width));
+    const auto minCellY = static_cast<int32_t>(std::floor(minWorldY / args.CellSize.Height));
+    const auto maxCellX = static_cast<int32_t>(std::ceil(maxWorldX / args.CellSize.Width));
+    const auto maxCellY = static_cast<int32_t>(std::ceil(maxWorldY / args.CellSize.Height));
+    const auto visibleBounds = Rect
+    {
+        minCellX,
+        minCellY,
+        std::max(0, maxCellX - minCellX),
+        std::max(0, maxCellY - minCellY)
+    };
+
+    const auto visibleRange = std::ranges::subrange(quadtree.begin(visibleBounds), quadtree.end());
+    m_Graphics.DrawGrid({ 0, 0 }, visibleRange, args);
+}
+
 gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args)
 {
     const auto snapshot = m_Worker->GetResult();
@@ -135,32 +160,7 @@ gol::SimulationState gol::SimulationEditor::SimulationUpdate(const GraphicsHandl
     if (std::holds_alternative<std::reference_wrapper<const LifeHashSet>>(data))
         m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const LifeHashSet>>(data).get(), args);
     else
-    {
-        const auto& quadtree = std::get<std::reference_wrapper<const HashQuadtree>>(data).get();
-		const auto viewBounds = args.ViewportBounds;
-		const auto topLeftWorld = m_Graphics.Camera.ScreenToWorldPos(
-			Vec2F { static_cast<float>(viewBounds.X), static_cast<float>(viewBounds.Y) }, viewBounds);
-		const auto bottomRightWorld = m_Graphics.Camera.ScreenToWorldPos(
-			Vec2F { static_cast<float>(viewBounds.X + viewBounds.Width), static_cast<float>(viewBounds.Y + viewBounds.Height) }, viewBounds);
-		const auto minWorldX = std::min(topLeftWorld.x, bottomRightWorld.x);
-		const auto maxWorldX = std::max(topLeftWorld.x, bottomRightWorld.x);
-		const auto minWorldY = std::min(topLeftWorld.y, bottomRightWorld.y);
-		const auto maxWorldY = std::max(topLeftWorld.y, bottomRightWorld.y);
-		const auto minCellX = static_cast<int32_t>(std::floor(minWorldX / args.CellSize.Width));
-		const auto minCellY = static_cast<int32_t>(std::floor(minWorldY / args.CellSize.Height));
-		const auto maxCellX = static_cast<int32_t>(std::ceil(maxWorldX / args.CellSize.Width));
-		const auto maxCellY = static_cast<int32_t>(std::ceil(maxWorldY / args.CellSize.Height));
-		const auto visibleBounds = Rect
-		{
-			minCellX,
-			minCellY,
-			std::max(0, maxCellX - minCellX),
-			std::max(0, maxCellY - minCellY)
-		};
-
-		const auto visibleRange = std::ranges::subrange(quadtree.begin(visibleBounds), quadtree.end());
-        m_Graphics.DrawGrid({ 0, 0 }, visibleRange, args);
-    }
+		DrawHashLifeData(std::get<std::reference_wrapper<const HashQuadtree>>(data).get(), args);
     return SimulationState::Simulation;
 }
 
@@ -196,7 +196,13 @@ gol::SimulationState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArg
     auto gridPos = CursorGridPos();
     if (gridPos)
         m_VersionManager.TryPushChange(m_SelectionManager.UpdateSelectionArea(m_Grid, *gridPos).Change);
-    m_Graphics.DrawGrid({ 0, 0 }, m_Grid.Data(), args);
+
+    const auto data = m_Grid.IterableData();
+    if (std::holds_alternative<std::reference_wrapper<const LifeHashSet>>(data))
+        m_Graphics.DrawGrid({ 0, 0 }, std::get<std::reference_wrapper<const LifeHashSet>>(data).get(), args);
+    else
+        DrawHashLifeData(std::get<std::reference_wrapper<const HashQuadtree>>(data).get(), args);
+    
     if (m_SelectionManager.CanDrawSelection())
         m_Graphics.DrawSelection(m_SelectionManager.SelectionBounds(), args);
     if (m_SelectionManager.CanDrawGrid())
@@ -343,9 +349,9 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
             m_VersionManager.PushChange({
                 .Action = GameAction::Clear,
-                .SelectionBounds = m_Grid.BoundingBox(),
+                .SelectionBounds = m_InitialGrid.BoundingBox(),
                 .CellsInserted = {},
-                .CellsDeleted = m_Grid.Data()
+                .CellsDeleted = m_InitialGrid.Data()
             });
             m_Grid = GameGrid { m_Grid.Size() };
             return SimulationState::Paint;
@@ -389,6 +395,8 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             return result.State;
         case Redo:
             UpdateVersion(result);
+            return result.State;
+        case NewFile:
             return result.State;
         case UpdateFile: [[fallthrough]];
         case Save:

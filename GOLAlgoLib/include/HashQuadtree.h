@@ -238,7 +238,7 @@ namespace gol
 
 		uint64_t Population() const;
 
-        int64_t NextGeneration(const Rect& bounds = {}, int64_t maxAdvance = 0);
+        int64_t Advance(const Rect& bounds = {}, int64_t maxAdvance = 0);
 
 		int32_t CalculateDepth() const;
 		int64_t CalculateTreeSize() const;

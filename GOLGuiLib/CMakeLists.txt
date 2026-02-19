@@ -3,7 +3,7 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 
 message(STATUS "GOLGuiLib sources found: ${SOURCES}")
 
-add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS})
+add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS} "include/InputString.h" "src/InputString.cpp")
 
 target_include_directories(GOLGuiLib
     PUBLIC

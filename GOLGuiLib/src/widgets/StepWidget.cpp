@@ -12,6 +12,19 @@ gol::Size2F gol::StepButton::Dimensions() const { return { ImGui::GetContentRegi
 std::string gol::StepButton::Label(const EditorResult&) const { return ICON_FA_FORWARD_STEP; }
 bool        gol::StepButton::Enabled(const EditorResult& state) const { return state.State == SimulationState::Paint || state.State == SimulationState::Paused; }
 
+template <std::integral T>
+constexpr static T IntPow(T base, T exponent)
+{
+    T res = 1;
+    while (exponent > 0)
+    {
+        if (exponent % 2 == 1) res *= base;
+        base *= base;
+        exponent /= 2;
+    }
+    return res;
+}
+
 gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& state)
 {
     constexpr static auto SmallStep = 1;
@@ -25,8 +38,71 @@ gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& sta
     }
 
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 3.f * 2.f + 5);
-    ImGui::InputScalar("##label", ImGuiDataType_U64, &m_StepCount, &SmallStep, &BigStep);
+
+    const auto buttonSize = ImGui::GetFrameHeight();
+    
+    const auto setStepCount = [&](int64_t stepCount)
+    {
+        m_StepCount = std::max(1LL, stepCount);
+        auto [end, error] = std::to_chars(m_InputText.Data, m_InputText.Data + m_InputText.Length + 1,
+            static_cast<int64_t>(m_StepCount));
+        assert(error == std::errc{});
+        *end = '\0';
+    };
+
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2.f + 5);
+    if(ImGui::InputText(
+        "##expr", m_InputText.Data, m_InputText.Length + 1))
+    {
+        const auto stepCountBefore = m_StepCount;
+        try
+        {
+            using std::ranges::all_of;
+            constexpr static auto validChar = [](char c) { return std::isdigit(c) || std::isspace(c); };
+
+            std::string str{ m_InputText.Data };
+            str = str.substr(str.find_first_not_of(' '));
+            if (const auto index = str.find('^'); index != std::string::npos)
+            {
+                const auto baseStr = str.substr(0, index);
+				const auto exponentStr = str.substr(index + 1);
+
+				if (!all_of(baseStr, validChar) || !all_of(exponentStr, validChar))
+                    throw std::invalid_argument("");
+
+                const auto base = std::stoll(baseStr);
+                const auto exponent = std::stoll(exponentStr);
+                
+                m_StepCount = std::max(1LL, IntPow(base, exponent));
+            }
+            else
+            {
+				if (!all_of(str, validChar))
+                    throw std::invalid_argument("");
+		        m_StepCount = std::max(1LL, std::stoll(str));
+            }
+			
+            auto [end, error] = std::to_chars(m_InputText.Data, m_InputText.Data + m_InputText.Length + 1,
+                static_cast<int64_t>(m_StepCount));
+            assert(error == std::errc{});
+            *end = '\0';
+        }
+        catch (const std::exception&)
+        {
+            setStepCount(stepCountBefore);
+        }
+    }
+    ImGui::PopItemWidth();
+
+    ImGui::SameLine();
+    if (ImGui::Button("-##minus", { buttonSize, buttonSize }))
+        setStepCount(m_StepCount - 1);
+        
+
+    ImGui::SameLine();
+    if (ImGui::Button("+##plus", { buttonSize, buttonSize }))
+        setStepCount(m_StepCount + 1);
+
     ImGui::PopStyleVar();
 
     if (m_HyperSpeed)

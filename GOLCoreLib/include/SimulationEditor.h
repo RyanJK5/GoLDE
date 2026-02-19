@@ -49,6 +49,8 @@ namespace gol
 		SimulationState PaintUpdate(const GraphicsHandlerArgs& args);
 		SimulationState PauseUpdate(const GraphicsHandlerArgs& args);
 
+		void DrawHashLifeData(const HashQuadtree& quadtree, const GraphicsHandlerArgs& args);
+
 		SimulationState StartSimulation();
 		void StopSimulation(bool stealGrid);
 

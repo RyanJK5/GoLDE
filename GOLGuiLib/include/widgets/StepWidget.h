@@ -11,6 +11,7 @@
 #include "GameEnums.h"
 #include "Graphics2D.h"
 #include "SimulationControlResult.h"
+#include "InputString.h"
 #include "Widget.h"
 
 namespace gol
@@ -34,12 +35,15 @@ namespace gol
 	public:
         StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
             : m_Button(shortcuts)
+			, m_InputText("1", std::to_string(std::numeric_limits<uint64_t>::max()).length())
         { }
-    friend Widget;
-
+        
+        friend Widget;
     private:
 		SimulationControlResult UpdateImpl(const EditorResult& state);
 	private:
+        InputString m_InputText;
+
         int64_t m_StepCount = 1;
 		bool m_HyperSpeed = false;
 

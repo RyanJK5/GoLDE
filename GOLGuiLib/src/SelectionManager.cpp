@@ -284,16 +284,16 @@ std::optional<gol::VersionChange> gol::SelectionManager::HandleAction(SelectionA
     switch (action)
     {
     using enum SelectionAction;
-    case Copy:       return this->Copy(grid);
-    case Cut:        return this->Cut();
-    case Delete:     return this->Delete();
-    case Deselect:   return this->Deselect(grid);
-    case NudgeLeft:  return Nudge({ -nudgeSize, 0 });
-    case NudgeRight: return Nudge({ nudgeSize, 0 });
-    case NudgeUp:    return Nudge({ 0, -nudgeSize });
-    case NudgeDown:  return Nudge({ 0, nudgeSize });
-    case Rotate:     return this->Rotate(true);
-    case FlipVertically: [[fallthrough]];
+    case Copy:             return this->Copy(grid);
+    case Cut:              return this->Cut();
+    case Delete:           return this->Delete();
+    case Deselect:         return this->Deselect(grid);
+    case NudgeLeft:        return Nudge({ -nudgeSize, 0 });
+    case NudgeRight:       return Nudge({ nudgeSize, 0 });
+    case NudgeUp:          return Nudge({ 0, -nudgeSize });
+    case NudgeDown:        return Nudge({ 0, nudgeSize });
+    case Rotate:           return this->Rotate(true);
+    case FlipVertically:   [[fallthrough]];
 	case FlipHorizontally: return this->Flip(action);
 	default: assert(false && "Invalid action passed to HandleAction");
     }
