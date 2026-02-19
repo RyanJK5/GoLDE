@@ -257,8 +257,8 @@ gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bo
 	const auto snapshot = m_Worker->GetResult();
     const auto generation = snapshot ? snapshot->Generation() : m_Grid.Generation();
     const auto population = snapshot ? snapshot->Population() : m_Grid.Population();
-    ImGui::Text("%s", std::format("Generation: {}", generation).c_str());
-    ImGui::Text("%s", std::format("Population: {}", population + m_SelectionManager.SelectedPopulation()).c_str());
+    ImGui::Text("%s", std::format(std::locale(""), "Generation: {:L}", generation).c_str());
+    ImGui::Text("%s", std::format(std::locale(""), "Population: {:L}", population + m_SelectionManager.SelectedPopulation()).c_str());
 
     if (m_SelectionManager.CanDrawSelection())
     {
