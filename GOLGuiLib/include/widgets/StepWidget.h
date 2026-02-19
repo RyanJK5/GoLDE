@@ -36,7 +36,8 @@ namespace gol
         StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
             : m_Button(shortcuts)
 			, m_InputText("1", std::to_string(std::numeric_limits<uint64_t>::max()).length())
-        { }
+        { 
+        }
         
         friend Widget;
     private:

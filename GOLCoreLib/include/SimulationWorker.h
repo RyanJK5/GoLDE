@@ -14,8 +14,6 @@ namespace gol
 	class SimulationWorker
 	{
 	public:
-		~SimulationWorker();
-
 		void Start(GameGrid& initialGrid);
 		GameGrid Stop();
 
@@ -27,9 +25,9 @@ namespace gol
 		std::atomic<int64_t> m_StepCount = 1;
 		std::atomic<int64_t> m_TickDelayMs = 0;
 
-		std::jthread m_Thread;
 		std::atomic<std::shared_ptr<GameGrid>> m_Snapshot;
-		std::atomic<bool> m_Running{ false };
+		
+		std::jthread m_Thread;
 	};
 }
 

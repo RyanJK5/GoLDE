@@ -2,6 +2,7 @@
 #define __InputString_h__
 
 #include <cstring>
+#include <print>
 
 namespace gol
 {
@@ -17,10 +18,12 @@ namespace gol
 		template <size_t N>
 		InputString(const char(&str)[N], size_t length = N - 1)
 			: Length(length)
-			, Data(new char[length])
+			, Data(new char[length + 1])
 		{
-			std::memcpy(Data, str, Length);
-			Data[Length] = '\0';
+			std::println("{}", length);
+			std::memcpy(Data, str, N);
+			for (auto i = N; i <= length; i++)
+				Data[i] = '\0';
 		}
 
 		InputString(const InputString& other);
