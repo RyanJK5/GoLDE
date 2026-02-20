@@ -27,17 +27,17 @@ namespace gol
 		return Pow2(power - 1LL);
 	}
 
-	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps)
+	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps, std::stop_token stopToken)
 	{
 		if (numSteps == 0)
-			return data.Advance(bounds, 0);
+			return data.Advance(bounds, 0, stopToken);
 
 		auto generation = 0LL;
 		while (generation < numSteps)
 		{
 			const auto maxAdvance = MaxAdvanceOf(numSteps - generation);
 			
-			const auto gens = data.Advance(bounds, maxAdvance);
+			const auto gens = data.Advance(bounds, maxAdvance, stopToken);
 			if (gens == 0)
 				return generation;
 			generation += gens;
@@ -314,8 +314,10 @@ namespace gol
 		);
 	}
 
-	NodeUpdateInfo HashQuadtree::AdvanceNode(const LifeNode* node, int32_t level, int64_t maxAdvance) const
+	NodeUpdateInfo HashQuadtree::AdvanceNode(std::stop_token stopToken, const LifeNode* node, int32_t level, int64_t maxAdvance) const
 	{
+		if (stopToken.stop_requested())
+			return { node, 0 };
 		if (node == FalseNode || level < 2)
 			return { node, 0 };
 
@@ -323,17 +325,17 @@ namespace gol
 		{
 			const auto span = Pow2(level);
 			if ((span / 4) > maxAdvance)
-				return AdvanceSlow(node, level, maxAdvance);
+				return AdvanceSlow(stopToken, node, level, maxAdvance);
 		}
-		return AdvanceFast(node, level, maxAdvance);
+		return AdvanceFast(stopToken, node, level, maxAdvance);
 	}
 
-	NodeUpdateInfo HashQuadtree::AdvanceSlow(const LifeNode* node, int32_t level, int64_t maxAdvance) const
+	NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken, const LifeNode* node, int32_t level, int64_t maxAdvance) const
 	{
 		if (node == FalseNode)
 			return { FalseNode, 0 };
 		if (level <= 2)
-			return AdvanceFast(node, level, maxAdvance);
+			return AdvanceFast(stopToken, node, level, maxAdvance);
 		if (const auto it = s_Cache.SlowCache.find({ node, maxAdvance }); it != s_Cache.SlowCache.end())
 			return { it->second, maxAdvance };
 
@@ -391,10 +393,10 @@ namespace gol
 		const auto* window10 = buildWindow(1, 3);
 		const auto* window11 = buildWindow(3, 3);
 
-		const auto result00 = AdvanceNode(window00, level - 1, maxAdvance);
-		const auto result01 = AdvanceNode(window01, level - 1, maxAdvance);
-		const auto result10 = AdvanceNode(window10, level - 1, maxAdvance);
-		const auto result11 = AdvanceNode(window11, level - 1, maxAdvance);
+		const auto result00 = AdvanceNode(stopToken, window00, level - 1, maxAdvance);
+		const auto result01 = AdvanceNode(stopToken, window01, level - 1, maxAdvance);
+		const auto result10 = AdvanceNode(stopToken, window10, level - 1, maxAdvance);
+		const auto result11 = AdvanceNode(stopToken, window11, level - 1, maxAdvance);
 
 		const auto generations = result00.Generations;
 		const auto* combined = FindOrCreate(result00.Node, result01.Node, result10.Node, result11.Node);
@@ -403,7 +405,7 @@ namespace gol
 		return { combined, generations };
 	}
 
-	NodeUpdateInfo HashQuadtree::AdvanceFast(const LifeNode* node, int32_t level, int64_t maxAdvance) const
+	NodeUpdateInfo HashQuadtree::AdvanceFast(std::stop_token stopToken, const LifeNode* node, int32_t level, int64_t maxAdvance) const
 	{
 		if (node == FalseNode)
 			return { FalseNode, 0 };
@@ -421,20 +423,20 @@ namespace gol
 			return { base, 1 };
 		}
 		
-		const auto n00 = AdvanceNode(node->NorthWest, level - 1, maxAdvance);
-		const auto n01 = AdvanceNode(CenteredHorizontal(*node->NorthWest, *node->NorthEast), level - 1, maxAdvance);
-		const auto n02 = AdvanceNode(node->NorthEast, level - 1, maxAdvance);
-		const auto n10 = AdvanceNode(CenteredVertical(*node->NorthWest, *node->SouthWest), level - 1, maxAdvance);
-		const auto n11 = AdvanceNode(CenteredSubNode(*node), level - 1, maxAdvance);
-		const auto n12 = AdvanceNode(CenteredVertical(*node->NorthEast, *node->SouthEast), level - 1, maxAdvance);
-		const auto n20 = AdvanceNode(node->SouthWest, level - 1, maxAdvance);
-		const auto n21 = AdvanceNode(CenteredHorizontal(*node->SouthWest, *node->SouthEast), level - 1, maxAdvance);
-		const auto n22 = AdvanceNode(node->SouthEast, level - 1, maxAdvance);
+		const auto n00 = AdvanceNode(stopToken, node->NorthWest, level - 1, maxAdvance);
+		const auto n01 = AdvanceNode(stopToken, CenteredHorizontal(*node->NorthWest, *node->NorthEast), level - 1, maxAdvance);
+		const auto n02 = AdvanceNode(stopToken, node->NorthEast, level - 1, maxAdvance);
+		const auto n10 = AdvanceNode(stopToken, CenteredVertical(*node->NorthWest, *node->SouthWest), level - 1, maxAdvance);
+		const auto n11 = AdvanceNode(stopToken, CenteredSubNode(*node), level - 1, maxAdvance);
+		const auto n12 = AdvanceNode(stopToken, CenteredVertical(*node->NorthEast, *node->SouthEast), level - 1, maxAdvance);
+		const auto n20 = AdvanceNode(stopToken, node->SouthWest, level - 1, maxAdvance);
+		const auto n21 = AdvanceNode(stopToken, CenteredHorizontal(*node->SouthWest, *node->SouthEast), level - 1, maxAdvance);
+		const auto n22 = AdvanceNode(stopToken, node->SouthEast, level - 1, maxAdvance);
 
-		const auto tl = AdvanceNode(FindOrCreate(n00.Node, n01.Node, n10.Node, n11.Node), level - 1, maxAdvance);
-		const auto tr = AdvanceNode(FindOrCreate(n01.Node, n02.Node, n11.Node, n12.Node), level - 1, maxAdvance);
-		const auto bl = AdvanceNode(FindOrCreate(n10.Node, n11.Node, n20.Node, n21.Node), level - 1, maxAdvance);
-		const auto br = AdvanceNode(FindOrCreate(n11.Node, n12.Node, n21.Node, n22.Node), level - 1, maxAdvance);
+		const auto tl = AdvanceNode(stopToken, FindOrCreate(n00.Node, n01.Node, n10.Node, n11.Node), level - 1, maxAdvance);
+		const auto tr = AdvanceNode(stopToken, FindOrCreate(n01.Node, n02.Node, n11.Node, n12.Node), level - 1, maxAdvance);
+		const auto bl = AdvanceNode(stopToken, FindOrCreate(n10.Node, n11.Node, n20.Node, n21.Node), level - 1, maxAdvance);
+		const auto br = AdvanceNode(stopToken, FindOrCreate(n11.Node, n12.Node, n21.Node, n22.Node), level - 1, maxAdvance);
 
 		const auto* result = FindOrCreate(tl.Node, tr.Node, bl.Node, br.Node);
 		s_Cache.NodeMap[node] = result;
@@ -521,7 +523,7 @@ namespace gol
 		return FindOrCreate(expandedNW, expandedNE, expandedSW, expandedSE);
 	}
 
-	int64_t HashQuadtree::Advance([[maybe_unused]] const Rect& bounds, int64_t maxAdvance)
+	int64_t HashQuadtree::Advance([[maybe_unused]] const Rect& bounds, int64_t maxAdvance, std::stop_token stopToken)
 	{
 		if (m_Root == FalseNode)
 			return {};
@@ -544,7 +546,7 @@ namespace gol
 
 		if (depth >= 63)
 			return 0;
-		const auto advanced = AdvanceNode(root, depth, maxAdvance);
+		const auto advanced = AdvanceNode(stopToken, root, depth, maxAdvance);
 		const auto centerDelta = std::max(1LL, size / 4);
 		offset.X += centerDelta;
 		offset.Y += centerDelta;

@@ -16,7 +16,7 @@ namespace gol
 	GameGrid::GameGrid(int32_t width, int32_t height)
 		: m_Width(width), m_Height(height)
 		, m_Algorithm(LifeAlgorithm::HashLife)
-		, m_Data(LifeHashSet{})
+		, m_Data()
 	{ }
 
 	GameGrid::GameGrid(Size2 size)
@@ -90,13 +90,15 @@ namespace gol
 			return std::ref(m_Data);
 	}
 
-	void GameGrid::Update(int64_t numSteps)
+	void GameGrid::Update(int64_t numSteps, std::stop_token stopToken)
 	{
 		switch (m_Algorithm) {
 		case LifeAlgorithm::SparseLife:
 			for (auto i = 0; i < numSteps; i++)
 			{
-				m_Data = SparseLife(m_Data, {0, 0, m_Width, m_Height});
+				if (stopToken.stop_requested())
+					break;
+				m_Data = SparseLife(m_Data, {0, 0, m_Width, m_Height}, stopToken);
 				m_Generation++;
 			}
 			m_Population = m_Data.size();
@@ -104,7 +106,7 @@ namespace gol
 		case LifeAlgorithm::HashLife:
 			if (!m_HashLifeData)
 				m_HashLifeData = HashQuadtree{ m_Data, {0, 0} };
-			const auto generations = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps);
+			const auto generations = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps, stopToken);
 
 			if (std::numeric_limits<int64_t>::max() - generations < m_Generation)
 				m_Generation = std::numeric_limits<int64_t>::max();

@@ -238,7 +238,7 @@ namespace gol
 
 		uint64_t Population() const;
 
-        int64_t Advance(const Rect& bounds = {}, int64_t maxAdvance = 0);
+		int64_t Advance(const Rect& bounds = {}, int64_t maxAdvance = 0, std::stop_token stopToken = {});
 
 		int32_t CalculateDepth() const;
 		int64_t CalculateTreeSize() const;
@@ -253,7 +253,7 @@ namespace gol
 		const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
 		bool NeedsExpansion(const LifeNode* node, int32_t level) const;
 
-		NodeUpdateInfo AdvanceNode(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
+		NodeUpdateInfo AdvanceNode(std::stop_token stopToken, const LifeNode * node, int32_t level, int64_t maxAdvance) const;
 
 		const LifeNode* FindOrCreate(
             const LifeNode* nw, 
@@ -282,9 +282,9 @@ namespace gol
 
 		const LifeNode* AdvanceBase(const LifeNode* node) const;
 
-		NodeUpdateInfo AdvanceSlow(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
+		NodeUpdateInfo AdvanceSlow(std::stop_token stopToken, const LifeNode* node, int32_t level, int64_t maxAdvance) const;
 
-		NodeUpdateInfo AdvanceFast(const LifeNode* node, int32_t level, int64_t maxAdvance) const;
+		NodeUpdateInfo AdvanceFast(std::stop_token stopToken, const LifeNode* node, int32_t level, int64_t maxAdvance) const;
 	private:
 		static inline thread_local HashLifeCache s_Cache{};
 

@@ -22,9 +22,11 @@ namespace gol
 
 		GameGrid(const GameGrid& other, Size2 size);
 
+		void SetAlgorithm(LifeAlgorithm algorithm) { m_Algorithm = algorithm; }
+
 		void PrepareCopy();
 
-		void Update(int64_t numSteps = 1);
+		void Update(int64_t numSteps = 1, std::stop_token stopToken = {});
 
 		int32_t Width() const { return m_Width; }
 		int32_t Height() const { return m_Height; }

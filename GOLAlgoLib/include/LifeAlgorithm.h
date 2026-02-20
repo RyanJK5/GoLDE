@@ -11,9 +11,9 @@
 
 namespace gol
 {
-	LifeHashSet SparseLife(std::span<const Vec2> data, const Rect& bounds);
+	LifeHashSet SparseLife(std::span<const Vec2> data, const Rect& bounds, std::stop_token = {});
 
-	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps);
+	int64_t HashLife(HashQuadtree& data, const Rect& bounds, int64_t numSteps, std::stop_token stopToken = {});
 
 	enum class LifeAlgorithm {
 		SparseLife,
