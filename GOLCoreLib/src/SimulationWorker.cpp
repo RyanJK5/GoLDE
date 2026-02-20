@@ -52,7 +52,7 @@ namespace gol
 			m_Thread.join();
 		}
 
-		auto shared = m_Snapshot.load(std::memory_order_acquire);
+		auto shared = m_Snapshot.load(std::memory_order_relaxed);
 		auto ret = std::move(*shared);
 		m_Snapshot.store(nullptr, std::memory_order_release);
 		return ret;
@@ -60,12 +60,12 @@ namespace gol
 
 	void SimulationWorker::SetStepCount(int64_t stepCount)
 	{
-		m_StepCount = stepCount;
+		m_StepCount.store(stepCount, std::memory_order_relaxed);
 	}
 
 	void SimulationWorker::SetTickDelayMs(int64_t tickDelayMs)
 	{
-		m_TickDelayMs = tickDelayMs;
+		m_TickDelayMs.store(tickDelayMs, std::memory_order_relaxed);
 	}
 
 	std::shared_ptr<GameGrid> SimulationWorker::GetResult() const
