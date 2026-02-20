@@ -20,7 +20,7 @@
 #include "GameGrid.h"
 #include "GraphicsHandler.h"
 #include "Graphics2D.h"
-#include "Logging.h"
+#include "LoadingSpinner.h"
 #include "SimulationControlResult.h"
 #include "SimulationEditor.h"
 #include "VersionManager.h"
@@ -112,6 +112,7 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
             return SimulationUpdate(graphicsArgs);
         case Paint:
             return PaintUpdate(graphicsArgs);
+        case Stepping: [[fallthrough]];
         case Paused:
             return PauseUpdate(graphicsArgs);
         case Empty:
@@ -215,7 +216,7 @@ gol::SimulationState gol::SimulationEditor::PauseUpdate(const GraphicsHandlerArg
         m_Graphics.DrawSelection(m_SelectionManager.SelectionBounds(), args);
     if (m_SelectionManager.CanDrawGrid())
         m_Graphics.DrawGrid(m_SelectionManager.SelectionBounds().UpperLeft(), m_SelectionManager.GridData(), args);
-    return SimulationState::Paused;
+    return m_State;
 }
 
 gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bool grabFocus)
@@ -259,6 +260,17 @@ gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bo
     m_TakeKeyboardInput = ImGui::IsItemFocused() || windowFocused;
     m_TakeMouseInput = ImGui::IsItemHovered();
 
+    
+    if ((m_State == SimulationState::Simulation || m_State == SimulationState::Stepping) &&
+        m_Worker->GetTimeSinceLastUpdate() > std::chrono::seconds{5})
+    {
+        constexpr static auto radius = 30.f;
+        constexpr static auto thickness = 12.f;
+	    ImGui::SetCursorPosX(ImGui::GetContentRegionMax().x - radius * 2 - thickness);
+	    ImGui::SetCursorPosY(ImGui::GetContentRegionMax().y - radius * 2 - thickness);
+        LoadingSpinner("##LoadingSpinner", radius, thickness, ImGui::GetColorU32(ImGuiCol_Text));
+    }
+
     splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 1);
     ImGui::SetCursorPos(ImGui::GetWindowContentRegionMin());
 
@@ -270,11 +282,11 @@ gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bo
 
     if (m_SelectionManager.CanDrawSelection())
     {
-        Vec2 pos = m_SelectionManager.SelectionBounds().UpperLeft();
-        std::string text = std::format("({}, {})", pos.X, pos.Y);
+        const auto pos = m_SelectionManager.SelectionBounds().UpperLeft();
+        auto text = std::format("({}, {})", pos.X, pos.Y);
         if (m_SelectionManager.CanDrawLargeSelection())
         {
-            auto sentinel = m_SelectionManager.SelectionBounds().LowerRight();
+            const auto sentinel = m_SelectionManager.SelectionBounds().LowerRight();
             text += std::format(" X ({}, {})", sentinel.X, sentinel.Y);
         }
         ImGui::SetCursorPosY(ImGui::GetContentRegionMax().y - ImGui::CalcTextSize(text.c_str()).y);
@@ -384,7 +396,7 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             if (result.State == SimulationState::Paint)
                 m_InitialGrid = m_Grid;
             m_Worker->Start(m_Grid, true, [this] { m_StopStepCommand = true; });
-            return SimulationState::Paused;
+            return SimulationState::Stepping;
         default:
 			assert(false && "Invalid GameAction passed to UpdateState");
         }

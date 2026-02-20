@@ -15,12 +15,14 @@ namespace gol
 		std::shared_ptr<GameGrid> backBuffer{ bufferB };
 		std::shared_ptr<GameGrid> workerGrid{ bufferC };
 
-		m_Thread = std::jthread{ [this, workerGrid, backBuffer, oneStep, onStop]
-		(std::stop_token stopToken) mutable
+		m_Thread = std::jthread{ 
+		[this, workerGrid, backBuffer, oneStep, onStop] (std::stop_token stopToken) mutable
 		{
 			auto nextFrame = std::chrono::steady_clock::now();
 			while(true)
 			{
+				m_LastUpdate.store(std::chrono::steady_clock::now(), std::memory_order_release);
+
 				workerGrid->Update(m_StepCount.load(std::memory_order_relaxed), stopToken);
 
 				if (stopToken.stop_requested())
@@ -39,7 +41,7 @@ namespace gol
 
 			m_Snapshot.load(std::memory_order_acquire)->PrepareCopy();
 
-			if (oneStep)
+			if (oneStep && !stopToken.stop_requested())
 				onStop();
 		} };
 	}
@@ -71,5 +73,10 @@ namespace gol
 	std::shared_ptr<GameGrid> SimulationWorker::GetResult() const
 	{
 		return m_Snapshot.load(std::memory_order_acquire);
+	}
+
+	std::chrono::duration<float> SimulationWorker::GetTimeSinceLastUpdate() const
+	{
+		return std::chrono::steady_clock::now() - m_LastUpdate.load(std::memory_order_acquire);
 	}
 }

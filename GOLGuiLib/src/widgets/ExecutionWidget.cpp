@@ -39,7 +39,7 @@ bool gol::StartButton::Enabled(const EditorResult& state) const
 
 gol::Size2F     gol::ResetButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 3.f, ActionButton::DefaultButtonHeight }; }
 std::string     gol::ResetButton::Label(const EditorResult&) const { return ICON_FA_STOP; }
-bool            gol::ResetButton::Enabled(const EditorResult& state) const { return state.State == SimulationState::Simulation || state.State == SimulationState::Paused; }
+bool            gol::ResetButton::Enabled(const EditorResult& state) const { return state.State == SimulationState::Simulation || state.State == SimulationState::Paused || state.State == SimulationState::Stepping; }
 
 gol::Size2F     gol::RestartButton::Dimensions() const { return { ImGui::GetContentRegionAvail().x / 2.f, ActionButton::DefaultButtonHeight }; }
 std::string     gol::RestartButton::Label(const EditorResult&) const { return ICON_FA_REPEAT; }

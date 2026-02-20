@@ -13,7 +13,12 @@ namespace gol
 {
 	enum class SimulationState
 	{
-		None, Paint, Simulation, Paused, Empty
+		None,
+		Paint, 
+		Simulation, 
+		Paused, 
+		Stepping,
+		Empty
 	};
 
 	enum class GameAction

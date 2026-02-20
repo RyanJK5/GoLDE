@@ -21,9 +21,12 @@ namespace gol
 		void SetTickDelayMs(int64_t tickDelayMs);
 
 		std::shared_ptr<GameGrid> GetResult() const;
+		std::chrono::duration<float> GetTimeSinceLastUpdate() const;
 	private:
 		std::atomic<int64_t> m_StepCount = 1;
 		std::atomic<int64_t> m_TickDelayMs = 0;
+
+		std::atomic<std::chrono::steady_clock::time_point> m_LastUpdate;
 
 		std::atomic<std::shared_ptr<GameGrid>> m_Snapshot;
 		

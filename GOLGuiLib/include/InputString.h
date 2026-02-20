@@ -20,7 +20,6 @@ namespace gol
 			: Length(length)
 			, Data(new char[length + 1])
 		{
-			std::println("{}", length);
 			std::memcpy(Data, str, N);
 			for (auto i = N; i <= length; i++)
 				Data[i] = '\0';
