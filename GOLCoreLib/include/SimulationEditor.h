@@ -91,6 +91,7 @@ namespace gol
 		ErrorWindow m_FileErrorWindow;
 		WarnWindow m_PasteWarning;
 		
+		bool m_StopStepCommand = false;
 		bool m_TakeKeyboardInput = false;
 		bool m_TakeMouseInput = false;
 

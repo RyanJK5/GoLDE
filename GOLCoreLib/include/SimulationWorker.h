@@ -14,7 +14,7 @@ namespace gol
 	class SimulationWorker
 	{
 	public:
-		void Start(GameGrid& initialGrid);
+		void Start(GameGrid& initialGrid, bool oneStep = false, const std::function<void()>& onStop = {});
 		GameGrid Stop();
 
 		void SetStepCount(int64_t stepCount);

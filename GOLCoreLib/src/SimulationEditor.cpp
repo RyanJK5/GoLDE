@@ -88,6 +88,14 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
             m_VersionManager.PushChange(*result);
 	}
 
+    if (m_StopStepCommand)
+    {
+        m_StopStepCommand = false;
+        m_State = SimulationState::Simulation;
+        StopSimulation(true);
+        m_State = SimulationState::Paused;
+    }
+
     if (controlArgs.TickDelayMs)
         m_Worker->SetTickDelayMs(*controlArgs.TickDelayMs);
     m_Worker->SetStepCount(controlArgs.StepCount);
@@ -372,12 +380,11 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             m_SelectionManager.Deselect(m_Grid);
             return StartSimulation();
         case Step:
-            StopSimulation(true);
             m_SelectionManager.Deselect(m_Grid);
             if (result.State == SimulationState::Paint)
                 m_InitialGrid = m_Grid;
-            m_Grid.Update(result.StepCount);
-            return m_Grid.Dead() ? SimulationState::Empty : SimulationState::Paused;
+            m_Worker->Start(m_Grid, true, [this] { m_StopStepCommand = true; });
+            return SimulationState::Paused;
         default:
 			assert(false && "Invalid GameAction passed to UpdateState");
         }

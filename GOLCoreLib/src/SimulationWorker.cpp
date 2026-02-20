@@ -4,7 +4,7 @@
 
 namespace gol
 {
-	void SimulationWorker::Start(GameGrid& initialGrid)
+	void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep, const std::function<void()>& onStop)
 	{
 		initialGrid.PrepareCopy();
 		auto bufferA = std::make_shared<GameGrid>(initialGrid);
@@ -15,23 +15,32 @@ namespace gol
 		std::shared_ptr<GameGrid> backBuffer{ bufferB };
 		std::shared_ptr<GameGrid> workerGrid{ bufferC };
 
-		m_Thread = std::jthread{ [this, workerGrid, backBuffer](std::stop_token stopToken) mutable
+		m_Thread = std::jthread{ [this, workerGrid, backBuffer, oneStep, onStop]
+		(std::stop_token stopToken) mutable
 		{
 			auto nextFrame = std::chrono::steady_clock::now();
-			while (true)
+			while(true)
 			{
 				workerGrid->Update(m_StepCount.load(std::memory_order_relaxed), stopToken);
+
 				if (stopToken.stop_requested())
 					break;
-				
+
 				std::swap(workerGrid, backBuffer);
 
 				workerGrid = m_Snapshot.exchange(backBuffer, std::memory_order_acq_rel);
 
+				if (oneStep)
+					break;
+
 				nextFrame += std::chrono::milliseconds{ m_TickDelayMs.load(std::memory_order_relaxed) };
 				std::this_thread::sleep_until(nextFrame);
 			}
+
 			m_Snapshot.load(std::memory_order_acquire)->PrepareCopy();
+
+			if (oneStep)
+				onStop();
 		} };
 	}
 
