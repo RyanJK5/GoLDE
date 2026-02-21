@@ -157,7 +157,7 @@ void gol::GraphicsHandler::DrawGrid(Vec2 offset, std::ranges::input_range auto&&
 	m_GridShader.AttachUniformMatrix4("u_MVP", matrix);
 	m_GridShader.AttachUniformVec4("u_Color", { 1.f, 1.f, 1.f, 1.f });
 
-	auto positions = GenerateGLBuffer(offset, grid, args);
+	const auto positions = GenerateGLBuffer(offset, grid, args);
 
 	GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
 	

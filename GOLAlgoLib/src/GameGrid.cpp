@@ -87,24 +87,32 @@ namespace gol
 		if (Bounded())
 			return { 0, 0, m_Width, m_Height };
 
-		auto least = Vec2 { std::numeric_limits<int32_t>::max(), std::numeric_limits<int32_t>::max() };
-		auto most = Vec2  { std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::min() };
-		for (const auto value : m_Data)
+		const auto findBox = [](std::ranges::input_range auto&& data) 
 		{
-			least.X = std::min(least.X, value.X);
-			least.Y = std::min(least.Y, value.Y);
+			auto least = Vec2{ std::numeric_limits<int32_t>::max(), std::numeric_limits<int32_t>::max() };
+			auto most = Vec2{ std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::min() };
+			for (const auto value : data)
+			{
+				least.X = std::min(least.X, value.X);
+				least.Y = std::min(least.Y, value.Y);
 
-			most.X = std::max(most.X, value.X);
-			most.Y = std::max(most.Y, value.Y);
-		}
+				most.X = std::max(most.X, value.X);
+				most.Y = std::max(most.Y, value.Y);
+			}
 
-		return Rect 
-		{ 
-			least.X, 
-			least.Y, 
-			most.X - least.X + 1, 
-			most.Y - least.Y + 1 
+			return Rect
+			{
+				least.X,
+				least.Y,
+				most.X - least.X + 1,
+				most.Y - least.Y + 1
+			};
 		};
+
+		if (m_CacheInvalidated && m_HashLifeData)
+			return findBox(*m_HashLifeData);
+		else
+			return findBox(m_Data);
 	}
 
 	const std::set<Vec2>& GameGrid::SortedData() const
@@ -233,7 +241,7 @@ namespace gol
 			GameGrid result{ region.Width, region.Height };
 			return fillGrid.operator()<false>(result, std::ranges::subrange(
 				m_HashLifeData->begin(region), m_HashLifeData->end())
-			);;
+			);
 		}
 		auto result = GameGrid { region.Width, region.Height };
 		return fillGrid.operator()<true>(result, m_Data);
