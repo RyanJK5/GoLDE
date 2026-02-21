@@ -274,7 +274,7 @@ gol::SimulationEditor::DisplayResult gol::SimulationEditor::DisplaySimulation(bo
     splitter.SetCurrentChannel(ImGui::GetWindowDrawList(), 1);
     ImGui::SetCursorPos(ImGui::GetWindowContentRegionMin());
 
-	const auto snapshot = m_Worker->GetResult();
+	const auto snapshot = m_Worker->GetResult();//
     const auto generation = snapshot ? snapshot->Generation() : m_Grid.Generation();
     const auto population = snapshot ? snapshot->Population() : m_Grid.Population();
     ImGui::Text("%s", std::format(std::locale(""), "Generation: {:L}", generation).c_str());
@@ -409,6 +409,15 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
         using enum EditorAction;
         case Resize:
             return ResizeGrid(result);
+        case GenerateNoise:
+        {
+			if (!m_SelectionManager.CanDrawGrid())
+                return result.State;
+			const auto selectionBounds = m_SelectionManager.SelectionBounds();
+            m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
+            m_VersionManager.TryPushChange(m_SelectionManager.InsertNoise(selectionBounds, *result.NoiseDensity));
+            return result.State;
+        }
         case Undo:
             UpdateVersion(result);
             return result.State;

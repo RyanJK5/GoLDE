@@ -132,6 +132,7 @@ namespace gol
 	using Size2 = GenericSize<int32_t>;
 
 	using Rect = GenericRect<int32_t>;
+	using RectL = GenericRect<int64_t>;
 	using RectDouble = GenericRect<double>;
 
 }

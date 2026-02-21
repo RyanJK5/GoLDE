@@ -16,8 +16,11 @@ gol::SimulationControlResult gol::DelayWidget::UpdateImpl(const EditorResult&)
 	ImGui::SetItemTooltip("Ctrl + Click to input value");
 	ImGui::PopStyleVar();
 	
-
+	ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
 	ImGui::Checkbox("Show Grid Lines", &m_GridLines);
+	
+	ImGui::Separator();
+	ImGui::PopStyleVar();
 
 	m_TickDelayMs = std::max(m_TickDelayMs, 0);
 	return { .TickDelayMs = m_TickDelayMs, .GridLines = m_GridLines };

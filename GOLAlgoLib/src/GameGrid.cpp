@@ -3,6 +3,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <random>
 #include <set>
 #include <utility>
 #include <vector>
@@ -13,6 +14,44 @@
 
 namespace gol
 {
+	GameGrid GameGrid::GenerateNoise(Rect bounds, float density)
+	{
+		static std::random_device random{};
+		static std::mt19937 generator{ random() };
+
+		if (density == 1.f)
+		{
+			GameGrid ret{bounds.Width, bounds.Height};
+			for (auto x = 0; x < bounds.Width; x++)
+				for (auto y = 0; y < bounds.Height; y++)
+					ret.m_Data.insert({ x, y });
+			ret.m_Population = ret.m_Data.size();
+			return ret;
+		}
+
+		// 1. Determine the number of points to generate
+		const auto area = bounds.Width * bounds.Height;
+		const auto mean = density * area;
+		std::poisson_distribution<int> countDist{ mean };
+		const auto finalCount = countDist(generator); // The random "actual" count
+
+		// 2. Prepare distributions for coordinates
+		std::uniform_int_distribution<int32_t> distX{ 0, bounds.Width - 1 };
+		std::uniform_int_distribution<int32_t> distY{ 0, bounds.Height - 1 };
+
+		// 3. Fill the container
+		GameGrid ret{bounds.Width, bounds.Height};
+		ret.m_Data.reserve(finalCount);
+		
+		std::ranges::generate_n(std::inserter(ret.m_Data, ret.m_Data.end()), finalCount, [&]()
+		{
+			return Vec2{ distX(generator), distY(generator) };
+		});
+
+		ret.m_Population = ret.m_Data.size();
+		return ret;
+	}
+
 	GameGrid::GameGrid(int32_t width, int32_t height)
 		: m_Width(width), m_Height(height)
 		, m_Algorithm(LifeAlgorithm::HashLife)
@@ -105,7 +144,11 @@ namespace gol
 			break;
 		case LifeAlgorithm::HashLife:
 			if (!m_HashLifeData)
+			{
 				m_HashLifeData = HashQuadtree{ m_Data, {0, 0} };
+				m_Data.clear();
+				m_SortedData.clear();
+			}
 			const auto generations = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps, stopToken);
 
 			if (std::numeric_limits<int64_t>::max() - generations < m_Generation)

@@ -8,6 +8,7 @@ shortcuts:
     step: [Ctrl+Right, Ctrl+.]
 
     resize: []
+    generate_noise: []
     undo: [Ctrl+Z]
     redo: [Ctrl+Y, Ctrl+Shift+Z]
     save: [Ctrl+Shift+S]

@@ -36,13 +36,14 @@ namespace gol
 	enum class EditorAction
 	{
 		Resize,
+		GenerateNoise,
 		Undo,
 		Redo,
 		Save,
 		NewFile,
 		UpdateFile,
 		Load,
-		Close
+		Close,
 	};
 
 	enum class SelectionAction 
@@ -75,17 +76,18 @@ namespace gol
 			{ "restart",     GameAction::Restart    },
 			{ "reset",       GameAction::Reset      },
 			{ "clear",       GameAction::Clear      },
-			{ "step",        GameAction::Step       },
+			{ "step",        GameAction::Step       }
 		};
 		inline const std::unordered_map<std::string_view, EditorAction> EditorActionDefinitions = {
-			{ "resize",      EditorAction::Resize     },
-			{ "undo",        EditorAction::Undo       },
-			{ "redo",        EditorAction::Redo       },
-			{ "save",        EditorAction::Save       },
-			{ "new",         EditorAction::NewFile    },
-			{ "update",      EditorAction::UpdateFile },
-			{ "load",        EditorAction::Load       },
-			{ "close",       EditorAction::Close      },
+			{ "resize",          EditorAction::Resize        },
+			{ "undo",            EditorAction::Undo          },
+			{ "redo",            EditorAction::Redo          },
+			{ "save",            EditorAction::Save          },
+			{ "new",             EditorAction::NewFile       },
+			{ "update",          EditorAction::UpdateFile    },
+			{ "load",            EditorAction::Load          },
+			{ "close",           EditorAction::Close         },
+			{ "generate_noise",  EditorAction::GenerateNoise }
 		};
 		inline const std::unordered_map<std::string_view, SelectionAction> SelectionActionDefinitions = {
 			{ "rotate",           SelectionAction::Rotate            },

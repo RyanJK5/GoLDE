@@ -62,6 +62,7 @@ gol::SimulationControl::SimulationControl(const StyleLoader::StyleInfo<ImVec4>& 
     , m_ResizeWidget(fileInfo.Shortcuts.at(EditorAction::Resize))
     , m_StepWidget(fileInfo.Shortcuts.at(GameAction::Step))
     , m_DelayWidget()
+	, m_NoiseWidget(fileInfo.Shortcuts.at(EditorAction::GenerateNoise))
 { }
 
 void gol::SimulationControl::FillResults(SimulationControlResult& current, const SimulationControlResult& update) const
@@ -82,6 +83,8 @@ void gol::SimulationControl::FillResults(SimulationControlResult& current, const
         current.GridLines = update.GridLines;
     if (!current.FromShortcut)
 		current.FromShortcut = update.FromShortcut;
+    if (!current.NoiseDensity)
+        current.NoiseDensity = update.NoiseDensity;
 }
 
 gol::SimulationControlResult gol::SimulationControl::Update(const EditorResult& state)
@@ -96,6 +99,7 @@ gol::SimulationControlResult gol::SimulationControl::Update(const EditorResult& 
     FillResults(result, m_StepWidget.Update(state));
     FillResults(result, m_ResizeWidget.Update(state));
     FillResults(result, m_DelayWidget.Update(state));
+    FillResults(result, m_NoiseWidget.Update(state));
     FillResults(result, m_ButtonlessShortcuts.Update(state));
 
     ImGui::End();

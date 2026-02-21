@@ -17,6 +17,8 @@ namespace gol
 	class GameGrid
 	{
 	public:
+		static GameGrid GenerateNoise(Rect bounds, float density);
+
 		GameGrid(int32_t width = 0, int32_t height = 0);
 		GameGrid(Size2 size);
 

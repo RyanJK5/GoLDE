@@ -119,6 +119,12 @@ gol::SimulationControlResult gol::StepWidget::UpdateImpl(const EditorResult& sta
     auto result = m_Button.Update(state);
 
 	ImGui::Checkbox("Enable Hyper Speed", &m_HyperSpeed);
+    ImGui::SetItemTooltip(
+        "Hyper Speed enables the HashLife algorithm to progress as fast as possible. However, this means\n"
+        "it may skip several generations at a time, and step count will be ignored. Expect the simulation\n"
+		"to run slowly for the first few jumps, but speed up significantly afterwards. Performance may be\n"
+        "suboptimal for chaotic patterns."
+    );
 
     ImGui::Separator();
     ImGui::PopStyleVar();

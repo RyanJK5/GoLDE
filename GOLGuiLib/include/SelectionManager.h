@@ -44,6 +44,8 @@ namespace gol
 
 		std::optional<VersionChange> Nudge(Vec2 translation);
 
+		std::optional<VersionChange> InsertNoise(Rect selectionBounds, float density);
+
 		std::expected<VersionChange, std::string> Load(const std::filesystem::path& filePath);
 		
 		bool Save(const GameGrid& grid, const std::filesystem::path& filePath) const;

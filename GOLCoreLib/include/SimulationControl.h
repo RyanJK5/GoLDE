@@ -16,6 +16,7 @@
 #include "ResizeWidget.h"
 #include "SimulationControlResult.h"
 #include "StepWidget.h"
+#include "NoiseWidget.h"
 
 namespace gol
 {
@@ -54,6 +55,7 @@ namespace gol
 		ResizeWidget m_ResizeWidget;
 		StepWidget m_StepWidget;
 		DelayWidget m_DelayWidget;
+		NoiseWidget m_NoiseWidget;
 	};
 }
 

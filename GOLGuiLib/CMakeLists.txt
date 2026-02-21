@@ -3,7 +3,7 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 
 message(STATUS "GOLGuiLib sources found: ${SOURCES}")
 
-add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS} "include/InputString.h" "src/InputString.cpp" "include/misc/LoadingSpinner.h" "src/misc/LoadingSpinner.cpp")
+add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS} "include/InputString.h" "src/InputString.cpp" "include/misc/LoadingSpinner.h" "src/misc/LoadingSpinner.cpp" "include/widgets/NoiseWidget.h" "src/widgets/NoiseWidget.cpp")
 
 target_include_directories(GOLGuiLib
     PUBLIC

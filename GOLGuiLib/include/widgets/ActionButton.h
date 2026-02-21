@@ -28,7 +28,7 @@ namespace gol
 	class MultiActionButton
 	{
 	public:
-		static constexpr int32_t DefaultButtonHeight = 50;
+		constexpr static int32_t DefaultButtonHeight = 50;
 
 		MultiActionButton(const std::unordered_map<ActType, std::vector<KeyShortcut>>& shortcuts)
 			: m_Shortcuts(shortcuts)
