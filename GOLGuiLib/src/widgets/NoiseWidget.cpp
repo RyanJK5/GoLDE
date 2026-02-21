@@ -20,6 +20,10 @@ namespace gol
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
         ImGui::InputFloat("##label", &m_Density, 0.001f, 1.f);
+		ImGui::SetItemTooltip(
+            "Fill the selection area with randomly generated live cells. The\n"
+            "density determines the probability of each cell being alive.");
+
 		m_Density = std::clamp(m_Density, 0.f, 1.f);
         
         ImGui::PopItemWidth();

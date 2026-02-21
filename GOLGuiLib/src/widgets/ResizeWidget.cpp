@@ -19,6 +19,7 @@ gol::SimulationControlResult gol::ResizeWidget::UpdateImpl(const EditorResult& s
 
     int32_t wrapper[2] = { m_Dimensions.Width, m_Dimensions.Height };
     ImGui::InputInt2("##label", wrapper);
+    ImGui::SetItemTooltip("If either width or height is set to zero, the universe will be unbounded.");
     m_Dimensions = { std::clamp(wrapper[0], 0, 1000000), std::clamp(wrapper[1], 0, 1000000) };
 
     ImGui::PopStyleVar();
