@@ -20,11 +20,15 @@ namespace gol
 		void SetStepCount(int64_t stepCount);
 		void SetTickDelayMs(int64_t tickDelayMs);
 
+		void SetAlgorithm(LifeAlgorithm algorithm);
+
 		std::shared_ptr<GameGrid> GetResult() const;
 		std::chrono::duration<float> GetTimeSinceLastUpdate() const;
 	private:
 		std::atomic<int64_t> m_StepCount = 1;
 		std::atomic<int64_t> m_TickDelayMs = 0;
+
+		std::atomic<std::optional<LifeAlgorithm>> m_PendingAlgorithm;
 
 		std::atomic<std::chrono::steady_clock::time_point> m_LastUpdate;
 

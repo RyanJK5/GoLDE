@@ -24,6 +24,8 @@ namespace gol
 
 		GameGrid(const GameGrid& other, Size2 size);
 
+		LifeAlgorithm GetAlgorithm() const { return m_Algorithm; }
+
 		void SetAlgorithm(LifeAlgorithm algorithm) { m_Algorithm = algorithm; }
 
 		void PrepareCopy();

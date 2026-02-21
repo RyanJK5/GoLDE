@@ -67,6 +67,8 @@ gol::SimulationControl::SimulationControl(const StyleLoader::StyleInfo<ImVec4>& 
 
 void gol::SimulationControl::FillResults(SimulationControlResult& current, const SimulationControlResult& update) const
 {
+    if (!current.Algorithm)
+	    current.Algorithm = update.Algorithm;
     if (!current.Action)
         current.Action = update.Action;
     if (!current.NewDimensions)

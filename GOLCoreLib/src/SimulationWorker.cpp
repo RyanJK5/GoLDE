@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <chrono>
+#include <print>
 
 namespace gol
 {
@@ -25,7 +26,15 @@ namespace gol
 			auto nextFrame = std::chrono::steady_clock::now();
 			while(true)
 			{
-				m_LastUpdate.store(std::chrono::steady_clock::now(), std::memory_order_release);
+				m_LastUpdate.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
+
+				const auto pendingAlgo = m_PendingAlgorithm.exchange(std::nullopt, std::memory_order_acq_rel);
+				if (pendingAlgo)
+				{
+					backBuffer->SetAlgorithm(*pendingAlgo);
+					workerGrid->SetAlgorithm(*pendingAlgo);
+					m_Snapshot.load(std::memory_order_acquire)->SetAlgorithm(*pendingAlgo);
+				}
 
 				workerGrid->Update(m_StepCount.load(std::memory_order_relaxed), stopToken);
 
@@ -82,6 +91,12 @@ namespace gol
 		m_TickDelayMs.store(tickDelayMs, std::memory_order_relaxed);
 	}
 
+	void SimulationWorker::SetAlgorithm(LifeAlgorithm algorithm)
+	{
+		std::println("{}", std::to_underlying(algorithm));
+		m_PendingAlgorithm.store(algorithm, std::memory_order_release);
+	}
+
 	std::shared_ptr<GameGrid> SimulationWorker::GetResult() const
 	{
 		return m_Snapshot.load(std::memory_order_acquire);
@@ -89,6 +104,6 @@ namespace gol
 
 	std::chrono::duration<float> SimulationWorker::GetTimeSinceLastUpdate() const
 	{
-		return std::chrono::steady_clock::now() - m_LastUpdate.load(std::memory_order_acquire);
+		return std::chrono::steady_clock::now() - m_LastUpdate.load(std::memory_order_relaxed);
 	}
 }

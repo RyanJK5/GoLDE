@@ -7,6 +7,7 @@
 
 #include "Graphics2D.h"
 #include "GameEnums.h"
+#include "LifeAlgorithm.h"
 	
 namespace gol
 {
@@ -16,6 +17,7 @@ namespace gol
 		std::optional<ActionVariant> Action;
 		
 		int64_t StepCount;
+		std::optional<LifeAlgorithm> Algorithm;
 
 		std::optional<Size2> NewDimensions;
 

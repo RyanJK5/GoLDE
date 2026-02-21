@@ -3,6 +3,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <print>
 #include <random>
 #include <set>
 #include <utility>
@@ -141,6 +142,12 @@ namespace gol
 	{
 		switch (m_Algorithm) {
 		case LifeAlgorithm::SparseLife:
+			if (m_HashLifeData)
+			{
+				m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
+				m_HashLifeData.reset();
+			}
+
 			for (auto i = 0; i < numSteps; i++)
 			{
 				if (stopToken.stop_requested())
@@ -159,11 +166,15 @@ namespace gol
 			}
 			const auto generations = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps, stopToken);
 
+			if (generations == 0 && numSteps == 0)
+				HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, std::numeric_limits<int64_t>::max() - m_Generation, stopToken);
+
 			if (std::numeric_limits<int64_t>::max() - generations < m_Generation)
 				m_Generation = std::numeric_limits<int64_t>::max();
 			else
 				m_Generation += generations;
 			m_Population = m_HashLifeData->Population();
+			std::println("{}", m_Population);
 			break;
 		}
 
@@ -232,7 +243,7 @@ namespace gol
 				}
 				grid.m_Population++;
 				grid.m_Data.insert(pos - region.Pos());
-			}
+			}//
 			return grid;
 		};
 

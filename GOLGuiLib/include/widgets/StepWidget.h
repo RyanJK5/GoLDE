@@ -42,9 +42,14 @@ namespace gol
         friend Widget;
     private:
 		SimulationControlResult UpdateImpl(const EditorResult& state);
+
+        void SetStepCount(int64_t stepCount);
+
+        void ShowInputText();
 	private:
         InputString m_InputText;
 
+        LifeAlgorithm m_Algorithm = LifeAlgorithm::HashLife;
         int64_t m_StepCount = 1;
 		bool m_HyperSpeed = false;
 

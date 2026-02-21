@@ -98,7 +98,10 @@ gol::EditorResult gol::SimulationEditor::Update(std::optional<bool> activeOverri
 
     if (controlArgs.TickDelayMs)
         m_Worker->SetTickDelayMs(*controlArgs.TickDelayMs);
+    
     m_Worker->SetStepCount(controlArgs.StepCount);
+    if (controlArgs.Algorithm)
+        m_Worker->SetAlgorithm(*controlArgs.Algorithm);
 
     if (controlArgs.Action && ((activeOverride && *activeOverride) || displayResult.Selected))
         m_State = UpdateState(controlArgs);

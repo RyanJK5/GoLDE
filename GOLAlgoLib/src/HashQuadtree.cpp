@@ -321,7 +321,7 @@ namespace gol
 		if (node == FalseNode || level < 2)
 			return { node, 0 };
 
-		if (maxAdvance > 0)
+		if (maxAdvance > 0 || CalculateDepth() >= 63)
 		{
 			const auto span = Pow2(level);
 			if ((span / 4) > maxAdvance)
@@ -544,8 +544,6 @@ namespace gol
 			size = Pow2(depth);
 		}
 
-		if (depth >= 63)
-			return 0;
 		const auto advanced = AdvanceNode(stopToken, root, depth, maxAdvance);
 		const auto centerDelta = std::max(1LL, size / 4);
 		offset.X += centerDelta;
