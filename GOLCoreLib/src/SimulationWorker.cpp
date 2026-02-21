@@ -1,5 +1,6 @@
 #include "SimulationWorker.h"
 
+#include <condition_variable>
 #include <chrono>
 
 namespace gol
@@ -16,8 +17,11 @@ namespace gol
 		std::shared_ptr<GameGrid> workerGrid{ bufferC };
 
 		m_Thread = std::jthread{ 
-		[this, workerGrid, backBuffer, oneStep, onStop] (std::stop_token stopToken) mutable
+		[this, workerGrid, backBuffer, oneStep, onStop](std::stop_token stopToken) mutable
 		{
+			std::condition_variable_any sleepCondition{};
+			std::mutex sleepMutex{};
+
 			auto nextFrame = std::chrono::steady_clock::now();
 			while(true)
 			{
@@ -29,14 +33,22 @@ namespace gol
 					break;
 
 				std::swap(workerGrid, backBuffer);
-
 				workerGrid = m_Snapshot.exchange(backBuffer, std::memory_order_acq_rel);
 
 				if (oneStep)
 					break;
 
-				nextFrame += std::chrono::milliseconds{ m_TickDelayMs.load(std::memory_order_relaxed) };
-				std::this_thread::sleep_until(nextFrame);
+				const auto tickDelayMs = m_TickDelayMs.load(std::memory_order_relaxed);
+				if (tickDelayMs > 0)
+				{
+					nextFrame += std::chrono::milliseconds{ tickDelayMs };
+					
+					std::unique_lock lock{ sleepMutex };
+					bool stopRequested = sleepCondition.wait_until(lock, stopToken, nextFrame, [] { return false; });
+
+					if (stopRequested)
+						break;
+				}
 			}
 
 			m_Snapshot.load(std::memory_order_acquire)->PrepareCopy();
