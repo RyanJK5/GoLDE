@@ -30,6 +30,8 @@ namespace gol
 
 		std::optional<VersionChange> Deselect(GameGrid& grid);
 
+		std::optional<VersionChange> SelectAll(GameGrid& grid);
+
 		std::optional<VersionChange> Copy(GameGrid& grid);
 
 		std::optional<VersionChange> Cut();

@@ -119,6 +119,25 @@ namespace gol
         return retValue;
     }
 
+    std::optional<VersionChange> SelectionManager::SelectAll(GameGrid& grid)
+    {
+        const auto bounds = grid.BoundingBox();
+        m_AnchorSelection = bounds.UpperLeft();
+        m_SentinelSelection = bounds.LowerRight() - Vec2{ 1, 1 };
+        
+        auto regionDestroyed = grid.SubRegion(SelectionBounds());
+        m_Selected = regionDestroyed;
+        grid.ClearRegion(SelectionBounds());
+        
+        return VersionChange
+        {
+            .Action = SelectionAction::Select,
+            .SelectionBounds = SelectionBounds(),
+            .CellsInserted = m_Selected->Data(),
+            .CellsDeleted = std::move(regionDestroyed).Data()
+        };
+	}
+
     std::optional<VersionChange> SelectionManager::Copy(GameGrid& grid)
     {
         if(!m_Selected)
@@ -304,6 +323,7 @@ namespace gol
         case Cut:              return this->Cut();
         case Delete:           return this->Delete();
         case Deselect:         return this->Deselect(grid);
+		case SelectAll:        return this->SelectAll(grid);
         case NudgeLeft:        return Nudge({ -nudgeSize, 0 });
         case NudgeRight:       return Nudge({ nudgeSize, 0 });
         case NudgeUp:          return Nudge({ 0, -nudgeSize });

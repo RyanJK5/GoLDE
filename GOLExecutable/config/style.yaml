@@ -9,6 +9,7 @@ shortcuts:
 
     resize: []
     generate_noise: []
+
     undo: [Ctrl+Z]
     redo: [Ctrl+Y, Ctrl+Shift+Z]
     save: [Ctrl+Shift+S]
@@ -18,6 +19,7 @@ shortcuts:
     close: [Ctrl+W]
 
     deselect: [Esc]
+    select_all: [Ctrl+A]
     delete: [Backspace, Delete]
     copy: [Ctrl+C]
     cut: [Ctrl+X]

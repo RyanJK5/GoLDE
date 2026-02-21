@@ -55,6 +55,7 @@ namespace gol
 		Copy,
 		Cut,
 		Paste,
+		SelectAll,
 
 		NudgeLeft,
 		NudgeRight,
@@ -101,7 +102,8 @@ namespace gol
 			{ "nudge_up",         SelectionAction::NudgeUp           },
 			{ "nudge_down",       SelectionAction::NudgeDown         },
 			{ "flip_horizontal",  SelectionAction::FlipHorizontally  },
-			{ "flip_vertical",    SelectionAction::FlipVertically    }
+			{ "flip_vertical",    SelectionAction::FlipVertically    },
+			{ "select_all",       SelectionAction::SelectAll         }
 		};
 
 		std::string ToString(ActionVariant action);

@@ -95,7 +95,17 @@ namespace gol
         virtual bool Enabled(const EditorResult& state) const final;
     };
 
-    class UndoButton : public ActionButton<EditorAction, true>
+    class SelectAllButton : public ActionButton<SelectionAction, true>
+    {
+    public:
+        SelectAllButton(std::span<const ImGuiKeyChord> shortcuts = {});
+    protected:
+        virtual Size2F Dimensions() const final;
+        virtual std::string Label(const EditorResult&) const override final;
+        virtual bool Enabled(const EditorResult& state) const final;
+    };
+
+    class UndoButton : public ActionButton<EditorAction, false>
     {
     public:
         UndoButton(std::span<const ImGuiKeyChord> shortcuts = {});
@@ -132,6 +142,7 @@ namespace gol
         RotateButton m_RotateButton;
         FlipHorizontalButton m_FlipHorizontalButton;
         FlipVerticalButton m_FlipVerticalButton;
+		SelectAllButton m_SelectAllButton;
         UndoButton m_UndoButton;
         RedoButton m_RedoButton;
     };

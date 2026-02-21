@@ -462,6 +462,9 @@ gol::SimulationState gol::SimulationEditor::UpdateState(const SimulationControlR
             PasteSelection();
             return result.State;
         }
+        if (*action == SelectionAction::SelectAll)
+            m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
+
         m_VersionManager.TryPushChange(m_SelectionManager.HandleAction(*action, m_Grid, result.NudgeSize));
     }
 
