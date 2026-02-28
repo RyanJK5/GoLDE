@@ -244,7 +244,7 @@ namespace gol
 		int32_t CalculateDepth() const;
 		int64_t CalculateTreeSize() const;
 
-		void PrepareCopy();
+		void PrepareCopyBetweenThreads();
 
 		bool operator==(const HashQuadtree& other) const;
 		bool operator!=(const HashQuadtree& other) const;

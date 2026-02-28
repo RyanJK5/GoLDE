@@ -31,7 +31,7 @@ namespace gol
                     for (auto j = 0; j < (genCount / i); j++)
                         myData.Update(i);
 
-                    myData.PrepareCopyAcrossThread();
+                    myData.PrepareCopyBetweenThreads();
                     endCounter.count_down();
                     return myData;
                 }));
@@ -61,7 +61,7 @@ namespace gol
             counter.wait();
 
             myData.Update(200);
-            myData.PrepareCopyAcrossThread();
+            myData.PrepareCopyBetweenThreads();
             return myData;
         });
         auto result2 = std::async(std::launch::async, [&counter, myData = decodeResult->Grid] mutable
@@ -71,7 +71,7 @@ namespace gol
 
             myData.Update(100);
             myData.Update(100);
-            myData.PrepareCopyAcrossThread();
+            myData.PrepareCopyBetweenThreads();
             return myData;
         });
 

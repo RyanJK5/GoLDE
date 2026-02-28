@@ -8,7 +8,7 @@ namespace gol
 {
 	void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep, const std::function<void()>& onStop)
 	{
-		initialGrid.PrepareCopyAcrossThread();
+		initialGrid.PrepareCopyBetweenThreads();
 		auto bufferA = std::make_shared<GameGrid>(initialGrid);
 		auto bufferB = std::make_shared<GameGrid>(initialGrid);
 		auto bufferC = std::make_shared<GameGrid>(initialGrid);
@@ -52,7 +52,7 @@ namespace gol
 				}
 			}
 
-			m_Snapshot.load(std::memory_order_acquire)->PrepareCopyAcrossThread();
+			m_Snapshot.load(std::memory_order_acquire)->PrepareCopyBetweenThreads();
 			if (oneStep && !stopToken.stop_requested())
 				onStop();
 		} };

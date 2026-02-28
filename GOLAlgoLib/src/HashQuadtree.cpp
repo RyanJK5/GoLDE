@@ -137,7 +137,6 @@ namespace gol
 		
 		if (other.m_TransferCache)
 		{
-			//
 			TransferMap transferMap{};
 			m_Root = BuildCache(transferMap, s_Cache, &other.m_TransferCache->NodeStorage.back());
 			other.m_TransferCache = nullptr;
@@ -146,7 +145,7 @@ namespace gol
 			m_Root = other.m_Root;
 	}
 
-	void HashQuadtree::PrepareCopy()
+	void HashQuadtree::PrepareCopyBetweenThreads()
 	{
 		TransferMap transferMap{};
 		m_TransferCache = std::make_unique<HashLifeCache>();
