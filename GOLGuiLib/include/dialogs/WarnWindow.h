@@ -6,17 +6,16 @@
 
 #include "PopupWindow.h"
 
-namespace gol
-{
-	class WarnWindow : public PopupWindow
-	{
-	public:
-		WarnWindow(std::string_view title, std::function<void(PopupWindowState)> onUpdate)
-			: PopupWindow(title, onUpdate)
-		{ }
-	protected:
-		virtual PopupWindowState ShowButtons() const override final;
-	};
-}
+namespace gol {
+class WarnWindow : public PopupWindow {
+public:
+  WarnWindow(std::string_view title,
+             std::function<void(PopupWindowState)> onUpdate)
+      : PopupWindow(title, onUpdate) {}
+
+protected:
+  virtual PopupWindowState ShowButtons() const override final;
+};
+} // namespace gol
 
 #endif

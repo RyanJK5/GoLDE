@@ -15,91 +15,87 @@
 #include "Graphics2D.h"
 #include "KeyShortcut.h"
 
-namespace gol
-{
-	template <ActionType ActType>
-	struct ActionButtonResult
-	{
-		std::optional<ActType> Action;
-		bool FromShortcut = false;
-	};
+namespace gol {
+template <ActionType ActType> struct ActionButtonResult {
+  std::optional<ActType> Action;
+  bool FromShortcut = false;
+};
 
-	template <ActionType ActType, bool LineBreak>
-	class MultiActionButton
-	{
-	public:
-		constexpr static int32_t DefaultButtonHeight = 50;
+template <ActionType ActType, bool LineBreak> class MultiActionButton {
+public:
+  constexpr static int32_t DefaultButtonHeight = 50;
 
-		MultiActionButton(const std::unordered_map<ActType, std::vector<KeyShortcut>>& shortcuts)
-			: m_Shortcuts(shortcuts)
-		{ }
+  MultiActionButton(
+      const std::unordered_map<ActType, std::vector<KeyShortcut>> &shortcuts)
+      : m_Shortcuts(shortcuts) {}
 
-		ActionButtonResult<ActType> Update(const EditorResult& state)
-		{
-			if (!Enabled(state))
-			{
-				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-			}
+  ActionButtonResult<ActType> Update(const EditorResult &state) {
+    if (!Enabled(state)) {
+      ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+      ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+    }
 
-			if (!m_LineBreak)
-				ImGui::SameLine();
+    if (!m_LineBreak)
+      ImGui::SameLine();
 
-			auto result = [this, state]()
-			{
-				bool active = false;
-				if (Enabled(state))
-					for (auto& shortcut : m_Shortcuts.at(Action(state)))
-						active = shortcut.Active() || active;
+    auto result = [this, state]() {
+      bool active = false;
+      if (Enabled(state))
+        for (auto &shortcut : m_Shortcuts.at(Action(state)))
+          active = shortcut.Active() || active;
 
-				if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
-					return ActionButtonResult<ActType> { Action(state), active };
-				return ActionButtonResult<ActType> { };
-			}();
-			
-			if (!Enabled(state))
-			{
-				ImGui::PopItemFlag();
-				ImGui::PopStyleVar();
-			}
-			else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-			{
-				auto tooltip = Actions::ToString(Action(state));
-				const auto& shortcuts = m_Shortcuts.at(Action(state));
-				if (!shortcuts.empty())
-					tooltip += ": " + KeyShortcut::StringRepresentation(m_Shortcuts.at(Action(state)));
-				ImGui::SetTooltip("%s", tooltip.c_str());
-			}
+      if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
+        return ActionButtonResult<ActType>{Action(state), active};
+      return ActionButtonResult<ActType>{};
+    }();
 
-			return result;
-		}
-	protected:
-		virtual ActType Action(const EditorResult& state) const = 0;
-		
-		virtual Size2F Dimensions() const = 0;
-		virtual std::string Label(const EditorResult& state) const = 0;
-		virtual	bool Enabled(const EditorResult& state) const = 0;
-	private:
-		bool m_LineBreak = LineBreak;
+    if (!Enabled(state)) {
+      ImGui::PopItemFlag();
+      ImGui::PopStyleVar();
+    } else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
+      auto tooltip = Actions::ToString(Action(state));
+      const auto &shortcuts = m_Shortcuts.at(Action(state));
+      if (!shortcuts.empty())
+        tooltip += ": " + KeyShortcut::StringRepresentation(
+                              m_Shortcuts.at(Action(state)));
+      ImGui::SetTooltip("%s", tooltip.c_str());
+    }
 
-		std::unordered_map<ActType, std::vector<KeyShortcut>> m_Shortcuts;
-	};
+    return result;
+  }
 
-	template <ActionType ActType, bool LineBreak>
-	class ActionButton : public MultiActionButton<ActType, LineBreak>
-	{
-	public:
-		ActionButton(ActType action, std::span<const ImGuiKeyChord> shortcuts, bool allowRepeats = false) 
-			: MultiActionButton<ActType, LineBreak>(
-				{{action, allowRepeats ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
-									   : shortcuts | KeyShortcut::MapChordsToVector
-				}}), m_Action(action)
-		{ }
-	protected:
-		virtual ActType Action(const EditorResult&) const override final { return m_Action; }
-	private:
-		ActType m_Action;
-	};
-}
+protected:
+  virtual ActType Action(const EditorResult &state) const = 0;
+
+  virtual Size2F Dimensions() const = 0;
+  virtual std::string Label(const EditorResult &state) const = 0;
+  virtual bool Enabled(const EditorResult &state) const = 0;
+
+private:
+  bool m_LineBreak = LineBreak;
+
+  std::unordered_map<ActType, std::vector<KeyShortcut>> m_Shortcuts;
+};
+
+template <ActionType ActType, bool LineBreak>
+class ActionButton : public MultiActionButton<ActType, LineBreak> {
+public:
+  ActionButton(ActType action, std::span<const ImGuiKeyChord> shortcuts,
+               bool allowRepeats = false)
+      : MultiActionButton<ActType, LineBreak>(
+            {{action, allowRepeats
+                          ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
+                          : shortcuts | KeyShortcut::MapChordsToVector}}),
+        m_Action(action) {}
+
+protected:
+  virtual ActType Action(const EditorResult &) const override final {
+    return m_Action;
+  }
+
+private:
+  ActType m_Action;
+};
+} // namespace gol
 
 #endif

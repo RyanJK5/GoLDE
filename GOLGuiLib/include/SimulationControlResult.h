@@ -5,37 +5,34 @@
 #include <filesystem>
 #include <optional>
 
-#include "Graphics2D.h"
 #include "GameEnums.h"
+#include "Graphics2D.h"
 #include "LifeAlgorithm.h"
-	
-namespace gol
-{
-	struct SimulationControlResult
-	{
-		SimulationState State = SimulationState::Empty;
-		std::optional<ActionVariant> Action;
-		
-		int64_t StepCount;
-		std::optional<LifeAlgorithm> Algorithm;
 
-		std::optional<Size2> NewDimensions;
+namespace gol {
+struct SimulationControlResult {
+  SimulationState State = SimulationState::Empty;
+  std::optional<ActionVariant> Action;
 
-		std::optional<float> NoiseDensity;
+  int64_t StepCount;
+  std::optional<LifeAlgorithm> Algorithm;
 
-		std::optional<int32_t> TickDelayMs;
+  std::optional<Size2> NewDimensions;
 
-		std::optional<std::filesystem::path> FilePath;
+  std::optional<float> NoiseDensity;
 
-		int32_t NudgeSize = 0;
+  std::optional<int32_t> TickDelayMs;
 
-		bool HyperSpeed = false;
+  std::optional<std::filesystem::path> FilePath;
 
-		bool GridLines = false;
+  int32_t NudgeSize = 0;
 
-		bool FromShortcut = false;
-	};
-}
+  bool HyperSpeed = false;
 
+  bool GridLines = false;
+
+  bool FromShortcut = false;
+};
+} // namespace gol
 
 #endif

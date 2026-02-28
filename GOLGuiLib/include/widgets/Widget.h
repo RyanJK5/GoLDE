@@ -8,24 +8,25 @@
 #include "GameEnums.h"
 #include "SimulationControlResult.h"
 
-namespace gol
-{
-	class Widget;
+namespace gol {
+class Widget;
 
-	class Widget
-	{
-	public:
-		SimulationControlResult Update(this auto&& self, const EditorResult& state) { return self.UpdateImpl(state); }
-	protected:
-		template <ActionType ActType>
-		inline static void UpdateResult(SimulationControlResult& result, const ActionButtonResult<ActType>& update)
-		{
-			if (!result.Action)
-				result.Action = update.Action;
-			if (!result.FromShortcut)
-				result.FromShortcut = update.FromShortcut;
-		}
-	};
-}
+class Widget {
+public:
+  SimulationControlResult Update(this auto &&self, const EditorResult &state) {
+    return self.UpdateImpl(state);
+  }
+
+protected:
+  template <ActionType ActType>
+  inline static void UpdateResult(SimulationControlResult &result,
+                                  const ActionButtonResult<ActType> &update) {
+    if (!result.Action)
+      result.Action = update.Action;
+    if (!result.FromShortcut)
+      result.FromShortcut = update.FromShortcut;
+  }
+};
+} // namespace gol
 
 #endif

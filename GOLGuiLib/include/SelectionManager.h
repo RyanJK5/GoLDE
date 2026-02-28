@@ -13,75 +13,80 @@
 #include "Graphics2D.h"
 #include "VersionManager.h"
 
-namespace gol
-{
-	struct SelectionUpdateResult
-	{
-		std::optional<VersionChange> Change;
-		bool BeginSelection = false;
-	};
+namespace gol {
+struct SelectionUpdateResult {
+  std::optional<VersionChange> Change;
+  bool BeginSelection = false;
+};
 
-	class SelectionManager
-	{
-	public:
-		SelectionUpdateResult UpdateSelectionArea(GameGrid& grid, Vec2 gridPos);
+class SelectionManager {
+public:
+  SelectionUpdateResult UpdateSelectionArea(GameGrid &grid, Vec2 gridPos);
 
-		bool TryResetSelection();
+  bool TryResetSelection();
 
-		std::optional<VersionChange> Deselect(GameGrid& grid);
+  std::optional<VersionChange> Deselect(GameGrid &grid);
 
-		std::optional<VersionChange> SelectAll(GameGrid& grid);
+  std::optional<VersionChange> SelectAll(GameGrid &grid);
 
-		std::optional<VersionChange> Copy(GameGrid& grid);
+  std::optional<VersionChange> Copy(GameGrid &grid);
 
-		std::optional<VersionChange> Cut();
+  std::optional<VersionChange> Cut();
 
-		std::expected<VersionChange, std::optional<uint32_t>> Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold, bool unlock = false);
+  std::expected<VersionChange, std::optional<uint32_t>>
+  Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold,
+        bool unlock = false);
 
-		std::optional<VersionChange> Delete();
+  std::optional<VersionChange> Delete();
 
-		std::optional<VersionChange> Rotate(bool clockwise);
+  std::optional<VersionChange> Rotate(bool clockwise);
 
-		std::optional<VersionChange> Flip(SelectionAction direction);
+  std::optional<VersionChange> Flip(SelectionAction direction);
 
-		std::optional<VersionChange> Nudge(Vec2 translation);
+  std::optional<VersionChange> Nudge(Vec2 translation);
 
-		std::optional<VersionChange> InsertNoise(Rect selectionBounds, float density);
+  std::optional<VersionChange> InsertNoise(Rect selectionBounds, float density);
 
-		std::expected<VersionChange, std::string> Load(const std::filesystem::path& filePath);
-		
-		bool Save(const GameGrid& grid, const std::filesystem::path& filePath) const;
-		
-		std::optional<VersionChange> HandleAction(SelectionAction action, GameGrid& grid, int32_t nudgeSize);
-		void HandleVersionChange(EditorAction undoRedo, GameGrid& grid, const VersionChange& change);
+  std::expected<VersionChange, std::string>
+  Load(const std::filesystem::path &filePath);
 
-		Rect SelectionBounds() const;
+  bool Save(const GameGrid &grid, const std::filesystem::path &filePath) const;
 
-		bool GridAlive() const;
-		const LifeHashSet& GridData() const;
-		int64_t SelectedPopulation() const;
+  std::optional<VersionChange> HandleAction(SelectionAction action,
+                                            GameGrid &grid, int32_t nudgeSize);
+  void HandleVersionChange(EditorAction undoRedo, GameGrid &grid,
+                           const VersionChange &change);
 
-		bool CanDrawSelection() const;
-		bool CanDrawLargeSelection() const;
-		bool CanDrawGrid() const;
-	private:
-		SelectionUpdateResult UpdateUnlockedSelection(gol::Vec2& gridPos);
+  Rect SelectionBounds() const;
 
-		void RestoreGridVersion(EditorAction undoRedo, GameGrid& grid, const VersionChange& change);
+  bool GridAlive() const;
+  const LifeHashSet &GridData() const;
+  int64_t SelectedPopulation() const;
 
-		void SetSelectionBounds(const Rect& bounds);
+  bool CanDrawSelection() const;
+  bool CanDrawLargeSelection() const;
+  bool CanDrawGrid() const;
 
-		Vec2 RotatePoint(Vec2F center, Vec2F point, bool clockwise);
-	private:
-		bool m_RotationParity = false;
+private:
+  SelectionUpdateResult UpdateUnlockedSelection(gol::Vec2 &gridPos);
 
-		bool m_LockSelection = true;
-		std::optional<Vec2> m_UnlockedOriginalPosition;
+  void RestoreGridVersion(EditorAction undoRedo, GameGrid &grid,
+                          const VersionChange &change);
 
-		std::optional<Vec2> m_AnchorSelection;
-		std::optional<Vec2> m_SentinelSelection;
-		std::optional<GameGrid> m_Selected;
-	};
-}
+  void SetSelectionBounds(const Rect &bounds);
+
+  Vec2 RotatePoint(Vec2F center, Vec2F point, bool clockwise);
+
+private:
+  bool m_RotationParity = false;
+
+  bool m_LockSelection = true;
+  std::optional<Vec2> m_UnlockedOriginalPosition;
+
+  std::optional<Vec2> m_AnchorSelection;
+  std::optional<Vec2> m_SentinelSelection;
+  std::optional<GameGrid> m_Selected;
+};
+} // namespace gol
 
 #endif

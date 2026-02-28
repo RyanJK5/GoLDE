@@ -2,157 +2,164 @@
 #define __Graphics2D_h__
 
 #include <cmath>
-#include <cstdint>
 #include <concepts>
+#include <cstdint>
 #include <format>
-#include <imgui/imgui.h>
 #include <glm/glm.hpp>
+#include <imgui/imgui.h>
 #include <utility>
 
-namespace gol
-{
-	struct Color
-	{
-		float Red;
-		float Green;
-		float Blue;
-		float Alpha;
-		
-		constexpr Color() : Red(0), Green(0), Blue(0), Alpha(1) { }
-		constexpr Color(float r, float g, float b, float a = 1.f) : Red(r), Green(g), Blue(b), Alpha(a) { }
-	};
+namespace gol {
+struct Color {
+  float Red;
+  float Green;
+  float Blue;
+  float Alpha;
 
-	template <std::totally_ordered T>
-	struct GenericVec
-	{
-		T X;
-		T Y;
+  constexpr Color() : Red(0), Green(0), Blue(0), Alpha(1) {}
+  constexpr Color(float r, float g, float b, float a = 1.f)
+      : Red(r), Green(g), Blue(b), Alpha(a) {}
+};
 
-		constexpr GenericVec() : X(0), Y(0) { }
-		constexpr GenericVec(T x, T y) : X(x), Y(y) { }
+template <std::totally_ordered T> struct GenericVec {
+  T X;
+  T Y;
 
-		constexpr auto operator<=>(const GenericVec<T>&) const = default;
+  constexpr GenericVec() : X(0), Y(0) {}
+  constexpr GenericVec(T x, T y) : X(x), Y(y) {}
 
-		constexpr GenericVec operator-() const { return { -X, -Y }; }
+  constexpr auto operator<=>(const GenericVec<T> &) const = default;
 
-		constexpr GenericVec operator+(GenericVec<T> other) const { return { X + other.X, Y + other.Y }; }
-		constexpr GenericVec operator-(GenericVec<T> other) const { return { X - other.X, Y - other.Y }; }
+  constexpr GenericVec operator-() const { return {-X, -Y}; }
 
-		constexpr GenericVec& operator+=(GenericVec<T> other) { X += other.X; Y += other.Y; return *this; }
-		constexpr GenericVec& operator-=(GenericVec<T> other) { X -= other.X; Y -= other.Y; return *this; }
-	};
+  constexpr GenericVec operator+(GenericVec<T> other) const {
+    return {X + other.X, Y + other.Y};
+  }
+  constexpr GenericVec operator-(GenericVec<T> other) const {
+    return {X - other.X, Y - other.Y};
+  }
 
-	template <std::totally_ordered T>
-	struct GenericSize
-	{
-		T Width;
-		T Height;
+  constexpr GenericVec &operator+=(GenericVec<T> other) {
+    X += other.X;
+    Y += other.Y;
+    return *this;
+  }
+  constexpr GenericVec &operator-=(GenericVec<T> other) {
+    X -= other.X;
+    Y -= other.Y;
+    return *this;
+  }
+};
 
-		constexpr GenericSize() : Width(0), Height(0) { }
-		constexpr GenericSize(T width, T height) : Width(width), Height(height) { }
-	};
+template <std::totally_ordered T> struct GenericSize {
+  T Width;
+  T Height;
 
-	template <std::totally_ordered T>
-	struct GenericRect
-	{
-		T X;
-		T Y;
-		T Width;
-		T Height;
+  constexpr GenericSize() : Width(0), Height(0) {}
+  constexpr GenericSize(T width, T height) : Width(width), Height(height) {}
+};
 
-		constexpr GenericVec<T> Pos() const { return { X, Y }; }
-		constexpr GenericSize<T> Size() const { return { Width, Height }; }
+template <std::totally_ordered T> struct GenericRect {
+  T X;
+  T Y;
+  T Width;
+  T Height;
 
-		constexpr GenericVec<T> UpperLeft() const { return { X, Y }; }
-		constexpr GenericVec<T> UpperRight() const { return { X + Width, Y }; }
-		constexpr GenericVec<T> LowerLeft() const { return { X, Y + Height }; }
-		constexpr GenericVec<T> LowerRight() const { return { X + Width, Y + Height }; }
-		constexpr GenericVec<T> Center() const { return { X + Width / 2, Y + Height / 2 }; }
+  constexpr GenericVec<T> Pos() const { return {X, Y}; }
+  constexpr GenericSize<T> Size() const { return {Width, Height}; }
 
-		constexpr GenericRect() : GenericRect(0, 0, 0, 0) { }
-		constexpr GenericRect(T x, T y, T width, T height) : X(x), Y(y), Width(width), Height(height) { }
-		constexpr GenericRect(GenericVec<T> pos, GenericSize<T> size) : X(pos.X), Y(pos.Y), Width(size.Width), Height(size.Height) {}
+  constexpr GenericVec<T> UpperLeft() const { return {X, Y}; }
+  constexpr GenericVec<T> UpperRight() const { return {X + Width, Y}; }
+  constexpr GenericVec<T> LowerLeft() const { return {X, Y + Height}; }
+  constexpr GenericVec<T> LowerRight() const { return {X + Width, Y + Height}; }
+  constexpr GenericVec<T> Center() const {
+    return {X + Width / 2, Y + Height / 2};
+  }
 
-		constexpr bool InBounds(std::totally_ordered auto x, std::totally_ordered auto y) const
-			{ return x >= X && x < X + Width && y >= Y && y < Y + Height; }
-		
-		constexpr bool InBounds(GenericVec<T> pos) const { return InBounds(pos.X, pos.Y); }
-	};
+  constexpr GenericRect() : GenericRect(0, 0, 0, 0) {}
+  constexpr GenericRect(T x, T y, T width, T height)
+      : X(x), Y(y), Width(width), Height(height) {}
+  constexpr GenericRect(GenericVec<T> pos, GenericSize<T> size)
+      : X(pos.X), Y(pos.Y), Width(size.Width), Height(size.Height) {}
 
-	struct Vec2F : public GenericVec<float>
-	{
-		constexpr Vec2F() : GenericVec() {}
-		constexpr explicit Vec2F(GenericVec<int32_t> vec) : GenericVec(static_cast<float>(vec.X), static_cast<float>(vec.Y)) {}
-		constexpr Vec2F(ImVec2 vec) : GenericVec(vec.x, vec.y) {}
-		constexpr Vec2F(glm::vec2 vec) : GenericVec(vec.x, vec.y) {}
-		constexpr Vec2F(float x, float y) : GenericVec(x, y) {}
+  constexpr bool InBounds(std::totally_ordered auto x,
+                          std::totally_ordered auto y) const {
+    return x >= X && x < X + Width && y >= Y && y < Y + Height;
+  }
 
-		constexpr operator ImVec2() const { return { X, Y }; }
-		constexpr operator glm::vec2() const { return { X, Y }; }
+  constexpr bool InBounds(GenericVec<T> pos) const {
+    return InBounds(pos.X, pos.Y);
+  }
+};
 
-		float Magnitude() const  { return std::sqrt(X * X + Y * Y); }
-		Vec2F Normalized() const { return Magnitude() == 0 ? Vec2F{ 0.f, 0.f } : Vec2F{ X / Magnitude(), Y / Magnitude() }; }
-	};
+struct Vec2F : public GenericVec<float> {
+  constexpr Vec2F() : GenericVec() {}
+  constexpr explicit Vec2F(GenericVec<int32_t> vec)
+      : GenericVec(static_cast<float>(vec.X), static_cast<float>(vec.Y)) {}
+  constexpr Vec2F(ImVec2 vec) : GenericVec(vec.x, vec.y) {}
+  constexpr Vec2F(glm::vec2 vec) : GenericVec(vec.x, vec.y) {}
+  constexpr Vec2F(float x, float y) : GenericVec(x, y) {}
 
-	struct Size2F : public GenericSize<float>
-	{
-		constexpr Size2F() : GenericSize() { }
-		constexpr Size2F(ImVec2 vec) : GenericSize(vec.x, vec.y) { }
-		constexpr Size2F(float x, float y) : GenericSize(x, y) { }
+  constexpr operator ImVec2() const { return {X, Y}; }
+  constexpr operator glm::vec2() const { return {X, Y}; }
 
-		constexpr operator ImVec2() const { return { Width, Height }; }
-	};
+  float Magnitude() const { return std::sqrt(X * X + Y * Y); }
+  Vec2F Normalized() const {
+    return Magnitude() == 0 ? Vec2F{0.f, 0.f}
+                            : Vec2F{X / Magnitude(), Y / Magnitude()};
+  }
+};
 
-	struct RectF : public GenericRect<float>
-	{
-		constexpr RectF() : GenericRect() { }
-		constexpr RectF(const GenericRect<int>& rect) : RectF(
-			static_cast<float>(rect.X), 
-			static_cast<float>(rect.Y), 
-			static_cast<float>(rect.Width), 
-			static_cast<float>(rect.Height))
-		{}
-		constexpr RectF(float x, float y, float width, float height) : GenericRect(x, y, width, height) { }
-		constexpr RectF(GenericVec<float> pos, GenericSize<float> size) : GenericRect(pos, size) {}
+struct Size2F : public GenericSize<float> {
+  constexpr Size2F() : GenericSize() {}
+  constexpr Size2F(ImVec2 vec) : GenericSize(vec.x, vec.y) {}
+  constexpr Size2F(float x, float y) : GenericSize(x, y) {}
 
-		constexpr operator GenericRect<int32_t>() const
-		{
-			return 
-			{
-				static_cast<int32_t>(X),
-				static_cast<int32_t>(Y),
-				static_cast<int32_t>(Width),
-				static_cast<int32_t>(Height),
-			};
-		}
-	};
+  constexpr operator ImVec2() const { return {Width, Height}; }
+};
 
-	using Vec2 = GenericVec<int32_t>;
-	using Vec2L = GenericVec<int64_t>;
+struct RectF : public GenericRect<float> {
+  constexpr RectF() : GenericRect() {}
+  constexpr RectF(const GenericRect<int> &rect)
+      : RectF(static_cast<float>(rect.X), static_cast<float>(rect.Y),
+              static_cast<float>(rect.Width), static_cast<float>(rect.Height)) {
+  }
+  constexpr RectF(float x, float y, float width, float height)
+      : GenericRect(x, y, width, height) {}
+  constexpr RectF(GenericVec<float> pos, GenericSize<float> size)
+      : GenericRect(pos, size) {}
 
-	using Size2 = GenericSize<int32_t>;
+  constexpr operator GenericRect<int32_t>() const {
+    return {
+        static_cast<int32_t>(X),
+        static_cast<int32_t>(Y),
+        static_cast<int32_t>(Width),
+        static_cast<int32_t>(Height),
+    };
+  }
+};
 
-	using Rect = GenericRect<int32_t>;
-	using RectL = GenericRect<int64_t>;
-	using RectDouble = GenericRect<double>;
-}
+using Vec2 = GenericVec<int32_t>;
+using Vec2L = GenericVec<int64_t>;
 
-namespace std
-{
-	template <std::totally_ordered T>
-	struct formatter<gol::GenericVec<T>>
-	{
-		constexpr auto parse(std::format_parse_context& context)
-		{
-			return context.begin();
-		}
+using Size2 = GenericSize<int32_t>;
 
-		template <typename Context>
-		auto format(const gol::GenericVec<T>& vec, Context& context) const
-		{
-			return std::format_to(context.out(), "({}, {})", vec.X, vec.Y);
-		}
-	};
-}
+using Rect = GenericRect<int32_t>;
+using RectL = GenericRect<int64_t>;
+using RectDouble = GenericRect<double>;
+} // namespace gol
+
+namespace std {
+template <std::totally_ordered T> struct formatter<gol::GenericVec<T>> {
+  constexpr auto parse(std::format_parse_context &context) {
+    return context.begin();
+  }
+
+  template <typename Context>
+  auto format(const gol::GenericVec<T> &vec, Context &context) const {
+    return std::format_to(context.out(), "({}, {})", vec.X, vec.Y);
+  }
+};
+} // namespace std
 
 #endif

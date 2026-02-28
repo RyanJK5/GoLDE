@@ -5,17 +5,16 @@
 
 #include "PopupWindow.h"
 
-namespace gol
-{
-	class ErrorWindow : public PopupWindow
-	{
-	public:
-		ErrorWindow(std::string_view title, std::function<void(PopupWindowState)> onUpdate)
-			: PopupWindow(title, onUpdate)
-		{ }
-	protected:
-		virtual PopupWindowState ShowButtons() const override final;
-	};
-}
+namespace gol {
+class ErrorWindow : public PopupWindow {
+public:
+  ErrorWindow(std::string_view title,
+              std::function<void(PopupWindowState)> onUpdate)
+      : PopupWindow(title, onUpdate) {}
+
+protected:
+  virtual PopupWindowState ShowButtons() const override final;
+};
+} // namespace gol
 
 #endif

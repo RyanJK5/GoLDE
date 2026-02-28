@@ -9,53 +9,55 @@
 #include <unordered_map>
 #include <utility>
 
-namespace gol
-{
-    
-    class ShaderManager
-    {
-    using IDPair = typename std::pair<unsigned int, unsigned int>;
+namespace gol {
 
-    public:
-        explicit ShaderManager(const std::filesystem::path& shaderFilePath);
+class ShaderManager {
+  using IDPair = typename std::pair<unsigned int, unsigned int>;
 
-        ShaderManager(const ShaderManager& other) = delete;
+public:
+  explicit ShaderManager(const std::filesystem::path &shaderFilePath);
 
-        ShaderManager(ShaderManager&& other) noexcept;
+  ShaderManager(const ShaderManager &other) = delete;
 
-        ShaderManager& operator=(const ShaderManager& other) = delete;
+  ShaderManager(ShaderManager &&other) noexcept;
 
-        ShaderManager& operator=(ShaderManager&& other) noexcept;
+  ShaderManager &operator=(const ShaderManager &other) = delete;
 
-        ~ShaderManager();
+  ShaderManager &operator=(ShaderManager &&other) noexcept;
 
-        uint32_t Program() const;
+  ~ShaderManager();
 
-		void AttachUniformVec2(std::string_view label, const glm::vec2& vec);
-        void AttachUniformVec4(std::string_view label, const glm::vec4& vec);
-        void AttachUniformMatrix4(std::string_view label, const glm::mat4& matrix);
-    private:
-        uint32_t CompileShader(uint32_t type, std::string_view source) const;
+  uint32_t Program() const;
 
-        std::optional<IDPair> ParseShader(const std::filesystem::path& filePath) const;
+  void AttachUniformVec2(std::string_view label, const glm::vec2 &vec);
+  void AttachUniformVec4(std::string_view label, const glm::vec4 &vec);
+  void AttachUniformMatrix4(std::string_view label, const glm::mat4 &matrix);
 
-        void CreateShader(uint32_t program, uint32_t shaderId);
+private:
+  uint32_t CompileShader(uint32_t type, std::string_view source) const;
 
-        int32_t UniformLocation(std::string_view label);
+  std::optional<IDPair>
+  ParseShader(const std::filesystem::path &filePath) const;
 
-        void Destroy();
-    private:
-        struct ShaderControlBlock
-        {
-            int32_t RefCount = 0;
-            uint32_t ProgramID = 0;
-			std::unordered_map<std::string_view, int32_t> Uniforms;
-        };
+  void CreateShader(uint32_t program, uint32_t shaderId);
 
-        inline static std::unordered_map<std::filesystem::path, ShaderControlBlock> s_Shaders = {};
-    private:
-		ShaderControlBlock* m_ControlBlock;
-    };
-}
+  int32_t UniformLocation(std::string_view label);
+
+  void Destroy();
+
+private:
+  struct ShaderControlBlock {
+    int32_t RefCount = 0;
+    uint32_t ProgramID = 0;
+    std::unordered_map<std::string_view, int32_t> Uniforms;
+  };
+
+  inline static std::unordered_map<std::filesystem::path, ShaderControlBlock>
+      s_Shaders = {};
+
+private:
+  ShaderControlBlock *m_ControlBlock;
+};
+} // namespace gol
 
 #endif
