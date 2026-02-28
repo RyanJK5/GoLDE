@@ -89,9 +89,18 @@ namespace gol
         if (m_StopStepCommand)
         {
             m_StopStepCommand = false;
+            const auto ogState = m_State;
             m_State = SimulationState::Simulation;
-            StopSimulation(true);
-            m_State = SimulationState::Paused;
+            if (ogState == SimulationState::Stepping)
+            {
+                StopSimulation(true);
+                m_State = SimulationState::Paused;
+            }
+            else
+            {
+                StopSimulation(false);
+                m_State = ogState;
+            }
         }
 
         if (controlArgs.TickDelayMs)
