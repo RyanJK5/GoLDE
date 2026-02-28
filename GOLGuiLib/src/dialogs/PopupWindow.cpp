@@ -4,27 +4,40 @@
 
 #include "PopupWindow.h"
 
-gol::PopupWindow::PopupWindow(std::string_view title, std::string_view message)
-	: m_Title(title)
-	, Message(message)
-{ }
-
-gol::PopupWindowState gol::PopupWindow::Update()
+namespace gol
 {
-	if (!Active)
-		return PopupWindowState::None;
+	PopupWindow::PopupWindow(std::string_view title, std::function<void(PopupWindowState)> onUpdate)
+		: Message("")
+		, m_Title(title)
+		, m_UpdateCallback(onUpdate)
+	{ }
 
-	ImGui::OpenPopup(m_Title.c_str());
-	ImGui::BeginPopupModal(m_Title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+	PopupWindowState PopupWindow::Update()
+	{
+		if (!Active)
+			return PopupWindowState::None;
 
-	ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
-	ImGui::Text("%s", Message.c_str());
-	ImGui::PopStyleVar();
+		ImGui::OpenPopup(m_Title.c_str());
+		ImGui::BeginPopupModal(m_Title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 
-	auto result = ShowButtons();
-	if (result != PopupWindowState::None)
-		Active = false;
+		ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+		ImGui::Text("%s", Message.c_str());
+		ImGui::PopStyleVar();
+
+		const auto result = ShowButtons();
+		if (result != PopupWindowState::None)
+		{
+			m_UpdateCallback(result);
+			Active = false;
+		}
 	
-	ImGui::EndPopup();
-	return result;
+		ImGui::EndPopup();
+		return result;
+	}
+
+	void PopupWindow::SetCallback(std::function<void(PopupWindowState)> onUpdate)
+	{
+		m_UpdateCallback = onUpdate;
+	}
+
 }

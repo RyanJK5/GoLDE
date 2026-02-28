@@ -20,7 +20,7 @@ namespace gol
     {
     public:
         StepButton(std::span<const ImGuiKeyChord> shortcuts = {})
-            : ActionButton(GameAction::Step, shortcuts)
+            : ActionButton(GameAction::Step, shortcuts, true)
         { }
     protected:
         virtual Size2F Dimensions() const override final;

@@ -39,6 +39,7 @@ namespace gol
     void StepWidget::ShowInputText()
     {
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2.f + 5);
+
         if (ImGui::InputText("##expr", m_InputText.Data, m_InputText.Length + 1))
         {
             const auto stepCountBefore = m_StepCount;
@@ -79,6 +80,10 @@ namespace gol
                 SetStepCount(stepCountBefore);
             }
         }
+        ImGui::SetItemTooltip(
+            "Enter the number of steps to advance. You can also enter an expression in the\n" 
+            "form of 'x^y' to compute large step counts quickly. For example, '2^10' will\n"
+            "set the step count to 1024.");
         ImGui::PopItemWidth();
     }
 
@@ -137,9 +142,14 @@ namespace gol
             .FromShortcut = result.FromShortcut
 		};
 
+        const bool showAlgoDropbox = state.State != SimulationState::Empty && state.State != SimulationState::Paint && state.State != SimulationState::Paused;
+		beginGreyOutIf(showAlgoDropbox);
+
         auto algoID = std::to_underlying(m_Algorithm);
 		ImGui::Combo("Algorithm", &algoID, "HashLife\0SparseLife\0");
         const auto algo = static_cast<LifeAlgorithm>(algoID);
+
+        endGreyOutIf(showAlgoDropbox);
 
         if (algo == LifeAlgorithm::HashLife) 
             ImGui::SetItemTooltip(
@@ -151,14 +161,12 @@ namespace gol
                 "SparseLife is a straightforward algorithm that computes each generation iteratively.\n"
                 "It may be faster for small or chaotic patterns, but slower for larger ones."
             );
+		
+        retValue.Algorithm = algo;
+        m_Algorithm = algo;
 
-        if (algo != m_Algorithm)
-        {
-			retValue.Algorithm = algo;
-            m_Algorithm = algo;
-        }
-
-		beginGreyOutIf(m_Algorithm == LifeAlgorithm::SparseLife);
+		const bool showHyperSpeedOption = state.State == SimulationState::Simulation;
+		beginGreyOutIf(showHyperSpeedOption);
 
 	    ImGui::Checkbox("Enable Hyper Speed", &m_HyperSpeed);
 		retValue.HyperSpeed = m_HyperSpeed;
@@ -170,7 +178,7 @@ namespace gol
 		    "to run slowly for the first few jumps, but speed up significantly afterwards."
         );
 
-        endGreyOutIf(m_Algorithm == LifeAlgorithm::SparseLife);
+        endGreyOutIf(showHyperSpeedOption);
 
         ImGui::Separator();
         ImGui::PopStyleVar();

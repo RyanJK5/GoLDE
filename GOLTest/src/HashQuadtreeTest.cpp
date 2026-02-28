@@ -38,10 +38,10 @@ namespace gol
 		HashQuadtree current{ data1->Grid.Data(), data1->Offset };
 		const HashQuadtree expected{ data2->Grid.Data(), data2->Offset };
 
-		uint64_t totalGenerations = 0;
-		for (int32_t i = 0; i < numJumps; ++i)
+		auto totalGenerations = 0ULL;
+		for (auto i = 0; i < numJumps; ++i)
 		{
-            const auto genCount = current.Advance({}, stepSize);
+            const auto genCount = current.Advance(stepSize);
 			EXPECT_EQ(genCount, expectedGenerationsPerJump)
 				<< "HashLife should advance by " << expectedGenerationsPerJump << " generations per jump";
 			totalGenerations += genCount;
@@ -63,8 +63,8 @@ namespace gol
     TEST(HashQuadtreeTest, BigSquigglesTest)
     {
         const std::filesystem::path directory{ "universes" };
-        CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles256.gol", 256);
-        CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles256.gol", 32, 8, 32);
+        CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles1024.gol", 1024);
+        CheckAgainstFile(directory / "bigsquiggles1.gol", directory / "bigsquiggles1024.gol", 128, 8, 128);
     }
 
     TEST(HashQuadtreeTest, RectTest)
@@ -98,7 +98,7 @@ namespace gol
         blockTree.Advance();
         EXPECT_EQ(blockTree.Population(), blockCells.size());
 
-        singleTree.Advance({}, 1);
+        singleTree.Advance(1);
         EXPECT_EQ(singleTree.Population(), 0ULL);
     }
 
@@ -354,7 +354,7 @@ namespace gol
         HashQuadtree original{ data->Grid.Data(), data->Offset };
         original.PrepareCopy();
 
-        original.Advance({}, 1LL << 32LL);
+        original.Advance(1LL << 32LL);
         HashQuadtree copy{ original };
 
         ASSERT_TRUE(true);
@@ -459,7 +459,7 @@ namespace gol
 
         EXPECT_GE(tree.CalculateDepth(), 3) << "Tree must be deep enough to trigger slow advance";
 
-        const auto gens = tree.Advance({}, 1);
+        const auto gens = tree.Advance(1);
         EXPECT_EQ(gens, 1);
         EXPECT_TRUE(tree.empty()) << "All isolated cells should die after one generation";
     }
@@ -474,8 +474,8 @@ namespace gol
         HashQuadtree tree2{ cells };
         ASSERT_EQ(tree1, tree2);
 
-        const auto directUpdate = tree1.Advance({}, 1);
-        const auto hashLifeUpdate = HashLife(tree2, {}, 1);
+        const auto directUpdate = tree1.Advance(1);
+        const auto hashLifeUpdate = HashLife(tree2, 1);
 
         EXPECT_EQ(directUpdate, 1);
         EXPECT_EQ(hashLifeUpdate, 1);

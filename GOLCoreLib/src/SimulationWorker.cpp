@@ -28,14 +28,6 @@ namespace gol
 			{
 				m_LastUpdate.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
 
-				const auto pendingAlgo = m_PendingAlgorithm.exchange(std::nullopt, std::memory_order_acq_rel);
-				if (pendingAlgo)
-				{
-					backBuffer->SetAlgorithm(*pendingAlgo);
-					workerGrid->SetAlgorithm(*pendingAlgo);
-					m_Snapshot.load(std::memory_order_acquire)->SetAlgorithm(*pendingAlgo);
-				}
-
 				workerGrid->Update(m_StepCount.load(std::memory_order_relaxed), stopToken);
 
 				if (stopToken.stop_requested())
@@ -61,7 +53,6 @@ namespace gol
 			}
 
 			m_Snapshot.load(std::memory_order_acquire)->PrepareCopy();
-
 			if (oneStep && !stopToken.stop_requested())
 				onStop();
 		} };
@@ -77,6 +68,7 @@ namespace gol
 
 		auto shared = m_Snapshot.load(std::memory_order_relaxed);
 		auto ret = std::move(*shared);
+
 		m_Snapshot.store(nullptr, std::memory_order_release);
 		return ret;
 	}
@@ -89,12 +81,6 @@ namespace gol
 	void SimulationWorker::SetTickDelayMs(int64_t tickDelayMs)
 	{
 		m_TickDelayMs.store(tickDelayMs, std::memory_order_relaxed);
-	}
-
-	void SimulationWorker::SetAlgorithm(LifeAlgorithm algorithm)
-	{
-		std::println("{}", std::to_underlying(algorithm));
-		m_PendingAlgorithm.store(algorithm, std::memory_order_release);
 	}
 
 	std::shared_ptr<GameGrid> SimulationWorker::GetResult() const

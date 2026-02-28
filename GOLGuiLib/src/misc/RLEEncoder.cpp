@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <expected>
 #include <filesystem>
@@ -5,90 +6,208 @@
 #include <iterator>
 #include <limits>
 #include <string>
-#include <variant>
+#include <memory>
+#include <vector>
 
 #include "GameGrid.h"
 #include "Graphics2D.h"
 #include "RLEEncoder.h"
 
-template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
-
-std::string gol::RLEEncoder::EncodeRegion(const GameGrid& grid, const Rect& region, Vec2 offset)
+namespace gol::RLEEncoder
 {
-	auto toString = [](const auto& vec)
+	std::string EncodeRegion(const GameGrid& grid, const Rect& region, Vec2 offset)
 	{
-		return std::string{reinterpret_cast<const char*>(vec.data())};
-	};
+		std::vector<char> result{'g', 'o', 'l', 'd', 'e'};
 
-	const auto encodeType = RLEEncoder::SelectStorageType(static_cast<int64_t>(region.Width) * region.Height);
-	
-	return std::visit(Overloaded
+		const auto appendDim = [&](std::integral auto dim)
+		{
+			const auto dimData = EncodeNumber(dim);
+			result.insert(result.end(), dimData.begin(), dimData.end());
+		};
+
+		const auto beginIndicator = result.size();
+		appendDim('0');
+		const auto beginIndicatorEnd = result.size();
+
+		appendDim(std::abs(offset.X));
+		appendDim(std::abs(offset.Y));
+		appendDim(region.Width);
+		appendDim(region.Height);
+
+
+		appendDim(offset.X < 0 ? '1' : '0');
+		appendDim(offset.Y < 0 ? '1' : '0');
+
+		auto runStart = Vec2{ region.X, region.Y - 1 } - offset;
+		bool running = false;
+		bool first = true;
+		for (auto pos : grid.SortedData())
+		{
+			if (!region.InBounds(pos))
+				continue;
+
+			pos -= offset;
+
+			if (!running)
+			{
+				const auto count = (region.Height * (pos.X - runStart.X) + pos.Y - runStart.Y) - 1;
+				if (count > 0)
+					appendDim(count);
+				else if (first)
+				{
+					result.erase(result.begin() + beginIndicator, result.begin() + beginIndicatorEnd);
+					const auto formattedOne = EncodeNumber('1');
+					result.insert(result.begin() + beginIndicator, formattedOne.begin(), formattedOne.end());
+				}
+				running = true;
+				runStart = pos;
+			}
+
+			first = false;
+			auto nextPos = Vec2{ pos.X, pos.Y + 1 };
+			if (nextPos.Y >= region.Y + region.Height - offset.Y)
+			{
+				nextPos.X++;
+				nextPos.Y = region.Y - offset.Y;
+			}
+
+			if (!region.InBounds(nextPos + offset) || grid.Data().find(nextPos + offset) == grid.Data().end())
+			{
+				const auto count = (region.Height * (pos.X - runStart.X) + pos.Y - runStart.Y) + 1;
+				appendDim(count);
+				running = false;
+				runStart = pos;
+			}
+		}
+
+		if (!running)
+		{
+			const auto pos = region.LowerRight() - offset;
+			const auto count = (region.Height * (pos.X - 1 - runStart.X) + pos.Y - runStart.Y) - 1;
+			appendDim(count);
+		}
+
+		result.push_back('\0');
+
+		return std::string{ result.data() };
+	}
+
+	std::expected<DecodeResult, std::optional<uint32_t>> DecodeRegion(std::string_view data, uint32_t warnThreshold)
 	{
-		[&](uint8_t)  { return toString(EncodeRegion<uint8_t >(grid, region, offset)); },
-		[&](uint16_t) { return toString(EncodeRegion<uint16_t>(grid, region, offset)); },
-		[&](uint32_t) { return toString(EncodeRegion<uint32_t>(grid, region, offset)); },
-		[&](uint64_t) { return toString(EncodeRegion<uint64_t>(grid, region, offset)); },
-	}, encodeType);
-}
+		if (data[0] == '\0')
+			return {};
+		if (data.substr(0, 5) != std::string_view{"golde"})
+			return std::unexpected{ std::nullopt };
 
-std::expected<gol::RLEEncoder::DecodeResult, uint32_t> gol::RLEEncoder::DecodeRegion(const char* data, uint32_t warnThreshold)
-{
-	const auto result8 =  DecodeRegion<uint8_t>(data, static_cast<uint8_t>(warnThreshold));
-	if (result8 || result8.error() != std::numeric_limits<uint8_t>::max())
-		return result8;
+		auto pos = 5UZ;
+		const auto getNextNumber = [&]() -> std::optional<int64_t>
+		{
+			if (pos >= data.size())
+				return std::nullopt;
 
-	const auto result16 = DecodeRegion<uint16_t>(data, static_cast<uint16_t>(warnThreshold));
-	if (result16 || result16.error() != std::numeric_limits<uint16_t>::max())
-		return result16;
+			const auto currentPos = pos;
+			switch (data[pos])
+			{
+			case 'A':
+				pos += 1 + 1;
+				return DecodeNumber(data.substr(currentPos, 1 + 1));
+			case 'B':
+				pos += 1 + 2;
+				return DecodeNumber(data.substr(currentPos, 1 + 2));
+			case 'C':
+				pos += 1 + 4;
+				return DecodeNumber(data.substr(currentPos, 1 + 4));
+			case 'D':
+				pos += 1 + 8;
+				return DecodeNumber(data.substr(currentPos, 1 + 8));
+			}
+			throw std::invalid_argument{ std::format("Expected 'A'-'D', Received {}", data[pos]) };
+		};
 
-	const auto result32 = DecodeRegion<uint32_t>(data, warnThreshold);
-	if (result32 || result32.error() != std::numeric_limits<uint32_t>::max())
-		return result32;
+		bool running = *getNextNumber() == '1';
 
-	const auto result64 = DecodeRegion<uint64_t>(data, warnThreshold);
-	if (result64)
-		return *result64;
+		Vec2 offset{ 
+			static_cast<int32_t>(*getNextNumber()),
+			static_cast<int32_t>(*getNextNumber()) 
+		};
 
-	return std::unexpected{ result32.error() };
-}
+		const auto width = static_cast<int32_t>(*getNextNumber());
+		const auto height = static_cast<int32_t>(*getNextNumber());
 
-bool gol::RLEEncoder::WriteRegion(const GameGrid& grid, const Rect& region, 
-		const std::filesystem::path& filePath, Vec2 offset)
-{
-	auto out = std::ofstream { filePath };
-	if (!out.is_open())
-		return false;
+		if (*getNextNumber() == '1')
+			offset.X = -offset.X;
+		if (*getNextNumber() == '1')
+			offset.Y = -offset.Y;
 
-	const auto encodedData = EncodeRegion(grid, region, offset);
-	out << encodedData;
+		auto xPtr = 0LL;
+		auto yPtr = 0LL;
 
-	return true;
-}
+		auto warnCount = 0LL;
+		GameGrid result{ width, height };
 
-std::expected<gol::RLEEncoder::DecodeResult, std::string> gol::RLEEncoder::ReadRegion(const std::filesystem::path& filePath)
-{
-	auto in = std::ifstream { filePath };
-	if (!in.is_open())
-		return std::unexpected { "Failed to open file for reading." };
+		while (const auto count = getNextNumber())
+		{
+			if (running)
+				warnCount += *count;
 
-	const std::string data { std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>() };
+			if (warnCount >= warnThreshold)
+			{
+				running = !running;
+				continue;
+			}
 
-	const auto decodeResult = RLEEncoder::DecodeRegion(data.c_str(), std::numeric_limits<uint32_t>::max());
-	if (!decodeResult)
-		return std::unexpected { "File contains too many cells." };
-	return *decodeResult;
-}
+			if (running)
+			{
+				for (auto i = 0; i < *count; i++)
+				{
+					result.Set(
+						static_cast<int32_t>(xPtr + (yPtr + i) / height),
+						static_cast<int32_t>((yPtr + i) % height),
+						true
+					);
+				}
+			}
 
+			running = !running;
+			xPtr += (yPtr + *count) / height;
+			yPtr = (yPtr + *count) % height;
+		}
 
+		if (warnCount >= warnThreshold)
+			return std::unexpected{ static_cast<uint32_t>(warnCount) };
 
-constexpr std::variant<uint8_t, uint16_t, uint32_t, uint64_t> gol::RLEEncoder::SelectStorageType(uint64_t count)
-{
-	if (count <= (std::numeric_limits<uint8_t>::max() >> 2))
-		return uint8_t {};
-	else if (count <= (std::numeric_limits<uint16_t>::max() >> 4))
-		return uint16_t {};
-	else if (count <= (std::numeric_limits<uint32_t>::max() >> 8))
-		return uint32_t {};
-	return uint64_t {};
+		return DecodeResult{ std::move(result), offset };
+	}
+
+	bool WriteRegion(const GameGrid& grid, const Rect& region, 
+			const std::filesystem::path& filePath, Vec2 offset)
+	{
+		auto out = std::ofstream { filePath };
+		if (!out.is_open())
+			return false;
+
+		const auto encodedData = EncodeRegion(grid, region, offset);
+		out << encodedData;
+
+		return true;
+	}
+
+	std::expected<DecodeResult, std::string> ReadRegion(const std::filesystem::path& filePath)
+	{
+		auto in = std::ifstream { filePath };
+		if (!in.is_open())
+			return std::unexpected { "Failed to open file for reading." };
+
+		const std::string data { std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>() };
+
+		const auto decodeResult = DecodeRegion(data.c_str(), std::numeric_limits<uint32_t>::max());
+		if (!decodeResult)
+		{
+			if (decodeResult.error().has_value())
+				return std::unexpected{ "File contains too many cells." };
+			else
+				return std::unexpected{ "File is not in a valid format." };
+		}
+		return *decodeResult;
+	}
 }

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <concepts>
+#include <format>
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
 #include <utility>
@@ -134,7 +135,24 @@ namespace gol
 	using Rect = GenericRect<int32_t>;
 	using RectL = GenericRect<int64_t>;
 	using RectDouble = GenericRect<double>;
+}
 
+namespace std
+{
+	template <std::totally_ordered T>
+	struct formatter<gol::GenericVec<T>>
+	{
+		constexpr auto parse(std::format_parse_context& context)
+		{
+			return context.begin();
+		}
+
+		template <typename Context>
+		auto format(const gol::GenericVec<T>& vec, Context& context) const
+		{
+			return std::format_to(context.out(), "({}, {})", vec.X, vec.Y);
+		}
+	};
 }
 
 #endif

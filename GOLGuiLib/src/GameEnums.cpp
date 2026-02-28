@@ -8,7 +8,7 @@
 
 std::string gol::Actions::ToString(ActionVariant action)
 {
-	std::string result{ [action]()
+	std::string result{[action]()
 	{
 		if (auto* value = std::get_if<GameAction>(&action))
 			return std::find_if(GameActionDefinitions.begin(), GameActionDefinitions.end(),
@@ -23,12 +23,14 @@ std::string gol::Actions::ToString(ActionVariant action)
 	}() };
 	
 	result[0] = static_cast<char>(std::toupper(result[0]));
-	auto underscoreIterator = std::ranges::find(result, '_');
-	if (underscoreIterator != result.end())
+	
+	auto underscoreIndex = result.find('_');
+	while (underscoreIndex != std::string::npos)
 	{
-		*underscoreIterator = ' ';
-		underscoreIterator++;
-		*underscoreIterator = static_cast<char>(std::toupper(*underscoreIterator));
+		result[underscoreIndex] = ' ';
+		underscoreIndex++;
+		result[underscoreIndex] = static_cast<char>(std::toupper(result[underscoreIndex]));
+		underscoreIndex = result.find('_', underscoreIndex);
 	}
 
 	return result;

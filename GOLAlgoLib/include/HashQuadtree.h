@@ -7,6 +7,7 @@
 #include <ranges>
 #include <cstddef>
 #include <cstdint>
+#include <print>
 #include <stack>
 #include <limits>
 #include <unordered_dense.h>
@@ -238,7 +239,7 @@ namespace gol
 
 		uint64_t Population() const;
 
-		int64_t Advance(const Rect& bounds = {}, int64_t maxAdvance = 0, std::stop_token stopToken = {});
+		int64_t Advance(int64_t maxAdvance = 0, std::stop_token stopToken = {});
 
 		int32_t CalculateDepth() const;
 		int64_t CalculateTreeSize() const;

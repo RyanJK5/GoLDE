@@ -124,6 +124,7 @@ std::vector<float> gol::GraphicsHandler::GenerateGLBuffer(Vec2 offset, std::rang
 		const auto reserveCount = std::min(static_cast<size_t>(grid.size()), visibleCapacity);
 		result.reserve(reserveCount * 2);
 	}
+
 	for (const auto vec : grid)
 	{
 		const auto x = vec.X + offset.X;

@@ -72,6 +72,17 @@ namespace gol
 			| std::ranges::to<LifeHashSet>();
 	}
 
+	void GameGrid::SetAlgorithm(LifeAlgorithm algorithm)
+	{
+		if (algorithm == LifeAlgorithm::SparseLife && m_HashLifeData)
+		{
+			m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
+			m_HashLifeData.reset();
+		}
+
+		m_Algorithm = algorithm;
+	}
+
 	void GameGrid::PrepareCopy()
 	{
 		if (m_HashLifeData)
@@ -127,6 +138,7 @@ namespace gol
 	{
 		if (m_CacheInvalidated && m_HashLifeData)
 			ValidateCache(false);
+		m_CacheInvalidated = false;
 		return m_Data;
 	}
 
@@ -138,16 +150,12 @@ namespace gol
 			return std::ref(m_Data);
 	}
 
-	void GameGrid::Update(int64_t numSteps, std::stop_token stopToken)
+	int64_t GameGrid::Update(int64_t numSteps, std::stop_token stopToken)
 	{
+		m_CacheInvalidated = true;
+
 		switch (m_Algorithm) {
 		case LifeAlgorithm::SparseLife:
-			if (m_HashLifeData)
-			{
-				m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
-				m_HashLifeData.reset();
-			}
-
 			for (auto i = 0; i < numSteps; i++)
 			{
 				if (stopToken.stop_requested())
@@ -156,7 +164,7 @@ namespace gol
 				m_Generation++;
 			}
 			m_Population = m_Data.size();
-			break;
+			return numSteps;
 		case LifeAlgorithm::HashLife:
 			if (!m_HashLifeData)
 			{
@@ -164,21 +172,17 @@ namespace gol
 				m_Data.clear();
 				m_SortedData.clear();
 			}
-			const auto generations = HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, numSteps, stopToken);
-
-			if (generations == 0 && numSteps == 0)
-				HashLife(*m_HashLifeData, { 0, 0, m_Width, m_Height }, std::numeric_limits<int64_t>::max() - m_Generation, stopToken);
+			const auto generations = HashLife(*m_HashLifeData, numSteps, stopToken);
 
 			if (std::numeric_limits<int64_t>::max() - generations < m_Generation)
 				m_Generation = std::numeric_limits<int64_t>::max();
 			else
 				m_Generation += generations;
 			m_Population = m_HashLifeData->Population();
-			std::println("{}", m_Population);
-			break;
+			return generations;
 		}
 
-		m_CacheInvalidated = true;
+		return 0;
 	}
 
 	bool GameGrid::Toggle(int32_t x, int32_t y)
@@ -285,6 +289,9 @@ namespace gol
 
 	LifeHashSet GameGrid::InsertGrid(const GameGrid& region, Vec2 pos)
 	{
+		ValidateCache(true);
+		m_HashLifeData.reset();
+
 		LifeHashSet result {};
 		for (auto&& cell : region.m_Data)
 		{

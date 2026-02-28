@@ -12,9 +12,9 @@ shortcuts:
 
     undo: [Ctrl+Z]
     redo: [Ctrl+Y, Ctrl+Shift+Z]
-    save: [Ctrl+Shift+S]
+    save_as_new: [Ctrl+Shift+S]
     new: [Ctrl+N]
-    update: [Ctrl+S]
+    save: [Ctrl+S]
     load: [Ctrl+O]
     close: [Ctrl+W]
 

@@ -39,9 +39,9 @@ namespace gol
 		GenerateNoise,
 		Undo,
 		Redo,
-		Save,
+		SaveAsNew,
 		NewFile,
-		UpdateFile,
+		Save,
 		Load,
 		Close,
 	};
@@ -83,9 +83,9 @@ namespace gol
 			{ "resize",          EditorAction::Resize        },
 			{ "undo",            EditorAction::Undo          },
 			{ "redo",            EditorAction::Redo          },
-			{ "save",            EditorAction::Save          },
+			{ "save_as_new",     EditorAction::SaveAsNew     },
 			{ "new",             EditorAction::NewFile       },
-			{ "update",          EditorAction::UpdateFile    },
+			{ "save",            EditorAction::Save          },
 			{ "load",            EditorAction::Load          },
 			{ "close",           EditorAction::Close         },
 			{ "generate_noise",  EditorAction::GenerateNoise }

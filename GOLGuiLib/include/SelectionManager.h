@@ -36,7 +36,7 @@ namespace gol
 
 		std::optional<VersionChange> Cut();
 
-		std::expected<VersionChange, uint32_t> Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold, bool unlock = false);
+		std::expected<VersionChange, std::optional<uint32_t>> Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold, bool unlock = false);
 
 		std::optional<VersionChange> Delete();
 

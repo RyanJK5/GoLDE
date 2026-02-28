@@ -19,14 +19,37 @@
 
 namespace gol::RLEEncoder
 {
-	template <std::unsigned_integral StorageType>
-	static constexpr StorageType FormatNumber(StorageType value)
+	enum class RLEStorageType
 	{
-		constexpr StorageType getData   = 0b00111111;
-		constexpr StorageType indicator = 0b01000000;
+		UInt8,
+		UInt16,
+		UInt32,
+		UInt64
+	};
+
+	constexpr RLEStorageType SelectStorageType(uint64_t count)
+	{
+		using enum RLEStorageType;
+
+		if (count <= (std::numeric_limits<uint8_t>::max() >> 2))
+			return UInt8;
+		else if (count <= (std::numeric_limits<uint16_t>::max() >> 4))
+			return UInt16;
+		else if (count <= (std::numeric_limits<uint32_t>::max() >> 8))
+			return UInt32;
+		else if (count <= (std::numeric_limits<uint64_t>::max() >> 16))
+			return UInt64;
+		throw std::invalid_argument(std::format("Cannot encode count >= {}", std::numeric_limits<uint64_t>::max() >> 16));
+	}
+
+	template <std::unsigned_integral StorageType, std::integral ValueType>
+	constexpr StorageType FormatNumber(ValueType value)
+	{
+		constexpr uint64_t getData   = 0b00111111;
+		constexpr uint64_t indicator = 0b01000000;
 		StorageType result = 0b0;
 		
-		for (int8_t i = 0; i < sizeof(StorageType); i++)
+		for (auto i = 0; i < sizeof(StorageType); i++)
 		{
 			result |= ((getData << (i * 6)) & value) << (i * 2);
 			result |= indicator << (i * 8);
@@ -36,28 +59,68 @@ namespace gol::RLEEncoder
 	}
 
 	template <std::unsigned_integral StorageType>
-	static constexpr std::vector<StorageType> FormatDimension(int32_t dim)
+	constexpr std::vector<char> EncodeNumber(char indicator, int64_t dim)
 	{
-		uint32_t formatted = FormatNumber<uint32_t>(dim);
-		std::vector<StorageType> result;
-		for (int32_t i = static_cast<int32_t>(sizeof(int32_t) - sizeof(StorageType)); 
-				i >= 0; i -= static_cast<int32_t>(sizeof(StorageType)))
-			result.push_back(static_cast<StorageType>(formatted >> (i * 8)));
-		std::ranges::reverse(result);
+		std::vector<char> result{};
+		result.push_back(indicator);
+		
+		const auto formatted = FormatNumber<StorageType>(dim);
+
+		for (auto i = static_cast<int32_t>(sizeof(StorageType)) - 1;
+			i >= 0;
+			i -= sizeof(char))
+		{
+			result.push_back(static_cast<char>(formatted >> (i * 8)));
+		}
 		return result;
 	}
 
-	template <std::unsigned_integral StorageType>
-	static constexpr StorageType ReadNumber(const char* value)
+	constexpr std::vector<char> EncodeNumber(std::integral auto dim)
 	{
-		constexpr uint8_t getData = 0b00111111;
-		StorageType result = static_cast<StorageType>(0b0);
-
-		for (uint32_t i = 0; i < sizeof(StorageType); i++)
+		const auto storageType = SelectStorageType(dim);
+		switch (storageType)
 		{
-			result |= static_cast<StorageType>(getData & static_cast<const uint8_t>(value[i])) << static_cast<StorageType>(i * 6);
+		using enum RLEStorageType;
+		case UInt8:
+			return EncodeNumber<uint8_t>('A', dim);
+		case UInt16:
+			return EncodeNumber<uint16_t>('B', dim);
+		case UInt32:
+			return EncodeNumber<uint32_t>('C', dim);
+		case UInt64:
+			return EncodeNumber<uint64_t>('D', dim);
+		}
+		std::unreachable();
+	}
+
+	template <std::unsigned_integral StorageType>
+	constexpr StorageType DecodeNumber(std::string_view value)
+	{
+		constexpr StorageType getData = 0b00111111;
+		auto result = static_cast<StorageType>(0b0);
+
+		for (auto i = 0; i < sizeof(StorageType); i++)
+		{
+			const auto strIndex = sizeof(StorageType) - 1 - i;
+			result |= static_cast<StorageType>((getData & value[strIndex]) << (i * 6));
 		}
 		return result;
+	}
+
+	constexpr int64_t DecodeNumber(std::string_view value)
+	{
+		switch (value[0])
+		{
+		case 'A':
+			return static_cast<int64_t>(DecodeNumber<uint8_t>(value.substr(1)));
+		case 'B':
+			return static_cast<int64_t>(DecodeNumber<uint16_t>(value.substr(1)));
+		case 'C':
+			return static_cast<int64_t>(DecodeNumber<uint32_t>(value.substr(1)));
+		case 'D':
+			return static_cast<int64_t>(DecodeNumber<uint64_t>(value.substr(1)));
+		}
+		std::unreachable();
 	}
 
 	template <std::unsigned_integral StorageType>
@@ -65,18 +128,19 @@ namespace gol::RLEEncoder
 	{
 		constexpr static StorageType largestValue = std::numeric_limits<StorageType>::max() >> (2 * sizeof(StorageType));
 
+
 		auto encoded = std::vector<StorageType> {};
 			
-		const auto offsetXDim = FormatDimension<StorageType>(std::abs(offset.X));
+		const auto offsetXDim = EncodeNumber<StorageType>(std::abs(offset.X));
 		encoded.insert(encoded.end(), offsetXDim.begin(), offsetXDim.end());
 			
-		const auto offsetYDim = FormatDimension<StorageType>(std::abs(offset.Y));
+		const auto offsetYDim = EncodeNumber<StorageType>(std::abs(offset.Y));
 		encoded.insert(encoded.end(), offsetYDim.begin(), offsetYDim.end());
 			
-		const auto widthDim = FormatDimension<StorageType>(region.Width);
+		const auto widthDim = EncodeNumber<StorageType>(region.Width);
 		encoded.insert(encoded.end(), widthDim.begin(), widthDim.end());
 			
-		const auto heightDim = FormatDimension<StorageType>(region.Height);
+		const auto heightDim = EncodeNumber<StorageType>(region.Height);
 		encoded.insert(encoded.end(), heightDim.begin(), heightDim.end());
 			
 		encoded.push_back(FormatNumber<StorageType>('0'));
@@ -150,78 +214,14 @@ namespace gol::RLEEncoder
 		Vec2 Offset;
 	};
 
-	template <std::unsigned_integral StorageType>
-	inline std::expected<DecodeResult, StorageType> DecodeRegion(const char* data, StorageType warnThreshold)
-	{
-		if (data[0] == '\0')
-			return {};
-
-		auto offset = Vec2
-		{
-			static_cast<int32_t>(ReadNumber<uint32_t>(data)),
-			static_cast<int32_t>(ReadNumber<uint32_t>(data + sizeof(uint32_t)))
-		};
-
-		auto width  = static_cast<int32_t>(ReadNumber<uint32_t>(data + sizeof(uint32_t) * 2));
-		auto height = static_cast<int32_t>(ReadNumber<uint32_t>(data + sizeof(uint32_t) * 3));
-		if (width * height > static_cast<int32_t>(std::numeric_limits<StorageType>::max() >> (2 * sizeof(StorageType))))
-			return std::unexpected { std::numeric_limits<StorageType>::max() };
-
-		bool running = ReadNumber<StorageType>(data + 4 * sizeof(uint32_t)) == '1';
-		StorageType xPtr = 0;
-		StorageType yPtr = 0;
-		
-		if (ReadNumber<StorageType>(data + sizeof(StorageType) + 4 * sizeof(uint32_t)) == '1')
-			offset.X = -offset.X;
-		if (ReadNumber<StorageType>(data + 2 * sizeof(StorageType) + 4 * sizeof(uint32_t)) == '1')
-			offset.Y = -offset.Y;
-
-		auto result = GameGrid { width, height };
-
-		StorageType warnCount = 0;
-		for (uint32_t i = 4 * sizeof(uint32_t) + 3 * sizeof(StorageType); data[i] != '\0'; i += sizeof(StorageType))
-		{
-			StorageType count = ReadNumber<StorageType>(data + i);
-			if (running)
-				warnCount += count;
-			if (warnCount >= warnThreshold)
-			{
-				running = !running;
-				continue;
-			}
-
-			if (running)
-			{
-				for (StorageType j = 0; j < count; j++)
-				{
-					result.Set(
-						static_cast<int32_t>(xPtr + (yPtr + j) / height),
-						static_cast<int32_t>((yPtr + j) % height),
-						true
-					);
-				}
-			}
-
-			running = !running;
-			xPtr += static_cast<StorageType>((yPtr + count) / height);
-			yPtr = static_cast<StorageType>((yPtr + count) % height);
-		}
-
-		if (warnCount >= warnThreshold)
-			return std::unexpected { warnCount };
-		return DecodeResult { std::move(result), offset };
-	}
-
 	std::string EncodeRegion(const GameGrid& grid, const Rect& region, Vec2 offset = { 0, 0 } );
 
-	std::expected<DecodeResult, uint32_t> DecodeRegion(const char* data, uint32_t warnThreshold);
+	std::expected<RLEEncoder::DecodeResult, std::optional<uint32_t>> DecodeRegion(std::string_view data, uint32_t warnThreshold);
 
 	bool WriteRegion(const GameGrid& grid, const Rect& region, 
 		const std::filesystem::path& filePath, Vec2 offset = { 0, 0 });
 
 	std::expected<DecodeResult, std::string> ReadRegion(const std::filesystem::path& filePath);
-
-	constexpr std::variant<uint8_t, uint16_t, uint32_t, uint64_t> SelectStorageType(uint64_t count);
 }
 
 #endif

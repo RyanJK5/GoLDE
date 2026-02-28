@@ -156,7 +156,7 @@ namespace gol
         return Delete();
     }
 
-    std::expected<VersionChange, uint32_t> SelectionManager::Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold, bool unlock)
+    std::expected<VersionChange, std::optional<uint32_t>> SelectionManager::Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold, bool unlock)
     {
         if (unlock)
 		    m_LockSelection = false;
@@ -391,7 +391,7 @@ namespace gol
 
         switch (*action)
         {
-        using enum SelectionAction;
+            using enum SelectionAction;
         case NudgeLeft: [[fallthrough]];
         case NudgeRight: [[fallthrough]];
         case NudgeUp: [[fallthrough]];
@@ -403,7 +403,7 @@ namespace gol
             return;
         case FlipHorizontally: [[fallthrough]];
         case FlipVertically:
-		    Flip(*action);
+            Flip(*action);
             return;
         case Rotate:
             this->Rotate(undoRedo == EditorAction::Redo);
@@ -411,7 +411,7 @@ namespace gol
         case Paste: [[fallthrough]];
         case Delete:
             SetSelectionBounds(*change.SelectionBounds);
-            m_Selected = GameGrid(change.SelectionBounds->Size());
+            m_Selected = GameGrid{ change.SelectionBounds->Size() };
             RestoreGridVersion(undoRedo, *m_Selected, change);
 
             if ((undoRedo == EditorAction::Redo) == (*action == Delete))
@@ -425,7 +425,7 @@ namespace gol
             }
 
             SetSelectionBounds(*change.SelectionBounds);
-            m_Selected = GameGrid(change.SelectionBounds->Size());
+            m_Selected = GameGrid{change.SelectionBounds->Size()};
 
             for (auto pos : change.CellsInserted)
                 m_Selected->Set(pos.X, pos.Y, true);
@@ -436,7 +436,7 @@ namespace gol
             if (undoRedo == EditorAction::Undo)
             {
                 SetSelectionBounds(*change.SelectionBounds);
-                m_Selected = GameGrid(change.SelectionBounds->Size());
+                m_Selected = GameGrid{ change.SelectionBounds->Size() };
                 for (auto pos : change.CellsDeleted)
                     m_Selected->Set(pos.X, pos.Y, true);
                 for (auto pos : change.CellsInserted)

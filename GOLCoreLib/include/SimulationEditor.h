@@ -59,46 +59,59 @@ namespace gol
 		DisplayResult DisplaySimulation(bool grabFocus);
 
 		SimulationState UpdateState(const SimulationControlResult& action);
+		
 		void PasteSelection();
-		void LoadFile(const gol::SimulationControlResult& result);
+		
+		void LoadFile(const SimulationControlResult& result);
+		
+		void SaveToFile(const SimulationControlResult& result);
+
 		gol::SimulationState ResizeGrid(const gol::SimulationControlResult& result);
+		
 		void UpdateViewport();
+		
 		std::optional<Vec2> CursorGridPos();
+		
 		std::optional<Vec2> ConvertToGridPos(Vec2F screenPos);
 
 		void UpdateMouseState(Vec2 gridPos);
 		void FillCells();
 		void UpdateDragState();
+
+		void PasteWarnUpdated(PopupWindowState state);
 	private:
 		static constexpr double DefaultTickDelayMs = 0.;
 	private:
-		uint32_t m_EditorID;
-		std::filesystem::path m_CurrentFilePath;
-
-		SimulationState m_State = SimulationState::Paint;
-
+		SelectionManager m_SelectionManager;
+		
 		GameGrid m_Grid;
 		GameGrid m_InitialGrid;
-
-		std::unique_ptr<SimulationWorker> m_Worker;
-
-		SelectionManager m_SelectionManager;
+		
 		VersionManager m_VersionManager;
-
+		
 		GraphicsHandler m_Graphics;
-		RectF m_WindowBounds;
-
+		
 		ErrorWindow m_FileErrorWindow;
 		WarnWindow m_PasteWarning;
-		
-		bool m_StopStepCommand = false;
-		bool m_TakeKeyboardInput = false;
-		bool m_TakeMouseInput = false;
+		WarnWindow m_SaveWarning;
 
+		std::filesystem::path m_CurrentFilePath;
+
+		RectF m_WindowBounds;
+
+		std::unique_ptr<SimulationWorker> m_Worker;
+		
 		Vec2F m_LeftDeltaLast;
 		Vec2F m_RightDeltaLast;
 		
+		uint32_t m_EditorID;
+		
 		EditorMode m_EditorMode = EditorMode::None;
+		SimulationState m_State = SimulationState::Paint;
+
+		bool m_StopStepCommand = false;
+		bool m_TakeKeyboardInput = false;
+		bool m_TakeMouseInput = false;
 	};
 }
 

@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(GOLTest ${SOURCES} "src/ThreadingTest.cpp")
+add_executable(GOLTest ${SOURCES} "src/ThreadingTest.cpp" "src/EncodeTest.cpp")
 
 # Modern GTest discovery
 include(GoogleTest)

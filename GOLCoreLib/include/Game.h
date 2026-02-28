@@ -60,6 +60,8 @@ namespace gol
 
 		inline bool Open() const { return !glfwWindowShouldClose(m_Window.Get()); }
 	private:
+		void HandleUnsaved(PopupWindowState state);
+
 		void BeginFrame();
 		void EndFrame();
 
@@ -67,6 +69,7 @@ namespace gol
 		void CreateDockspace();
 
 		bool WindowCanClose();
+		void HandleWindowClose(PopupWindowState state);
 
 		bool CheckForNewEditors(const SimulationControlResult& controlResult);
 		void CreateEditorDockspace();
