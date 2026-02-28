@@ -12,12 +12,12 @@
 
 namespace gol {
 struct VersionChange {
-  std::optional<ActionVariant> Action;
-  std::optional<std::pair<GameGrid, Size2>> GridResize;
-  std::optional<Rect> SelectionBounds;
-  LifeHashSet CellsInserted;
-  LifeHashSet CellsDeleted;
-  Vec2 NudgeTranslation;
+  std::optional<ActionVariant> Action{};
+  std::optional<std::pair<GameGrid, Size2>> GridResize{};
+  std::optional<Rect> SelectionBounds{};
+  LifeHashSet CellsInserted{};
+  LifeHashSet CellsDeleted{};
+  Vec2 NudgeTranslation{};
 
   bool InsertedIntoSelection() const { return SelectionBounds.has_value(); }
 };

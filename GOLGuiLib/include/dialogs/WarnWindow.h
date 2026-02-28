@@ -1,6 +1,7 @@
 #ifndef __WarnWindow_h__
 #define __WarnWindow_h__
 
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -14,7 +15,7 @@ public:
       : PopupWindow(title, onUpdate) {}
 
 protected:
-  virtual PopupWindowState ShowButtons() const override final;
+  virtual std::optional<PopupWindowState> ShowButtons() const override final;
 };
 } // namespace gol
 

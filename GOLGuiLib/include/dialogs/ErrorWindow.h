@@ -2,6 +2,7 @@
 #define __ErrorWindow_h__
 
 #include <string_view>
+#include <optional>
 
 #include "PopupWindow.h"
 
@@ -13,7 +14,7 @@ public:
       : PopupWindow(title, onUpdate) {}
 
 protected:
-  virtual PopupWindowState ShowButtons() const override final;
+  virtual std::optional<PopupWindowState> ShowButtons() const override final;
 };
 } // namespace gol
 

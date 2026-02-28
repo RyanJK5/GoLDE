@@ -50,8 +50,8 @@ GameGrid GameGrid::GenerateNoise(Rect bounds, float density) {
 }
 
 GameGrid::GameGrid(int32_t width, int32_t height)
-    : m_Width(width), m_Height(height), m_Algorithm(LifeAlgorithm::HashLife),
-      m_Data() {}
+    : m_Algorithm(LifeAlgorithm::HashLife), m_Data(), m_Width(width), m_Height(height)
+ {}
 
 GameGrid::GameGrid(Size2 size) : GameGrid(size.Width, size.Height) {}
 

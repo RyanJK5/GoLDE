@@ -93,8 +93,6 @@ private:
   WarnWindow m_UnsavedWarning;
   SimulationEditor *m_Unsaved = nullptr;
 
-  size_t m_ActiveEditorID = 0;
-
   SimulationControl m_Control;
   PresetSelection m_PresetSelection;
   ImFont *m_Font = nullptr;

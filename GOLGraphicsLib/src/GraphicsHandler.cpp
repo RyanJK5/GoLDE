@@ -176,7 +176,7 @@ gol::GraphicsHandler::GridLineInfo gol::GraphicsHandler::CalculateGridLineInfo(
                  args.GridSize.Height * args.CellSize.Height)};
   }();
 
-  const auto gridSize = [cameraCorner, upperLeft, bounded, args, this]() {
+  const auto gridSize = [upperLeft, bounded, args, this]() {
     const auto unboundedReturn = Size2{
         static_cast<int32_t>(std::ceil(args.ViewportBounds.Width / Camera.Zoom /
                                        args.CellSize.Width)),

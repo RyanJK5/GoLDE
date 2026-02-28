@@ -19,7 +19,7 @@ static void StressTest(const std::filesystem::path &universe,
   std::vector<std::future<GameGrid>> result{};
   for (auto i = 1; i <= threadCount; i++) {
     result.emplace_back(std::async(
-        std::launch::async, [&startCounter, &endCounter, genCount, threadCount,
+        std::launch::async, [&startCounter, &endCounter, genCount,
                              i, myData = decodeResult->Grid] mutable {
           startCounter.count_down();
           startCounter.wait();

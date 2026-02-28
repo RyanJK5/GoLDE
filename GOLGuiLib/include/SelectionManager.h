@@ -15,7 +15,7 @@
 
 namespace gol {
 struct SelectionUpdateResult {
-  std::optional<VersionChange> Change;
+  std::optional<VersionChange> Change{};
   bool BeginSelection = false;
 };
 

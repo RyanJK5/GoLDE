@@ -12,18 +12,18 @@
 namespace gol {
 struct SimulationControlResult {
   SimulationState State = SimulationState::Empty;
-  std::optional<ActionVariant> Action;
+  std::optional<ActionVariant> Action{};
 
-  int64_t StepCount;
-  std::optional<LifeAlgorithm> Algorithm;
+  int64_t StepCount = 0;
+  std::optional<LifeAlgorithm> Algorithm{};
 
-  std::optional<Size2> NewDimensions;
+  std::optional<Size2> NewDimensions{};
 
-  std::optional<float> NoiseDensity;
+  std::optional<float> NoiseDensity{};
 
-  std::optional<int32_t> TickDelayMs;
+  std::optional<int32_t> TickDelayMs{};
 
-  std::optional<std::filesystem::path> FilePath;
+  std::optional<std::filesystem::path> FilePath{};
 
   int32_t NudgeSize = 0;
 

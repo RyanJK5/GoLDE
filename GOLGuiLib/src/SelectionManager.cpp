@@ -172,7 +172,6 @@ std::optional<VersionChange> SelectionManager::Delete() {
   if (!m_Selected)
     return std::nullopt;
 
-  auto bounds = SelectionBounds();
   auto retValue = VersionChange{.Action = SelectionAction::Delete,
                                 .SelectionBounds = SelectionBounds(),
                                 .CellsInserted = {},

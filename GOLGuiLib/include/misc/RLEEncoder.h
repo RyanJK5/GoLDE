@@ -41,7 +41,7 @@ constexpr StorageType FormatNumber(ValueType value) {
   constexpr uint64_t indicator = 0b01000000;
   StorageType result = 0b0;
 
-  for (auto i = 0; i < sizeof(StorageType); i++) {
+  for (auto i = 0UZ; i < sizeof(StorageType); i++) {
     result |= ((getData << (i * 6)) & value) << (i * 2);
     result |= indicator << (i * 8);
   }
@@ -84,7 +84,7 @@ constexpr StorageType DecodeNumber(std::string_view value) {
   constexpr StorageType getData = 0b00111111;
   auto result = static_cast<StorageType>(0b0);
 
-  for (auto i = 0; i < sizeof(StorageType); i++) {
+  for (auto i = 0UZ; i < sizeof(StorageType); i++) {
     const auto strIndex = sizeof(StorageType) - 1 - i;
     result |= static_cast<StorageType>((getData & value[strIndex]) << (i * 6));
   }

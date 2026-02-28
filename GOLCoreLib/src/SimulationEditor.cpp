@@ -38,15 +38,15 @@ namespace gol {
 SimulationEditor::SimulationEditor(uint32_t id,
                                    const std::filesystem::path &path,
                                    Size2 windowSize, Size2 gridSize)
-    : m_EditorID(id), m_CurrentFilePath(path), m_Grid(gridSize),
-      m_Worker(std::make_unique<SimulationWorker>()),
+    : m_Grid(gridSize),
       m_Graphics(std::filesystem::path("resources") / "shader",
                  windowSize.Width, windowSize.Height, {0.1f, 0.1f, 0.1f, 1.f}),
+      m_FileErrorWindow("File Error", [](auto) {}),
       m_PasteWarning(
           "Paste Warning",
           std::bind_front(&SimulationEditor::PasteWarnUpdated, this)),
-      m_FileErrorWindow("File Error", [](auto) {}),
-      m_SaveWarning("Save Warning", [](auto) {}) {}
+      m_SaveWarning("Save Warning", [](auto) {}), m_CurrentFilePath(path),
+      m_Worker(std::make_unique<SimulationWorker>()), m_EditorID(id) {}      
 
 bool SimulationEditor::IsSaved() const { return m_VersionManager.IsSaved(); }
 

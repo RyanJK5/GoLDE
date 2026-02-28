@@ -14,7 +14,7 @@
     {
       "name": "x64-Release",
       "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
+      "configurationType": "Release",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
@@ -34,6 +34,30 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "${defaultWSLPath}"
+    },
+    {
+      "name": "x64-Clang-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "-G \"Ninja\"",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "clang_cl_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "x64-Clang-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "-G \"Ninja\"",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "clang_cl_x64_x64" ],
+      "variables": []
     }
   ]
 }

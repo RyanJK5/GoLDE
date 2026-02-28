@@ -2,18 +2,19 @@
 #define __PopupWindow_h__
 
 #include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
 
 namespace gol {
-enum class PopupWindowState { None, Success, Failure };
+enum class PopupWindowState { Success, Failure };
 
 class PopupWindow {
 public:
   PopupWindow(std::string_view title,
               std::function<void(PopupWindowState)> onUpdate);
 
-  PopupWindowState Update();
+  void Update();
 
   void Activate() { Active = true; }
 
@@ -22,7 +23,7 @@ public:
   std::string Message;
 
 protected:
-  virtual PopupWindowState ShowButtons() const = 0;
+  virtual std::optional<PopupWindowState> ShowButtons() const = 0;
 
 private:
   std::function<void(PopupWindowState)> m_UpdateCallback;

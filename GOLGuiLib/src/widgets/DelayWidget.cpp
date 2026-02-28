@@ -5,8 +5,10 @@
 #include "GameEnums.h"
 #include "SimulationControlResult.h"
 
-gol::SimulationControlResult
-gol::DelayWidget::UpdateImpl(const EditorResult &) {
+namespace gol {
+
+SimulationControlResult
+DelayWidget::UpdateImpl(const EditorResult &) {
 
   ImGui::Text("Simulation Delay (ms)");
   ImGui::SetItemTooltip(
@@ -25,4 +27,6 @@ gol::DelayWidget::UpdateImpl(const EditorResult &) {
 
   m_TickDelayMs = std::max(m_TickDelayMs, 0);
   return {.TickDelayMs = m_TickDelayMs, .GridLines = m_GridLines};
+}
+
 }

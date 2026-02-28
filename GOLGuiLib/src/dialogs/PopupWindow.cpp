@@ -7,11 +7,11 @@
 namespace gol {
 PopupWindow::PopupWindow(std::string_view title,
                          std::function<void(PopupWindowState)> onUpdate)
-    : Message(""), m_Title(title), m_UpdateCallback(onUpdate) {}
+    : Message(""), m_UpdateCallback(onUpdate), m_Title(title) {}
 
-PopupWindowState PopupWindow::Update() {
+void PopupWindow::Update() {
   if (!Active)
-    return PopupWindowState::None;
+    return;
 
   ImGui::OpenPopup(m_Title.c_str());
   ImGui::BeginPopupModal(m_Title.c_str(), nullptr,
@@ -23,13 +23,12 @@ PopupWindowState PopupWindow::Update() {
   ImGui::PopStyleVar();
 
   const auto result = ShowButtons();
-  if (result != PopupWindowState::None) {
-    m_UpdateCallback(result);
+  if (result) {
+    m_UpdateCallback(*result);
     Active = false;
   }
 
   ImGui::EndPopup();
-  return result;
 }
 
 void PopupWindow::SetCallback(std::function<void(PopupWindowState)> onUpdate) {

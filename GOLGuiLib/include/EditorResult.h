@@ -8,7 +8,7 @@
 
 namespace gol {
 struct EditorResult {
-  std::filesystem::path CurrentFilePath;
+  std::filesystem::path CurrentFilePath{};
   SimulationState State = SimulationState::Paint;
   LifeAlgorithm Algorithm = LifeAlgorithm::SparseLife;
   bool Active = true;

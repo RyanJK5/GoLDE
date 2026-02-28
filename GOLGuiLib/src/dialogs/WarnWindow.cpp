@@ -7,7 +7,10 @@
 #include "PopupWindow.h"
 #include "WarnWindow.h"
 
-gol::PopupWindowState gol::WarnWindow::ShowButtons() const {
+namespace gol
+{
+
+std::optional<PopupWindowState> WarnWindow::ShowButtons() const {
   constexpr int32_t height =
       ActionButton<EditorAction, false>::DefaultButtonHeight;
   bool yes = ImGui::Button("Yes", {ImGui::GetContentRegionAvail().x, height});
@@ -17,5 +20,7 @@ gol::PopupWindowState gol::WarnWindow::ShowButtons() const {
     return PopupWindowState::Success;
   if (no)
     return PopupWindowState::Failure;
-  return PopupWindowState::None;
+  return {};
+}
+
 }

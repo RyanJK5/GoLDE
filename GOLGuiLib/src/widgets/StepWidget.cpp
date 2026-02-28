@@ -89,8 +89,6 @@ void StepWidget::ShowInputText() {
 }
 
 SimulationControlResult StepWidget::UpdateImpl(const EditorResult &state) {
-  constexpr static auto SmallStep = 1;
-
   constexpr static auto beginGreyOutIf = [](bool condition) {
     if (condition) {
       ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
