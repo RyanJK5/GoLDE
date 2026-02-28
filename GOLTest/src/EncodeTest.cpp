@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <fstream>
 #include <print>
 
 #include "Graphics2D.h"
@@ -8,10 +9,8 @@ namespace gol
 {
 	constexpr static bool EncodeDecodeTest(std::integral auto value)
 	{
-		using namespace RLEEncoder;
-		
-		const auto encoded = EncodeNumber(value);
-		const auto decoded = DecodeNumber(std::string_view{ encoded.data(), encoded.size() });
+		const auto encoded = RLEEncoder::EncodeNumber(value);
+		const auto decoded = RLEEncoder::DecodeNumber(std::string_view{ encoded.data(), encoded.size() });
 
 		return (decoded == value);
 	}
@@ -49,11 +48,33 @@ namespace gol
 			return std::unexpected{ str };
 		}
 
-		std::println("   {}\n-> {}\n-> {}", grid.Data(), encoded, decodeResult->Grid.Data());
-
 		return *decodeResult;
 	}
 
+	TEST(EncodeTest, DecodeEncodeTest)
+	{
+		const auto filePath = std::filesystem::path{ "universes" } / "bigsquiggles1.gol";
+		const auto result = RLEEncoder::ReadRegion(filePath);
+		ASSERT_TRUE(result.has_value()) << result.error();
+
+		const auto dataToWrite = result->Grid.Data()
+			| std::views::transform([&](Vec2 pos) { return pos + result->Offset; })
+			| std::ranges::to<LifeHashSet>();
+		GameGrid finalGrid{};
+		for (const auto pos : dataToWrite)
+			finalGrid.Set(pos.X, pos.Y, true);
+
+		const auto boundingBox = finalGrid.BoundingBox();
+		const auto encoded = RLEEncoder::EncodeRegion(finalGrid, boundingBox, boundingBox.Pos());
+		
+		const auto fileStr = [&]
+		{
+			auto in = std::ifstream{ filePath };
+			return std::string{ std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>() };
+		}();
+
+		ASSERT_EQ(fileStr, encoded);
+	}
 	TEST(EncodeTest, SquareTest)
 	{
 		const LifeHashSet data{ {0, 0}, {1, 1}, {0, 1}, {1, 0} };
