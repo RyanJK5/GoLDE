@@ -352,7 +352,6 @@ namespace gol
         const auto data = RLEEncoder::ReadRegion(directory / "glider_gun.gol");
         
         HashQuadtree original{ data->Grid.Data(), data->Offset };
-        original.PrepareCopyAcrossThread();
 
         original.Advance(1LL << 32LL);
         HashQuadtree copy{ original };

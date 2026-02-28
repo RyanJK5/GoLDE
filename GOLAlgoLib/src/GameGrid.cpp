@@ -86,7 +86,7 @@ namespace gol
 	void GameGrid::PrepareCopyBetweenThreads()
 	{
 		if (m_HashLifeData)
-			m_HashLifeData->PrepareCopyAcrossThread();
+			m_HashLifeData->PrepareCopyBetweenThreads();
 	}
 
 	bool GameGrid::Dead() const
