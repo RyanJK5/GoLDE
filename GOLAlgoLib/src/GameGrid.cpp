@@ -83,7 +83,7 @@ namespace gol
 		m_Algorithm = algorithm;
 	}
 
-	void GameGrid::PrepareCopy()
+	void GameGrid::PrepareCopyAcrossThread()
 	{
 		if (m_HashLifeData)
 			m_HashLifeData->PrepareCopy();

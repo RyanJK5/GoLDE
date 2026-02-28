@@ -28,7 +28,7 @@ namespace gol
 
 		void SetAlgorithm(LifeAlgorithm algorithm);
 
-		void PrepareCopy();
+		void PrepareCopyAcrossThread();
 
 		int64_t Update(int64_t numSteps = 1, std::stop_token stopToken = {});
 
