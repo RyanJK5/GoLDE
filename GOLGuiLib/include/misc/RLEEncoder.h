@@ -1,5 +1,5 @@
-#ifndef __RLEEncoder_h__
-#define __RLEEncoder_h__
+#ifndef RLEEncoder_h_
+#define RLEEncoder_h_
 
 #include <algorithm>
 #include <concepts>

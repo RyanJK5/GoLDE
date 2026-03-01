@@ -1,5 +1,5 @@
-#ifndef __ActionWidget_h__
-#define __ActionWidget_h__
+#ifndef ActionWidget_h_
+#define ActionWidget_h_
 
 #include <cstdint>
 #include <filesystem>

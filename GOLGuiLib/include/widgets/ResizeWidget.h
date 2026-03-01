@@ -1,5 +1,5 @@
-#ifndef __ResizeWidget_h__
-#define __ResizeWidget_h__
+#ifndef ResizeWidget_h_
+#define ResizeWidget_h_
 
 #include <imgui/imgui.h>
 #include <span>

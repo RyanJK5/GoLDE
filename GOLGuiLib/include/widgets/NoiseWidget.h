@@ -1,5 +1,5 @@
-#ifndef __NoiseWidget_h__
-#define __NoiseWidget_h__
+#ifndef NoiseWidget_h_
+#define NoiseWidget_h_
 
 #include <cstdint>
 #include <imgui/imgui.h>

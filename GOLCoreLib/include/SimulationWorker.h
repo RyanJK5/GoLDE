@@ -1,5 +1,5 @@
-#ifndef __SimulationWorker_h__
-#define __SimulationWorker_h__
+#ifndef SimulationWorker_h_
+#define SimulationWorker_h_
 
 #include <atomic>
 #include <cstdint>

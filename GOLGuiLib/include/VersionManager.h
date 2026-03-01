@@ -1,5 +1,5 @@
-#ifndef __VersionManager_h__
-#define __VersionManager_h__
+#ifndef VersionManager_h_
+#define VersionManager_h_
 
 #include <optional>
 #include <stack>

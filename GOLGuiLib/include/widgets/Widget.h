@@ -1,5 +1,5 @@
-#ifndef __Widget_h__
-#define __Widget_h__
+#ifndef Widget_h_
+#define Widget_h_
 
 #include <concepts>
 

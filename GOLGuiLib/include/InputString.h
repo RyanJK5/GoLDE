@@ -1,5 +1,5 @@
-#ifndef __InputString_h__
-#define __InputString_h__
+#ifndef InputString_h_
+#define InputString_h_
 
 #include <cstring>
 #include <print>

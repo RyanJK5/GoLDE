@@ -1,5 +1,5 @@
-#ifndef __DrawManager_h__
-#define __DrawManager_h__
+#ifndef DrawManager_h_
+#define DrawManager_h_
 
 #include <algorithm>
 #include <cmath>

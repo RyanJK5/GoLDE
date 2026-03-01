@@ -1,5 +1,5 @@
-#ifndef __PopupWindow_h__
-#define __PopupWindow_h__
+#ifndef PopupWindow_h_
+#define PopupWindow_h_
 
 #include <functional>
 #include <optional>

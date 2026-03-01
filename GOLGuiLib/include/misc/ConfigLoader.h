@@ -1,4 +1,4 @@
-#define StyleLoader_h_
+#ifndef StyleLoader_h_
 #define StyleLoader_h_
 
 #include <algorithm>

@@ -1,4 +1,4 @@
-#define PresetComponent_h_
+#ifndef PresetComponent_h_
 #define PresetComponent_h_
 
 #include <cstdint>

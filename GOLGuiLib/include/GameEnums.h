@@ -1,5 +1,5 @@
-#ifndef __GameEnums_h__
-#define __GameEnums_h__
+#ifndef GameEnums_h_
+#define GameEnums_h_
 
 #include <concepts>
 #include <filesystem>

@@ -1,5 +1,5 @@
-#ifndef __FileDialog_h__
-#define __FileDialog_h__
+#ifndef FileDialog_h_
+#define FileDialog_h_
 
 #include <expected>
 #include <filesystem>
