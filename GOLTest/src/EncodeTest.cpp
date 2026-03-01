@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 #include <print>
 
-#include "Graphics2D.h"
-#include "RLEEncoder.h"
+#include "Graphics2D.hpp"
+#include "RLEEncoder.hpp"
 
 namespace gol {
 constexpr static bool EncodeDecodeTest(std::integral auto value) {

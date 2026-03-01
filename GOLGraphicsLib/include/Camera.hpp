@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Graphics2D.h"
+#include "Graphics2D.hpp"
 
 namespace gol {
 class GraphicsCamera {

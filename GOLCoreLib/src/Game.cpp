@@ -11,16 +11,16 @@
 #include <optional>
 #include <utility>
 
-#include "ConfigLoader.h"
-#include "GLException.h"
-#include "Game.h"
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "Logging.h"
-#include "PopupWindow.h"
-#include "PresetSelectionResult.h"
-#include "SimulationControlResult.h"
-#include "SimulationEditor.h"
+#include "ConfigLoader.hpp"
+#include "GLException.hpp"
+#include "Game.hpp"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "Logging.hpp"
+#include "PopupWindow.hpp"
+#include "PresetSelectionResult.hpp"
+#include "SimulationControlResult.hpp"
+#include "SimulationEditor.hpp"
 #include <cassert>
 #include <ranges>
 #include <vector>

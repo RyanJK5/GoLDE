@@ -15,8 +15,8 @@
 #include <unordered_dense.h>
 #include <utility>
 
-#include "Graphics2D.h"
-#include "LifeHashSet.h"
+#include "Graphics2D.hpp"
+#include "LifeHashSet.hpp"
 
 // HashQuadtree and its related free functions and structs contain all of the necessary
 // representations for the HashLife algorithm. At a high level, HashLife uses a quadtree

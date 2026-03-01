@@ -1,11 +1,11 @@
 #include <imgui/imgui.h>
 #include <vector>
 
-#include "ConfigLoader.h"
-#include "GameEnums.h"
-#include "KeyShortcut.h"
-#include "SimulationControl.h"
-#include "SimulationControlResult.h"
+#include "ConfigLoader.hpp"
+#include "GameEnums.hpp"
+#include "KeyShortcut.hpp"
+#include "SimulationControl.hpp"
+#include "SimulationControlResult.hpp"
 
 gol::ButtonlessShortcuts::ButtonlessShortcuts(
     const std::vector<ImGuiKeyChord> &left,

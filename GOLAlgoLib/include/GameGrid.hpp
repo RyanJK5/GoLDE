@@ -9,9 +9,9 @@
 #include <unordered_dense.h>
 #include <vector>
 
-#include "Graphics2D.h"
-#include "LifeAlgorithm.h"
-#include "LifeHashSet.h"
+#include "Graphics2D.hpp"
+#include "LifeAlgorithm.hpp"
+#include "LifeHashSet.hpp"
 
 namespace gol {
 

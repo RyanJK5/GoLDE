@@ -4,11 +4,11 @@
 #include <string>
 #include <utility>
 
-#include "ActionButton.h"
-#include "ExecutionWidget.h"
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "SimulationControlResult.h"
+#include "ActionButton.hpp"
+#include "ExecutionWidget.hpp"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "SimulationControlResult.hpp"
 
 gol::Size2F gol::StartButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 4.f,

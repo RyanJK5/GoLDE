@@ -1,4 +1,4 @@
-#include "NoiseWidget.h"
+#include "NoiseWidget.hpp"
 
 namespace gol {
 Size2F GenerateNoiseButton::Dimensions() const {

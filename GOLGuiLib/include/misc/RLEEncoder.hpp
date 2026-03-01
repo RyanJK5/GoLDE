@@ -13,9 +13,9 @@
 #include <variant>
 #include <vector>
 
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "Logging.h"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "Logging.hpp"
 
 namespace gol::RLEEncoder {
 enum class RLEStorageType { UInt8, UInt16, UInt32, UInt64 };

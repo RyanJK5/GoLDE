@@ -1,20 +1,20 @@
 #include <algorithm>
 #include <array>
-#include <cstdint>
-#include <span>
-#include <stop_token>
-#include <unordered_dense.h>
-#include <vector>
-
-#include "LifeAlgorithm.h"
-#include <Graphics2D.h>
-#include <HashQuadtree.h>
-#include <LifeHashSet.h>
 #include <cmath>
 #include <concepts>
 #include <memory>
 #include <ranges>
+#include <cstdint>
+#include <span>
+#include <stop_token>
 #include <type_traits>
+#include <unordered_dense.h>
+#include <vector>
+
+#include "LifeAlgorithm.hpp"
+#include "Graphics2D.hpp"
+#include "HashQuadtree.hpp"
+#include "LifeHashSet.hpp"
 
 namespace gol {
 template <std::integral T> constexpr static int64_t Pow2(T exponent) {

@@ -9,9 +9,9 @@
 #include <string_view>
 #include <utility>
 
-#include "GLException.h"
-#include "Logging.h"
-#include "ShaderManager.h"
+#include "GLException.hpp"
+#include "Logging.hpp"
+#include "ShaderManager.hpp"
 
 gol::ShaderManager::ShaderManager(const std::filesystem::path &shaderFilePath) {
     auto itr = s_Shaders.find(shaderFilePath);

@@ -4,12 +4,12 @@
 #include <imgui/imgui.h>
 #include <span>
 
-#include "ActionButton.h"
-#include "EditorResult.h"
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "SimulationControlResult.h"
-#include "Widget.h"
+#include "ActionButton.hpp"
+#include "EditorResult.hpp"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "SimulationControlResult.hpp"
+#include "Widget.hpp"
 
 namespace gol {
 class ResizeButton : public ActionButton<EditorAction, false> {

@@ -6,17 +6,17 @@
 #include <string>
 #include <utility>
 
-#include "EditorResult.h"
-#include "FileDialog.h"
-#include "GameEnums.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "GraphicsHandler.h"
-#include "InputString.h"
-#include "Logging.h"
-#include "PresetSelection.h"
-#include "PresetSelectionResult.h"
-#include "RLEEncoder.h"
+#include "EditorResult.hpp"
+#include "FileDialog.hpp"
+#include "GameEnums.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "GraphicsHandler.hpp"
+#include "InputString.hpp"
+#include "Logging.hpp"
+#include "PresetSelection.hpp"
+#include "PresetSelectionResult.hpp"
+#include "RLEEncoder.hpp"
 
 gol::PresetDisplay::PresetDisplay(const GameGrid &grid,
                                   const std::string &fileName, Size2 windowSize)

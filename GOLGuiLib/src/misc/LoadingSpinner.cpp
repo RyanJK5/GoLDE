@@ -1,4 +1,4 @@
-#include "LoadingSpinner.h"
+#include "LoadingSpinner.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>

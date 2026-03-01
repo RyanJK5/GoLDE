@@ -9,12 +9,12 @@
 #include <utility>
 #include <variant>
 
-#include "GameEnums.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "RLEEncoder.h"
-#include "SelectionManager.h"
-#include "VersionManager.h"
+#include "GameEnums.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "RLEEncoder.hpp"
+#include "SelectionManager.hpp"
+#include "VersionManager.hpp"
 
 namespace gol {
 SelectionUpdateResult SelectionManager::UpdateSelectionArea(GameGrid &grid,

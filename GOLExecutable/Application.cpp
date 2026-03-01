@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include "Game.h"
+#include "Game.hpp"
 
 int main() {
   const auto configPath = std::filesystem::path{"config"} / "style.yaml";

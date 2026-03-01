@@ -6,11 +6,11 @@
 #include <utility>
 #include <vector>
 
-#include "GLException.h"
-#include "Graphics2D.h"
-#include "GraphicsHandler.h"
-#include "Logging.h"
-#include "ShaderManager.h"
+#include "GLException.hpp"
+#include "Graphics2D.hpp"
+#include "GraphicsHandler.hpp"
+#include "Logging.hpp"
+#include "ShaderManager.hpp"
 
 gol::FrameBufferBinder::FrameBufferBinder(const gol::GLFrameBuffer &buffer) {
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, buffer.ID()));

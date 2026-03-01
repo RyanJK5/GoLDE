@@ -4,10 +4,10 @@
 #include <string>
 #include <utility>
 
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "SimulationControlResult.h"
-#include "StepWidget.h"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "SimulationControlResult.hpp"
+#include "StepWidget.hpp"
 
 namespace gol {
 Size2F StepButton::Dimensions() const {

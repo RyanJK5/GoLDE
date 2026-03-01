@@ -3,8 +3,8 @@
 
 #include <filesystem>
 
-#include "GameEnums.h"
-#include "LifeAlgorithm.h"
+#include "GameEnums.hpp"
+#include "LifeAlgorithm.hpp"
 
 namespace gol {
 struct EditorResult {

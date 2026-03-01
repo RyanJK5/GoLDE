@@ -4,7 +4,7 @@
 #include <optional>
 #include <string_view>
 
-#include "PopupWindow.h"
+#include "PopupWindow.hpp"
 
 namespace gol {
 class ErrorWindow : public PopupWindow {

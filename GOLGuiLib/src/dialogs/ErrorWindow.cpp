@@ -1,10 +1,10 @@
 #include <cstdint>
 #include <imgui/imgui.h>
 
-#include "ActionButton.h"
-#include "ErrorWindow.h"
-#include "GameEnums.h"
-#include "PopupWindow.h"
+#include "ActionButton.hpp"
+#include "ErrorWindow.hpp"
+#include "GameEnums.hpp"
+#include "PopupWindow.hpp"
 
 namespace gol {
 

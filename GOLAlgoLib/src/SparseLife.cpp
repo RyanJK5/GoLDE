@@ -1,8 +1,8 @@
 #include <algorithm>
 
-#include "Graphics2D.h"
-#include "LifeAlgorithm.h"
-#include "LifeHashSet.h"
+#include "Graphics2D.hpp"
+#include "LifeAlgorithm.hpp"
+#include "LifeHashSet.hpp"
 
 namespace gol {
     LifeHashSet SparseLife(std::span<const Vec2> data, Rect bounds,

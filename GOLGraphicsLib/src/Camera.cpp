@@ -3,8 +3,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <print>
 
-#include "Camera.h"
-#include "Graphics2D.h"
+#include "Camera.hpp"
+#include "Graphics2D.hpp"
 
 void gol::GraphicsCamera::ZoomBy(Vec2F screenPos, const RectF &viewBounds,
                                  float zoom) {

@@ -1,6 +1,6 @@
 #include <utility>
 
-#include "InputString.h"
+#include "InputString.hpp"
 
 namespace gol {
 InputString::InputString(size_t length)

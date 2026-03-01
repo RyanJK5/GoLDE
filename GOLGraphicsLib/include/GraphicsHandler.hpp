@@ -10,11 +10,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "Camera.h"
-#include "GLBuffer.h"
-#include "Graphics2D.h"
-#include "Logging.h"
-#include "ShaderManager.h"
+#include "Camera.hpp"
+#include "GLBuffer.hpp"
+#include "Graphics2D.hpp"
+#include "Logging.hpp"
+#include "ShaderManager.hpp"
 
 namespace gol {
 struct GraphicsHandlerArgs {

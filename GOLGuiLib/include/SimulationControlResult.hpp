@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <optional>
 
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "LifeAlgorithm.h"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "LifeAlgorithm.hpp"
 
 namespace gol {
 struct SimulationControlResult {

@@ -2,7 +2,7 @@
 
 #include <imgui/imgui.h>
 
-#include "PopupWindow.h"
+#include "PopupWindow.hpp"
 
 namespace gol {
 PopupWindow::PopupWindow(std::string_view title,

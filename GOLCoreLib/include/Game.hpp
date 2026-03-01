@@ -6,12 +6,12 @@
 #include <imgui/imgui.h>
 #include <vector>
 
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "PopupWindow.h"
-#include "PresetSelection.h"
-#include "SimulationControl.h"
-#include "SimulationEditor.h"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "PopupWindow.hpp"
+#include "PresetSelection.hpp"
+#include "SimulationControl.hpp"
+#include "SimulationEditor.hpp"
 
 namespace gol {
 // Simple RAII wrapper for the GLFWwindow handle.

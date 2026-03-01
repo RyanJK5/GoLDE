@@ -5,13 +5,13 @@
 #include <span>
 #include <string>
 
-#include "ActionButton.h"
-#include "FileDialog.h"
-#include "FileWidget.h"
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "PopupWindow.h"
-#include "SimulationControlResult.h"
+#include "ActionButton.hpp"
+#include "FileDialog.hpp"
+#include "FileWidget.hpp"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "PopupWindow.hpp"
+#include "SimulationControlResult.hpp"
 
 namespace gol {
 NewFileButton::NewFileButton(std::span<const ImGuiKeyChord> shortcuts)

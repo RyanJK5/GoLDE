@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-#include "Logging.h"
+#include "Logging.hpp"
 
 constexpr std::array<std::string_view, 4> TermBlacklist = {
     "class", "__cdecl", "__thiscall", "std::"};

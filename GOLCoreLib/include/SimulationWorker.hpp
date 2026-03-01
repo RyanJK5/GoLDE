@@ -6,8 +6,8 @@
 #include <memory>
 #include <thread>
 
-#include "GameGrid.h"
-#include "HashQuadtree.h"
+#include "GameGrid.hpp"
+#include "HashQuadtree.hpp"
 
 namespace gol {
 class SimulationWorker {

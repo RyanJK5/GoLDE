@@ -4,9 +4,9 @@
 #include <random>
 #include <ranges>
 
-#include "HashQuadtree.h"
-#include "LifeAlgorithm.h"
-#include "RLEEncoder.h"
+#include "HashQuadtree.hpp"
+#include "LifeAlgorithm.hpp"
+#include "RLEEncoder.hpp"
 
 namespace gol {
 // Helper to verify the tree iterator yields exactly the expected points

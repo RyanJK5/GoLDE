@@ -1,4 +1,4 @@
-#include "SimulationWorker.h"
+#include "SimulationWorker.hpp"
 
 #include <chrono>
 #include <condition_variable>

@@ -5,18 +5,18 @@
 #include <glm/glm.hpp>
 #include <optional>
 
-#include "EditorResult.h"
-#include "ErrorWindow.h"
-#include "GameEnums.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "GraphicsHandler.h"
-#include "PresetSelectionResult.h"
-#include "SelectionManager.h"
-#include "SimulationControlResult.h"
-#include "SimulationWorker.h"
-#include "VersionManager.h"
-#include "WarnWindow.h"
+#include "EditorResult.hpp"
+#include "ErrorWindow.hpp"
+#include "GameEnums.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "GraphicsHandler.hpp"
+#include "PresetSelectionResult.hpp"
+#include "SelectionManager.hpp"
+#include "SimulationControlResult.hpp"
+#include "SimulationWorker.hpp"
+#include "VersionManager.hpp"
+#include "WarnWindow.hpp"
 
 namespace gol {
 class SimulationEditor {

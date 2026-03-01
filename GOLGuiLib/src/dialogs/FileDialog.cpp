@@ -4,7 +4,7 @@
 #include <nfd.h>
 #include <string>
 
-#include "FileDialog.h"
+#include "FileDialog.hpp"
 
 namespace gol {
 namespace {

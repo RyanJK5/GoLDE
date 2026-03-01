@@ -3,7 +3,7 @@
 
 #include <unordered_dense.h>
 
-#include "Graphics2D.h"
+#include "Graphics2D.hpp"
 
 template <> struct std::hash<gol::Vec2> {
     size_t operator()(gol::Vec2 vec) const;

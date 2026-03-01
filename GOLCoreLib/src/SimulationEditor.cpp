@@ -13,26 +13,26 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <variant>
-
-#include "GameEnums.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "GraphicsHandler.h"
-#include "LoadingSpinner.h"
-#include "PopupWindow.h"
-#include "PresetSelectionResult.h"
-#include "SimulationControlResult.h"
-#include "SimulationEditor.h"
-#include "VersionManager.h"
-#include <EditorResult.h>
-#include <HashQuadtree.h>
-#include <LifeHashSet.h>
-#include <SimulationWorker.h>
 #include <cassert>
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <variant>
+
+#include "GameEnums.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "GraphicsHandler.hpp"
+#include "LoadingSpinner.hpp"
+#include "PopupWindow.hpp"
+#include "PresetSelectionResult.hpp"
+#include "SimulationControlResult.hpp"
+#include "SimulationEditor.hpp"
+#include "VersionManager.hpp"
+#include "EditorResult.hpp"
+#include "HashQuadtree.hpp"
+#include "LifeHashSet.hpp"
+#include "SimulationWorker.hpp"
 
 namespace gol {
 SimulationEditor::SimulationEditor(uint32_t id,

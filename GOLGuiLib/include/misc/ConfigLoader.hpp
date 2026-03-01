@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "GameEnums.h"
+#include "GameEnums.hpp"
 
 namespace gol::StyleLoader {
 template <typename T>

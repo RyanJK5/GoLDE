@@ -2,9 +2,9 @@
 #include <imgui/imgui.h>
 #include <optional>
 
-#include "EditorWidget.h"
-#include "GameEnums.h"
-#include "SimulationControlResult.h"
+#include "EditorWidget.hpp"
+#include "GameEnums.hpp"
+#include "SimulationControlResult.hpp"
 
 namespace gol {
 

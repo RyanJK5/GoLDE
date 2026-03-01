@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <utility>
 
-#include "Logging.h"
+#include "Logging.hpp"
 
 namespace gol {
 template <typename T>

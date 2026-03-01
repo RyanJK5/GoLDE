@@ -6,9 +6,9 @@
 #include <stop_token>
 #include <variant>
 
-#include "Graphics2D.h"
-#include "HashQuadtree.h"
-#include "LifeHashSet.h"
+#include "Graphics2D.hpp"
+#include "HashQuadtree.hpp"
+#include "LifeHashSet.hpp"
 
 namespace gol {
 // A simple hashing algorithm for running Game of Life. It is fairly efficient

@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <unordered_dense.h>
 
-#include "Graphics2D.h"
-#include "LifeHashSet.h"
+#include "Graphics2D.hpp"
+#include "LifeHashSet.hpp"
 
 // Arbitrary hash function
 size_t std::hash<gol::Vec2>::operator()(gol::Vec2 vec) const {

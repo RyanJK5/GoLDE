@@ -8,10 +8,10 @@
 #include <set>
 #include <string>
 
-#include "GameEnums.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "VersionManager.h"
+#include "GameEnums.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "VersionManager.hpp"
 
 namespace gol {
 struct SelectionUpdateResult {

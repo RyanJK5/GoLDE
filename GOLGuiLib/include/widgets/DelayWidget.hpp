@@ -5,9 +5,9 @@
 #include <imgui/imgui.h>
 #include <span>
 
-#include "GameEnums.h"
-#include "SimulationControlResult.h"
-#include "Widget.h"
+#include "GameEnums.hpp"
+#include "SimulationControlResult.hpp"
+#include "Widget.hpp"
 
 namespace gol {
 class DelayWidget : public Widget {

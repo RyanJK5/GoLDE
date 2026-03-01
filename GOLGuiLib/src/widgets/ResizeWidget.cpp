@@ -1,9 +1,9 @@
 #include <cstdint>
 #include <imgui/imgui.h>
 
-#include "GameEnums.h"
-#include "ResizeWidget.h"
-#include "SimulationControlResult.h"
+#include "GameEnums.hpp"
+#include "ResizeWidget.hpp"
+#include "SimulationControlResult.hpp"
 
 gol::SimulationControlResult
 gol::ResizeWidget::UpdateImpl(const EditorResult &state) {

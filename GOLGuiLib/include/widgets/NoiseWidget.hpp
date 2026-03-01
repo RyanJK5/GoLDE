@@ -6,13 +6,13 @@
 #include <span>
 #include <string>
 
-#include "ActionButton.h"
-#include "EditorResult.h"
-#include "GameEnums.h"
-#include "Graphics2D.h"
-#include "InputString.h"
-#include "SimulationControlResult.h"
-#include "Widget.h"
+#include "ActionButton.hpp"
+#include "EditorResult.hpp"
+#include "GameEnums.hpp"
+#include "Graphics2D.hpp"
+#include "InputString.hpp"
+#include "SimulationControlResult.hpp"
+#include "Widget.hpp"
 
 namespace gol {
 class GenerateNoiseButton : public ActionButton<EditorAction, true> {

@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "RLEEncoder.h"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "RLEEncoder.hpp"
 
 namespace gol::RLEEncoder {
 std::string EncodeRegion(const GameGrid &grid, const Rect &region,

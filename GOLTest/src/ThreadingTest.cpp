@@ -4,9 +4,9 @@
 #include <latch>
 #include <thread>
 
-#include "HashQuadtree.h"
-#include "RLEEncoder.h"
-#include "SimulationWorker.h"
+#include "HashQuadtree.hpp"
+#include "RLEEncoder.hpp"
+#include "SimulationWorker.hpp"
 
 namespace gol {
 static void StressTest(const std::filesystem::path &universe,

@@ -6,9 +6,9 @@
 #include <unordered_set>
 #include <utility>
 
-#include "GameEnums.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
+#include "GameEnums.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
 
 namespace gol {
 struct VersionChange {

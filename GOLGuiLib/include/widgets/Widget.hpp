@@ -3,10 +3,10 @@
 
 #include <concepts>
 
-#include "ActionButton.h"
-#include "EditorResult.h"
-#include "GameEnums.h"
-#include "SimulationControlResult.h"
+#include "ActionButton.hpp"
+#include "EditorResult.hpp"
+#include "GameEnums.hpp"
+#include "SimulationControlResult.hpp"
 
 namespace gol {
 class Widget;

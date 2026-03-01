@@ -6,12 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "EditorResult.h"
-#include "GameGrid.h"
-#include "Graphics2D.h"
-#include "GraphicsHandler.h"
-#include "InputString.h"
-#include "PresetSelectionResult.h"
+#include "EditorResult.hpp"
+#include "GameGrid.hpp"
+#include "Graphics2D.hpp"
+#include "GraphicsHandler.hpp"
+#include "InputString.hpp"
+#include "PresetSelectionResult.hpp"
 
 namespace gol {
 struct PresetDisplay {

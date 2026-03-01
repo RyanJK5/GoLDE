@@ -2,10 +2,10 @@
 #include <imgui/imgui.h>
 #include <string>
 
-#include "ActionButton.h"
-#include "GameEnums.h"
-#include "PopupWindow.h"
-#include "WarnWindow.h"
+#include "ActionButton.hpp"
+#include "GameEnums.hpp"
+#include "PopupWindow.hpp"
+#include "WarnWindow.hpp"
 
 namespace gol {
 

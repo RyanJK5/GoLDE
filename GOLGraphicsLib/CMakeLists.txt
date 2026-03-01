@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.h")
+file(GLOB_RECURSE HEADERS "include/*.hpp")
 
 message(STATUS "GOLGraphicsLib sources: ${SOURCES}")
 

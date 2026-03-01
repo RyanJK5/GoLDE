@@ -4,7 +4,7 @@
 #include <utility>
 #include <variant>
 
-#include "GameEnums.h"
+#include "GameEnums.hpp"
 
 std::string gol::Actions::ToString(ActionVariant action) {
     std::string result{[action]() {

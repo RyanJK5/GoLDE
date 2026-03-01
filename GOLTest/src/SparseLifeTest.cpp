@@ -3,8 +3,8 @@
 #include <ranges>
 #include <vector>
 
-#include "LifeAlgorithm.h"
-#include "RLEEncoder.h"
+#include "LifeAlgorithm.hpp"
+#include "RLEEncoder.hpp"
 
 namespace gol {
 TEST(SparseLifeTest, SquigglesTest) {

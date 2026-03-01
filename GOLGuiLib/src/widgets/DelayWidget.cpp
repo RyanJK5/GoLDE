@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <imgui/imgui.h>
 
-#include "DelayWidget.h"
-#include "GameEnums.h"
-#include "SimulationControlResult.h"
+#include "DelayWidget.hpp"
+#include "GameEnums.hpp"
+#include "SimulationControlResult.hpp"
 
 namespace gol {
 

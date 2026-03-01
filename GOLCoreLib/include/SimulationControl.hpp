@@ -6,17 +6,17 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ConfigLoader.h"
-#include "DelayWidget.h"
-#include "EditorWidget.h"
-#include "ExecutionWidget.h"
-#include "FileWidget.h"
-#include "GameEnums.h"
-#include "KeyShortcut.h"
-#include "NoiseWidget.h"
-#include "ResizeWidget.h"
-#include "SimulationControlResult.h"
-#include "StepWidget.h"
+#include "ConfigLoader.hpp"
+#include "DelayWidget.hpp"
+#include "EditorWidget.hpp"
+#include "ExecutionWidget.hpp"
+#include "FileWidget.hpp"
+#include "GameEnums.hpp"
+#include "KeyShortcut.hpp"
+#include "NoiseWidget.hpp"
+#include "ResizeWidget.hpp"
+#include "SimulationControlResult.hpp"
+#include "StepWidget.hpp"
 
 namespace gol {
 struct ButtonlessShortcuts {
