@@ -1,9 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <limits>
-#include <memory>
 #include <optional>
-#include <print>
 #include <random>
 #include <set>
 #include <utility>
@@ -12,6 +10,15 @@
 #include "GameGrid.h"
 #include "Graphics2D.h"
 #include "LifeAlgorithm.h"
+#include <HashQuadtree.h>
+#include <LifeHashSet.h>
+#include <functional>
+#include <iterator>
+#include <ranges>
+#include <stop_token>
+#include <type_traits>
+#include <unordered_dense.h>
+#include <variant>
 
 namespace gol {
 GameGrid GameGrid::GenerateNoise(Rect bounds, float density) {

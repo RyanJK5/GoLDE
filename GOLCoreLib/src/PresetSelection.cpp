@@ -1,13 +1,10 @@
 #include <algorithm>
-#include <filesystem>
 #include <font-awesome/IconsFontAwesome7.h>
-#include <format>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <string>
 #include <utility>
 
-#include "FileDialog.h"
 #include "GameGrid.h"
 #include "Graphics2D.h"
 #include "GraphicsHandler.h"
@@ -15,6 +12,10 @@
 #include "PresetSelection.h"
 #include "PresetSelectionResult.h"
 #include "RLEEncoder.h"
+#include <EditorResult.h>
+#include <GameEnums.h>
+#include <InputString.h>
+#include <cstdint>
 
 gol::PresetDisplay::PresetDisplay(const GameGrid &grid,
                                   const std::string &fileName, Size2 windowSize)

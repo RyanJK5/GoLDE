@@ -78,6 +78,7 @@ TEST(EncodeTest, DecodeEncodeTest) {
 
     ASSERT_EQ(fileStr, encoded);
 }
+
 TEST(EncodeTest, SquareTest) {
     const LifeHashSet data{{0, 0}, {1, 1}, {0, 1}, {1, 0}};
     GameGrid grid{};
