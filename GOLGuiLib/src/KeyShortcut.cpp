@@ -12,27 +12,27 @@ gol::KeyShortcut::KeyShortcut(ImGuiKeyChord shortcut, bool onRelease,
 
 std::string
 gol::KeyShortcut::StringRepresentation(std::span<const KeyShortcut> shortcuts) {
-  auto tooltip = std::string{};
-  if (!shortcuts.empty()) {
-    for (size_t i = 0; i < shortcuts.size(); ++i) {
-      tooltip += ImGui::GetKeyChordName(shortcuts[i].Shortcut());
-      if (i < shortcuts.size() - 1)
-        tooltip += ", ";
+    auto tooltip = std::string{};
+    if (!shortcuts.empty()) {
+        for (size_t i = 0; i < shortcuts.size(); ++i) {
+            tooltip += ImGui::GetKeyChordName(shortcuts[i].Shortcut());
+            if (i < shortcuts.size() - 1)
+                tooltip += ", ";
+        }
     }
-  }
-  return tooltip;
+    return tooltip;
 }
 
 bool gol::KeyShortcut::Active() {
-  bool keyCombo = ImGui::IsKeyChordPressed(
-      m_Shortcut,
-      m_AllowRepeats ? ImGuiInputFlags_Repeat : ImGuiInputFlags_None);
-  bool result = (!m_OnRelease && keyCombo) || (m_Down && !keyCombo);
+    bool keyCombo = ImGui::IsKeyChordPressed(
+        m_Shortcut,
+        m_AllowRepeats ? ImGuiInputFlags_Repeat : ImGuiInputFlags_None);
+    bool result = (!m_OnRelease && keyCombo) || (m_Down && !keyCombo);
 
-  if (keyCombo)
-    m_Down = true;
-  else if (m_Down)
-    m_Down = false;
+    if (keyCombo)
+        m_Down = true;
+    else if (m_Down)
+        m_Down = false;
 
-  return result;
+    return result;
 }

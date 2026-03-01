@@ -7,8 +7,8 @@
 
 namespace gol {
 class GLException : public std::runtime_error {
-public:
-  GLException(std::string_view str) : std::runtime_error(str.data()) {}
+  public:
+    GLException(std::string_view str) : std::runtime_error(str.data()) {}
 };
 } // namespace gol
 

@@ -6,17 +6,17 @@
 #include "GameEnums.h"
 #include "PopupWindow.h"
 
-namespace gol
-{
+namespace gol {
 
 std::optional<PopupWindowState> ErrorWindow::ShowButtons() const {
-  constexpr static int32_t height =
-      ActionButton<EditorAction, false>::DefaultButtonHeight;
-  const bool ok = ImGui::Button("Ok", {ImGui::GetContentRegionAvail().x, height});
+    constexpr static int32_t height =
+        ActionButton<EditorAction, false>::DefaultButtonHeight;
+    const bool ok =
+        ImGui::Button("Ok", {ImGui::GetContentRegionAvail().x, height});
 
-  if (ok)
-    return PopupWindowState::Success;
-  return {};
+    if (ok)
+        return PopupWindowState::Success;
+    return {};
 }
 
-}
+} // namespace gol

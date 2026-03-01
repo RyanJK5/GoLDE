@@ -9,13 +9,13 @@
 
 namespace gol {
 class WarnWindow : public PopupWindow {
-public:
-  WarnWindow(std::string_view title,
-             std::function<void(PopupWindowState)> onUpdate)
-      : PopupWindow(title, onUpdate) {}
+  public:
+    WarnWindow(std::string_view title,
+               std::function<void(PopupWindowState)> onUpdate)
+        : PopupWindow(title, onUpdate) {}
 
-protected:
-  virtual std::optional<PopupWindowState> ShowButtons() const override final;
+  protected:
+    virtual std::optional<PopupWindowState> ShowButtons() const override final;
 };
 } // namespace gol
 

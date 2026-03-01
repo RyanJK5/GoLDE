@@ -12,19 +12,19 @@
 #ifdef _DEBUG
 
 #define GL_DEBUG(statement)                                                    \
-  while (glGetError())                                                         \
-    ;                                                                          \
-  statement;                                                                   \
-  gol::LogGLErrors()
+    while (glGetError())                                                       \
+        ;                                                                      \
+    statement;                                                                 \
+    gol::LogGLErrors()
 #define ERROR(str, ...)                                                        \
-  gol::Log(gol::LogCode::Error, std::source_location::current(), str,          \
-           __VA_ARGS__)
+    gol::Log(gol::LogCode::Error, std::source_location::current(), str,        \
+             __VA_ARGS__)
 #define WARN(str, ...)                                                         \
-  gol::Log(gol::LogCode::Error, std::source_location::current(), str,          \
-           __VA_ARGS__)
+    gol::Log(gol::LogCode::Error, std::source_location::current(), str,        \
+             __VA_ARGS__)
 #define INFO(str, ...)                                                         \
-  gol::Log(gol::LogCode::Info, std::source_location::current(), str,           \
-           __VA_ARGS__)
+    gol::Log(gol::LogCode::Info, std::source_location::current(), str,         \
+             __VA_ARGS__)
 #else
 #define GL_DEBUG(statement) statement
 #define ERROR(str, ...)
@@ -48,15 +48,16 @@ std::string SimplifyFunctionName(const std::string &funcName);
 template <typename... Args>
 inline void Log(LogCode code, const std::source_location &location,
                 std::format_string<Args...> str = "", Args &&...args) {
-  if (code > Level)
-    return;
+    if (code > Level)
+        return;
 
-  std::println("{} at {}:{} in {}", logimpl::StringRepresentation(code),
-               logimpl::SimplifyFileName(location.file_name()), location.line(),
-               logimpl::SimplifyFunctionName(location.function_name()));
+    std::println("{} at {}:{} in {}", logimpl::StringRepresentation(code),
+                 logimpl::SimplifyFileName(location.file_name()),
+                 location.line(),
+                 logimpl::SimplifyFunctionName(location.function_name()));
 
-  if (!str.get().empty())
-    std::println(str, std::forward<Args>(args)...);
+    if (!str.get().empty())
+        std::println(str, std::forward<Args>(args)...);
 }
 
 void LogGLErrors(

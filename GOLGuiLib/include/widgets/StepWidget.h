@@ -16,45 +16,44 @@
 
 namespace gol {
 class StepButton : public ActionButton<GameAction, false> {
-public:
-  StepButton(std::span<const ImGuiKeyChord> shortcuts = {})
-      : ActionButton(GameAction::Step, shortcuts, true) {}
+  public:
+    StepButton(std::span<const ImGuiKeyChord> shortcuts = {})
+        : ActionButton(GameAction::Step, shortcuts, true) {}
 
-protected:
-  virtual Size2F Dimensions() const override final;
-  virtual std::string Label(const EditorResult &) const override final;
-  virtual bool Enabled(const EditorResult &state) const override final;
+  protected:
+    virtual Size2F Dimensions() const override final;
+    virtual std::string Label(const EditorResult &) const override final;
+    virtual bool Enabled(const EditorResult &state) const override final;
 };
 
 class StepWidget : public Widget {
-public:
-  static constexpr int32_t BigStep = 10;
+  public:
+    static constexpr int32_t BigStep = 10;
 
-public:
-  StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
-      : m_InputText(
-            "1",
-            std::to_string(std::numeric_limits<uint64_t>::max()).length()),
-        m_Button(shortcuts)
-  {}
+  public:
+    StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
+        : m_InputText(
+              "1",
+              std::to_string(std::numeric_limits<uint64_t>::max()).length()),
+          m_Button(shortcuts) {}
 
-  friend Widget;
+    friend Widget;
 
-private:
-  SimulationControlResult UpdateImpl(const EditorResult &state);
+  private:
+    SimulationControlResult UpdateImpl(const EditorResult &state);
 
-  void SetStepCount(int64_t stepCount);
+    void SetStepCount(int64_t stepCount);
 
-  void ShowInputText();
+    void ShowInputText();
 
-private:
-  InputString m_InputText;
+  private:
+    InputString m_InputText;
 
-  LifeAlgorithm m_Algorithm = LifeAlgorithm::HashLife;
-  int64_t m_StepCount = 1;
-  bool m_HyperSpeed = false;
+    LifeAlgorithm m_Algorithm = LifeAlgorithm::HashLife;
+    int64_t m_StepCount = 1;
+    bool m_HyperSpeed = false;
 
-  StepButton m_Button;
+    StepButton m_Button;
 };
 } // namespace gol
 

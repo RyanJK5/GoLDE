@@ -12,116 +12,118 @@ CopyButton::CopyButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Copy, shortcuts) {}
 
 Size2F CopyButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 4.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 4.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string CopyButton::Label(const EditorResult &) const {
-  return ICON_FA_COPY;
+    return ICON_FA_COPY;
 }
 
 bool CopyButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive;
+    return state.SelectionActive;
 }
 
 CutButton::CutButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Cut, shortcuts) {}
 
 Size2F CutButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 2.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 2.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string CutButton::Label(const EditorResult &) const {
-  return ICON_FA_SCISSORS;
+    return ICON_FA_SCISSORS;
 }
 
 bool CutButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive && (state.State == SimulationState::Paint ||
-                                   state.State == SimulationState::Empty);
+    return state.SelectionActive && (state.State == SimulationState::Paint ||
+                                     state.State == SimulationState::Empty);
 }
 
 PasteButton::PasteButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Paste, shortcuts) {}
 
 Size2F PasteButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 3.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 3.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string PasteButton::Label(const EditorResult &) const {
-  return ICON_FA_PASTE;
+    return ICON_FA_PASTE;
 }
 
 bool PasteButton::Enabled(const EditorResult &state) const {
-  return ImGui::GetClipboardText() && (state.State == SimulationState::Paint ||
-                                       state.State == SimulationState::Empty);
+    return ImGui::GetClipboardText() &&
+           (state.State == SimulationState::Paint ||
+            state.State == SimulationState::Empty);
 }
 
 DeleteButton::DeleteButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Delete, shortcuts) {}
 
 Size2F DeleteButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string DeleteButton::Label(const EditorResult &) const {
-  return ICON_FA_DELETE_LEFT;
+    return ICON_FA_DELETE_LEFT;
 }
 
 bool DeleteButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive && (state.State == SimulationState::Paint ||
-                                   state.State == SimulationState::Empty);
+    return state.SelectionActive && (state.State == SimulationState::Paint ||
+                                     state.State == SimulationState::Empty);
 }
 
 DeselectButton::DeselectButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Deselect, shortcuts) {}
 
 Size2F DeselectButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 4.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 4.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string DeselectButton::Label(const EditorResult &) const {
-  return ICON_FA_OBJECT_UNGROUP;
+    return ICON_FA_OBJECT_UNGROUP;
 }
 
 bool DeselectButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive;
+    return state.SelectionActive;
 }
 
 RotateButton::RotateButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Rotate, shortcuts) {}
 
 Size2F RotateButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 3.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 3.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string RotateButton::Label(const EditorResult &) const {
-  return ICON_FA_ROTATE;
+    return ICON_FA_ROTATE;
 }
 
 bool RotateButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive && (state.State == SimulationState::Paint ||
-                                   state.State == SimulationState::Empty);
+    return state.SelectionActive && (state.State == SimulationState::Paint ||
+                                     state.State == SimulationState::Empty);
 }
 
 FlipVerticalButton::FlipVerticalButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::FlipVertically, shortcuts) {}
 
 Size2F FlipVerticalButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 2.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 2.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string FlipVerticalButton::Label(const EditorResult &) const {
-  return ICON_FA_ARROWS_UP_DOWN;
+    return ICON_FA_ARROWS_UP_DOWN;
 }
 
 bool FlipVerticalButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive && (state.State == SimulationState::Paint ||
-                                   state.State == SimulationState::Empty);
+    return state.SelectionActive && (state.State == SimulationState::Paint ||
+                                     state.State == SimulationState::Empty);
 }
 
 FlipHorizontalButton::FlipHorizontalButton(
@@ -129,67 +131,68 @@ FlipHorizontalButton::FlipHorizontalButton(
     : ActionButton(SelectionAction::FlipHorizontally, shortcuts) {}
 
 Size2F FlipHorizontalButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x, ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string FlipHorizontalButton::Label(const EditorResult &) const {
-  return ICON_FA_ARROWS_LEFT_RIGHT;
+    return ICON_FA_ARROWS_LEFT_RIGHT;
 }
 
 bool FlipHorizontalButton::Enabled(const EditorResult &state) const {
-  return state.SelectionActive && (state.State == SimulationState::Paint ||
-                                   state.State == SimulationState::Empty);
+    return state.SelectionActive && (state.State == SimulationState::Paint ||
+                                     state.State == SimulationState::Empty);
 }
 
 SelectAllButton::SelectAllButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::SelectAll, shortcuts) {}
 
 Size2F SelectAllButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 4.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 4.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string SelectAllButton::Label(const EditorResult &) const {
-  return ICON_FA_SQUARE_CHECK;
+    return ICON_FA_SQUARE_CHECK;
 }
 
 bool SelectAllButton::Enabled(const EditorResult &state) const {
-  return state.State == SimulationState::Paint ||
-         state.State == SimulationState::Paused;
+    return state.State == SimulationState::Paint ||
+           state.State == SimulationState::Paused;
 }
 
 UndoButton::UndoButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(EditorAction::Undo, shortcuts, true) {}
 
 Size2F UndoButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 3.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 3.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string UndoButton::Label(const EditorResult &) const {
-  return ICON_FA_ARROW_ROTATE_LEFT;
+    return ICON_FA_ARROW_ROTATE_LEFT;
 }
 
 bool UndoButton::Enabled(const EditorResult &state) const {
-  return state.UndosAvailable && (state.State == SimulationState::Paint ||
-                                  state.State == SimulationState::Empty);
+    return state.UndosAvailable && (state.State == SimulationState::Paint ||
+                                    state.State == SimulationState::Empty);
 }
 
 RedoButton::RedoButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(EditorAction::Redo, shortcuts, true) {}
 
 Size2F RedoButton::Dimensions() const {
-  return {ImGui::GetContentRegionAvail().x / 2.f,
-          ActionButton::DefaultButtonHeight};
+    return {ImGui::GetContentRegionAvail().x / 2.f,
+            ActionButton::DefaultButtonHeight};
 }
 
 std::string RedoButton::Label(const EditorResult &) const {
-  return ICON_FA_ARROW_ROTATE_RIGHT;
+    return ICON_FA_ARROW_ROTATE_RIGHT;
 }
 
 bool RedoButton::Enabled(const EditorResult &state) const {
-  return state.RedosAvailable && (state.State == SimulationState::Paint ||
-                                  state.State == SimulationState::Empty);
+    return state.RedosAvailable && (state.State == SimulationState::Paint ||
+                                    state.State == SimulationState::Empty);
 }
 
 EditorWidget::EditorWidget(
@@ -208,26 +211,26 @@ EditorWidget::EditorWidget(
       m_RedoButton(shortcuts.at(EditorAction::Redo)) {}
 
 SimulationControlResult EditorWidget::UpdateImpl(const EditorResult &state) {
-  auto result = SimulationControlResult{};
+    auto result = SimulationControlResult{};
 
-  UpdateResult(result, m_CopyButton.Update(state));
-  UpdateResult(result, m_PasteButton.Update(state));
-  UpdateResult(result, m_CutButton.Update(state));
-  UpdateResult(result, m_DeleteButton.Update(state));
+    UpdateResult(result, m_CopyButton.Update(state));
+    UpdateResult(result, m_PasteButton.Update(state));
+    UpdateResult(result, m_CutButton.Update(state));
+    UpdateResult(result, m_DeleteButton.Update(state));
 
-  UpdateResult(result, m_DeselectButton.Update(state));
-  UpdateResult(result, m_RotateButton.Update(state));
-  UpdateResult(result, m_FlipVerticalButton.Update(state));
-  UpdateResult(result, m_FlipHorizontalButton.Update(state));
-  UpdateResult(result, m_SelectAllButton.Update(state));
+    UpdateResult(result, m_DeselectButton.Update(state));
+    UpdateResult(result, m_RotateButton.Update(state));
+    UpdateResult(result, m_FlipVerticalButton.Update(state));
+    UpdateResult(result, m_FlipHorizontalButton.Update(state));
+    UpdateResult(result, m_SelectAllButton.Update(state));
 
-  UpdateResult(result, m_UndoButton.Update(state));
+    UpdateResult(result, m_UndoButton.Update(state));
 
-  ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
-  UpdateResult(result, m_RedoButton.Update(state));
-  ImGui::Separator();
-  ImGui::PopStyleVar();
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    UpdateResult(result, m_RedoButton.Update(state));
+    ImGui::Separator();
+    ImGui::PopStyleVar();
 
-  return result;
+    return result;
 }
 } // namespace gol

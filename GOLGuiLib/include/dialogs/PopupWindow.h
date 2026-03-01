@@ -10,26 +10,26 @@ namespace gol {
 enum class PopupWindowState { Success, Failure };
 
 class PopupWindow {
-public:
-  PopupWindow(std::string_view title,
-              std::function<void(PopupWindowState)> onUpdate);
+  public:
+    PopupWindow(std::string_view title,
+                std::function<void(PopupWindowState)> onUpdate);
 
-  void Update();
+    void Update();
 
-  void Activate() { Active = true; }
+    void Activate() { Active = true; }
 
-  void SetCallback(std::function<void(PopupWindowState)> onUpdate);
+    void SetCallback(std::function<void(PopupWindowState)> onUpdate);
 
-  std::string Message;
+    std::string Message;
 
-protected:
-  virtual std::optional<PopupWindowState> ShowButtons() const = 0;
+  protected:
+    virtual std::optional<PopupWindowState> ShowButtons() const = 0;
 
-private:
-  std::function<void(PopupWindowState)> m_UpdateCallback;
+  private:
+    std::function<void(PopupWindowState)> m_UpdateCallback;
 
-  bool Active = false;
-  std::string m_Title;
+    bool Active = false;
+    std::string m_Title;
 };
 } // namespace gol
 

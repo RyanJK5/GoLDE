@@ -9,8 +9,8 @@ namespace gol {
 enum class FileFailureType { Cancelled, Error };
 
 struct FileDialogFailure {
-  FileFailureType Type;
-  std::string Message{};
+    FileFailureType Type;
+    std::string Message{};
 };
 
 namespace FileDialog {

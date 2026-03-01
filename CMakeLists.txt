@@ -56,4 +56,4 @@ add_subdirectory(GOLExecutable)
 add_subdirectory(GOLTest)
 
 # CLANG FORMAT SETUP
-include(cmake/ClangFormat.cmake)
+include("cmake/ClangFormat.cmake")

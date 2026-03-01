@@ -3,7 +3,7 @@
 
 namespace gol {
 struct PresetSelectionResult {
-  std::string ClipboardText;
+    std::string ClipboardText;
 };
 } // namespace gol
 

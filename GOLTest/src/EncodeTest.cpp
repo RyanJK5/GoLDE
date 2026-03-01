@@ -7,165 +7,166 @@
 
 namespace gol {
 constexpr static bool EncodeDecodeTest(std::integral auto value) {
-  const auto encoded = RLEEncoder::EncodeNumber(value);
-  const auto decoded = RLEEncoder::DecodeNumber(
-      std::string_view{encoded.data(), encoded.size()});
+    const auto encoded = RLEEncoder::EncodeNumber(value);
+    const auto decoded = RLEEncoder::DecodeNumber(
+        std::string_view{encoded.data(), encoded.size()});
 
-  return (decoded == value);
+    return (decoded == value);
 }
 
 TEST(EncodeTest, EncodeDecode) {
-  static_assert(EncodeDecodeTest(0));
-  static_assert(EncodeDecodeTest(150));
-  static_assert(EncodeDecodeTest(124987543));
-  static_assert(EncodeDecodeTest(99999999999999));
+    static_assert(EncodeDecodeTest(0));
+    static_assert(EncodeDecodeTest(150));
+    static_assert(EncodeDecodeTest(124987543));
+    static_assert(EncodeDecodeTest(99999999999999));
 
-  static_assert([] {
-    for (auto i = 1LL; i < std::numeric_limits<int32_t>::max(); i <<= 2)
-      if (!EncodeDecodeTest(i))
-        return false;
-    return true;
-  }());
+    static_assert([] {
+        for (auto i = 1LL; i < std::numeric_limits<int32_t>::max(); i <<= 2)
+            if (!EncodeDecodeTest(i))
+                return false;
+        return true;
+    }());
 
-  static_assert(EncodeDecodeTest(
-      static_cast<int64_t>(std::numeric_limits<uint64_t>::max() >> 16)));
-  // SHOULD NOT COMPILE
-  // static_assert(EncodeDecodeTest(std::numeric_limits<uint64_t>::max() >>
-  // 15));
+    static_assert(EncodeDecodeTest(
+        static_cast<int64_t>(std::numeric_limits<uint64_t>::max() >> 16)));
+    // SHOULD NOT COMPILE
+    // static_assert(EncodeDecodeTest(std::numeric_limits<uint64_t>::max() >>
+    // 15));
 }
 
 static std::expected<RLEEncoder::DecodeResult, std::string>
 EncodeDecodeRegionTest(const GameGrid &grid, Rect region, Vec2 offset) {
-  const auto encoded = RLEEncoder::EncodeRegion(grid, region, offset);
-  const auto decodeResult = RLEEncoder::DecodeRegion(encoded, 1000000);
+    const auto encoded = RLEEncoder::EncodeRegion(grid, region, offset);
+    const auto decodeResult = RLEEncoder::DecodeRegion(encoded, 1000000);
 
-  if (!decodeResult.has_value()) {
-    const auto str =
-        std::format("Decode failed with error: {}",
-                    decodeResult.error().has_value()
-                        ? std::format("Data contains too many cells ({})",
-                                      decodeResult.error().value())
-                        : "Data is not in a valid format");
-    return std::unexpected{str};
-  }
+    if (!decodeResult.has_value()) {
+        const auto str =
+            std::format("Decode failed with error: {}",
+                        decodeResult.error().has_value()
+                            ? std::format("Data contains too many cells ({})",
+                                          decodeResult.error().value())
+                            : "Data is not in a valid format");
+        return std::unexpected{str};
+    }
 
-  return *decodeResult;
+    return *decodeResult;
 }
 
 TEST(EncodeTest, DecodeEncodeTest) {
-  const auto filePath =
-      std::filesystem::path{"universes"} / "bigsquiggles1.gol";
-  const auto result = RLEEncoder::ReadRegion(filePath);
-  ASSERT_TRUE(result.has_value()) << result.error();
+    const auto filePath =
+        std::filesystem::path{"universes"} / "bigsquiggles1.gol";
+    const auto result = RLEEncoder::ReadRegion(filePath);
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  const auto dataToWrite =
-      result->Grid.Data() |
-      std::views::transform([&](Vec2 pos) { return pos + result->Offset; }) |
-      std::ranges::to<LifeHashSet>();
-  GameGrid finalGrid{};
-  for (const auto pos : dataToWrite)
-    finalGrid.Set(pos.X, pos.Y, true);
+    const auto dataToWrite =
+        result->Grid.Data() |
+        std::views::transform([&](Vec2 pos) { return pos + result->Offset; }) |
+        std::ranges::to<LifeHashSet>();
+    GameGrid finalGrid{};
+    for (const auto pos : dataToWrite)
+        finalGrid.Set(pos.X, pos.Y, true);
 
-  const auto boundingBox = finalGrid.BoundingBox();
-  const auto encoded =
-      RLEEncoder::EncodeRegion(finalGrid, boundingBox, boundingBox.Pos());
+    const auto boundingBox = finalGrid.BoundingBox();
+    const auto encoded =
+        RLEEncoder::EncodeRegion(finalGrid, boundingBox, boundingBox.Pos());
 
-  const auto fileStr = [&] {
-    auto in = std::ifstream{filePath};
-    return std::string{std::istreambuf_iterator<char>(in),
-                       std::istreambuf_iterator<char>()};
-  }();
+    const auto fileStr = [&] {
+        auto in = std::ifstream{filePath};
+        return std::string{std::istreambuf_iterator<char>(in),
+                           std::istreambuf_iterator<char>()};
+    }();
 
-  ASSERT_EQ(fileStr, encoded);
+    ASSERT_EQ(fileStr, encoded);
 }
 TEST(EncodeTest, SquareTest) {
-  const LifeHashSet data{{0, 0}, {1, 1}, {0, 1}, {1, 0}};
-  GameGrid grid{};
-  for (const auto pos : data)
-    grid.Set(pos.X, pos.Y, true);
+    const LifeHashSet data{{0, 0}, {1, 1}, {0, 1}, {1, 0}};
+    GameGrid grid{};
+    for (const auto pos : data)
+        grid.Set(pos.X, pos.Y, true);
 
-  constexpr static Vec2 offset{2, 2};
-  const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 4, 4}, offset);
+    constexpr static Vec2 offset{2, 2};
+    const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 4, 4}, offset);
 
-  ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  EXPECT_EQ(result->Grid.Data(), grid.Data());
-  EXPECT_EQ(result->Offset, offset);
+    EXPECT_EQ(result->Grid.Data(), grid.Data());
+    EXPECT_EQ(result->Offset, offset);
 }
 
 TEST(EncodeTest, SingleCellTest) {
-  GameGrid grid{};
-  grid.Set(3, 4, true);
+    GameGrid grid{};
+    grid.Set(3, 4, true);
 
-  constexpr static Vec2 offset{5, -3};
-  const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 8, 8}, offset);
+    constexpr static Vec2 offset{5, -3};
+    const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 8, 8}, offset);
 
-  ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  EXPECT_EQ(result->Grid.Data(), grid.Data());
-  EXPECT_EQ(result->Offset, offset);
+    EXPECT_EQ(result->Grid.Data(), grid.Data());
+    EXPECT_EQ(result->Offset, offset);
 }
 
 TEST(EncodeTest, HorizontalLineTest) {
-  const LifeHashSet data{{0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}};
-  GameGrid grid{};
-  for (const auto pos : data)
-    grid.Set(pos.X, pos.Y, true);
+    const LifeHashSet data{{0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}};
+    GameGrid grid{};
+    for (const auto pos : data)
+        grid.Set(pos.X, pos.Y, true);
 
-  constexpr static Vec2 offset{-4, 7};
-  const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 6, 6}, offset);
+    constexpr static Vec2 offset{-4, 7};
+    const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 6, 6}, offset);
 
-  ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  EXPECT_EQ(result->Grid.Data(), grid.Data());
-  EXPECT_EQ(result->Offset, offset);
+    EXPECT_EQ(result->Grid.Data(), grid.Data());
+    EXPECT_EQ(result->Offset, offset);
 }
 
 TEST(EncodeTest, SparsePatternTest) {
-  const LifeHashSet data{{0, 0}, {2, 5}, {3, 1}, {6, 6}, {8, 2}, {9, 9}};
+    const LifeHashSet data{{0, 0}, {2, 5}, {3, 1}, {6, 6}, {8, 2}, {9, 9}};
 
-  GameGrid grid{};
-  for (const auto pos : data)
-    grid.Set(pos.X, pos.Y, true);
+    GameGrid grid{};
+    for (const auto pos : data)
+        grid.Set(pos.X, pos.Y, true);
 
-  constexpr static Vec2 offset{-10, -10};
-  const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 10, 10}, offset);
+    constexpr static Vec2 offset{-10, -10};
+    const auto result =
+        EncodeDecodeRegionTest(grid, Rect{0, 0, 10, 10}, offset);
 
-  ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  EXPECT_EQ(result->Grid.Data(), grid.Data());
-  EXPECT_EQ(result->Offset, offset);
+    EXPECT_EQ(result->Grid.Data(), grid.Data());
+    EXPECT_EQ(result->Offset, offset);
 }
 
 TEST(EncodeTest, EmptyRegionTest) {
-  GameGrid grid{};
+    GameGrid grid{};
 
-  constexpr static Vec2 offset{2, 2};
-  const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 5, 5}, offset);
+    constexpr static Vec2 offset{2, 2};
+    const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 5, 5}, offset);
 
-  ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  EXPECT_TRUE(result->Grid.Data().empty());
-  EXPECT_EQ(result->Offset, offset);
+    EXPECT_TRUE(result->Grid.Data().empty());
+    EXPECT_EQ(result->Offset, offset);
 }
 
 TEST(EncodeTest, IgnoresCellsOutsideRegionTest) {
-  const LifeHashSet data{{-1, 0}, {0, 0}, {3, 3}, {4, 0}, {0, 4}, {8, 8}};
+    const LifeHashSet data{{-1, 0}, {0, 0}, {3, 3}, {4, 0}, {0, 4}, {8, 8}};
 
-  GameGrid grid{};
-  for (const auto pos : data)
-    grid.Set(pos.X, pos.Y, true);
+    GameGrid grid{};
+    for (const auto pos : data)
+        grid.Set(pos.X, pos.Y, true);
 
-  GameGrid expected{};
-  expected.Set(0, 0, true);
-  expected.Set(3, 3, true);
+    GameGrid expected{};
+    expected.Set(0, 0, true);
+    expected.Set(3, 3, true);
 
-  constexpr static Vec2 offset{1, 1};
-  const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 4, 4}, offset);
+    constexpr static Vec2 offset{1, 1};
+    const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 4, 4}, offset);
 
-  ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error();
 
-  EXPECT_EQ(result->Grid.Data(), expected.Data());
-  EXPECT_EQ(result->Offset, offset);
+    EXPECT_EQ(result->Grid.Data(), expected.Data());
+    EXPECT_EQ(result->Offset, offset);
 }
 } // namespace gol

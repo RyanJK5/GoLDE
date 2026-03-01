@@ -18,8 +18,8 @@ int64_t HashLife(HashQuadtree &data, int64_t numSteps,
                  std::stop_token stopToken = {});
 
 enum class LifeAlgorithm {
-  HashLife,
-  SparseLife,
+    HashLife,
+    SparseLife,
 };
 } // namespace gol
 

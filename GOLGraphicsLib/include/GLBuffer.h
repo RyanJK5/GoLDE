@@ -19,26 +19,26 @@ concept GLDeleter = std::same_as<T, decltype(&glDeleteBuffers)> ||
                     std::same_as<T, decltype(&glDeleteTextures)>;
 
 template <auto Generator, auto Deleter> class GLWrapper {
-public:
-  static_assert(GLGenerator<decltype(Generator)>);
-  static_assert(GLDeleter<decltype(Deleter)>);
+  public:
+    static_assert(GLGenerator<decltype(Generator)>);
+    static_assert(GLDeleter<decltype(Deleter)>);
 
-  GLWrapper();
+    GLWrapper();
 
-  GLWrapper(const GLWrapper<Generator, Deleter> &) = delete;
+    GLWrapper(const GLWrapper<Generator, Deleter> &) = delete;
 
-  auto &operator=(const GLWrapper<Generator, Deleter> &) = delete;
+    auto &operator=(const GLWrapper<Generator, Deleter> &) = delete;
 
-  GLWrapper(GLWrapper<Generator, Deleter> &&other) noexcept;
+    GLWrapper(GLWrapper<Generator, Deleter> &&other) noexcept;
 
-  auto &operator=(GLWrapper<Generator, Deleter> &&other) noexcept;
+    auto &operator=(GLWrapper<Generator, Deleter> &&other) noexcept;
 
-  ~GLWrapper();
+    ~GLWrapper();
 
-  uint32_t ID() const { return m_ID; }
+    uint32_t ID() const { return m_ID; }
 
-private:
-  uint32_t m_ID = 0;
+  private:
+    uint32_t m_ID = 0;
 };
 
 using GLBuffer = GLWrapper<&glGenBuffers, &glDeleteBuffers>;
@@ -55,26 +55,26 @@ using GLVertexArray = GLWrapper<&glGenVertexArrays, &glDeleteVertexArrays>;
 
 template <auto Generator, auto Deleter>
 GLWrapper<Generator, Deleter>::GLWrapper() {
-  GL_DEBUG((*Generator)(1, &m_ID));
+    GL_DEBUG((*Generator)(1, &m_ID));
 }
 
 template <auto Generator, auto Deleter>
 GLWrapper<Generator, Deleter>::GLWrapper(
     GLWrapper<Generator, Deleter> &&other) noexcept {
-  m_ID = std::exchange(other.m_ID, 0);
+    m_ID = std::exchange(other.m_ID, 0);
 }
 
 template <auto Generator, auto Deleter>
 auto &GLWrapper<Generator, Deleter>::operator=(
     GLWrapper<Generator, Deleter> &&other) noexcept {
-  if (this != &other)
-    m_ID = std::exchange(other.m_ID, 0);
-  return *this;
+    if (this != &other)
+        m_ID = std::exchange(other.m_ID, 0);
+    return *this;
 }
 
 template <auto Generator, auto Deleter>
 GLWrapper<Generator, Deleter>::~GLWrapper() {
-  GL_DEBUG((*Deleter)(1, &m_ID));
+    GL_DEBUG((*Deleter)(1, &m_ID));
 }
 } // namespace gol
 #endif

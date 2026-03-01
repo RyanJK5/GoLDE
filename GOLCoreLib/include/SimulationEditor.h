@@ -20,106 +20,106 @@
 
 namespace gol {
 class SimulationEditor {
-public:
-  static constexpr float DefaultCellWidth = 20.f;
-  static constexpr float DefaultCellHeight = 20.f;
+  public:
+    static constexpr float DefaultCellWidth = 20.f;
+    static constexpr float DefaultCellHeight = 20.f;
 
-public:
-  SimulationEditor(uint32_t id, const std::filesystem::path &path,
-                   Size2 windowSize, Size2 gridSize);
+  public:
+    SimulationEditor(uint32_t id, const std::filesystem::path &path,
+                     Size2 windowSize, Size2 gridSize);
 
-  Rect WindowBounds() const;
-  Rect ViewportBounds() const;
-  const std::filesystem::path &CurrentFilePath() const {
-    return m_CurrentFilePath;
-  }
+    Rect WindowBounds() const;
+    Rect ViewportBounds() const;
+    const std::filesystem::path &CurrentFilePath() const {
+        return m_CurrentFilePath;
+    }
 
-  EditorResult Update(std::optional<bool> activeOverride,
-                      const SimulationControlResult &controlArgs,
-                      const PresetSelectionResult &presetArgs);
+    EditorResult Update(std::optional<bool> activeOverride,
+                        const SimulationControlResult &controlArgs,
+                        const PresetSelectionResult &presetArgs);
 
-  uint32_t EditorID() const { return m_EditorID; }
-  bool IsSaved() const;
-  bool operator==(const SimulationEditor &other) const;
+    uint32_t EditorID() const { return m_EditorID; }
+    bool IsSaved() const;
+    bool operator==(const SimulationEditor &other) const;
 
-private:
-  struct DisplayResult {
-    bool Visible = false;
-    bool Selected = false;
-    bool Closing = false;
-  };
+  private:
+    struct DisplayResult {
+        bool Visible = false;
+        bool Selected = false;
+        bool Closing = false;
+    };
 
-private:
-  SimulationState SimulationUpdate(const GraphicsHandlerArgs &args);
-  SimulationState PaintUpdate(const GraphicsHandlerArgs &args);
-  SimulationState PauseUpdate(const GraphicsHandlerArgs &args);
+  private:
+    SimulationState SimulationUpdate(const GraphicsHandlerArgs &args);
+    SimulationState PaintUpdate(const GraphicsHandlerArgs &args);
+    SimulationState PauseUpdate(const GraphicsHandlerArgs &args);
 
-  void DrawHashLifeData(const HashQuadtree &quadtree,
-                        const GraphicsHandlerArgs &args);
+    void DrawHashLifeData(const HashQuadtree &quadtree,
+                          const GraphicsHandlerArgs &args);
 
-  SimulationState StartSimulation();
-  void StopSimulation(bool stealGrid);
+    SimulationState StartSimulation();
+    void StopSimulation(bool stealGrid);
 
-  void UpdateVersion(const SimulationControlResult &args);
+    void UpdateVersion(const SimulationControlResult &args);
 
-  DisplayResult DisplaySimulation(bool grabFocus);
+    DisplayResult DisplaySimulation(bool grabFocus);
 
-  SimulationState UpdateState(const SimulationControlResult &action);
+    SimulationState UpdateState(const SimulationControlResult &action);
 
-  void PasteSelection();
+    void PasteSelection();
 
-  void LoadFile(const SimulationControlResult &result);
+    void LoadFile(const SimulationControlResult &result);
 
-  void SaveToFile(const SimulationControlResult &result);
+    void SaveToFile(const SimulationControlResult &result);
 
-  gol::SimulationState ResizeGrid(const gol::SimulationControlResult &result);
+    gol::SimulationState ResizeGrid(const gol::SimulationControlResult &result);
 
-  void UpdateViewport();
+    void UpdateViewport();
 
-  std::optional<Vec2> CursorGridPos();
+    std::optional<Vec2> CursorGridPos();
 
-  std::optional<Vec2> ConvertToGridPos(Vec2F screenPos);
+    std::optional<Vec2> ConvertToGridPos(Vec2F screenPos);
 
-  void UpdateMouseState(Vec2 gridPos);
-  void FillCells();
-  void UpdateDragState();
+    void UpdateMouseState(Vec2 gridPos);
+    void FillCells();
+    void UpdateDragState();
 
-  void PasteWarnUpdated(PopupWindowState state);
+    void PasteWarnUpdated(PopupWindowState state);
 
-private:
-  static constexpr double DefaultTickDelayMs = 0.;
+  private:
+    static constexpr double DefaultTickDelayMs = 0.;
 
-private:
-  SelectionManager m_SelectionManager;
+  private:
+    SelectionManager m_SelectionManager;
 
-  GameGrid m_Grid;
-  GameGrid m_InitialGrid;
+    GameGrid m_Grid;
+    GameGrid m_InitialGrid;
 
-  VersionManager m_VersionManager;
+    VersionManager m_VersionManager;
 
-  GraphicsHandler m_Graphics;
+    GraphicsHandler m_Graphics;
 
-  ErrorWindow m_FileErrorWindow;
-  WarnWindow m_PasteWarning;
-  WarnWindow m_SaveWarning;
+    ErrorWindow m_FileErrorWindow;
+    WarnWindow m_PasteWarning;
+    WarnWindow m_SaveWarning;
 
-  std::filesystem::path m_CurrentFilePath;
+    std::filesystem::path m_CurrentFilePath;
 
-  RectF m_WindowBounds;
+    RectF m_WindowBounds;
 
-  std::unique_ptr<SimulationWorker> m_Worker;
+    std::unique_ptr<SimulationWorker> m_Worker;
 
-  Vec2F m_LeftDeltaLast;
-  Vec2F m_RightDeltaLast;
+    Vec2F m_LeftDeltaLast;
+    Vec2F m_RightDeltaLast;
 
-  uint32_t m_EditorID;
+    uint32_t m_EditorID;
 
-  EditorMode m_EditorMode = EditorMode::None;
-  SimulationState m_State = SimulationState::Paint;
+    EditorMode m_EditorMode = EditorMode::None;
+    SimulationState m_State = SimulationState::Paint;
 
-  bool m_StopStepCommand = false;
-  bool m_TakeKeyboardInput = false;
-  bool m_TakeMouseInput = false;
+    bool m_StopStepCommand = false;
+    bool m_TakeKeyboardInput = false;
+    bool m_TakeMouseInput = false;
 };
 } // namespace gol
 

@@ -38,22 +38,22 @@ enum class SectionType { StyleColors, ImGUIStyle, Shortcuts };
 enum class YAMLErrorType { FileOpenError, ParseError, InvalidArguments };
 
 struct YAMLError {
-  YAMLErrorType Type;
-  std::string Description;
+    YAMLErrorType Type;
+    std::string Description;
 };
 
 class StyleLoaderException : public std::runtime_error {
-public:
-  StyleLoaderException(std::string_view str)
-      : std::runtime_error(std::move(str).data()) {}
-  StyleLoaderException(const YAMLError &err)
-      : std::runtime_error(err.Description.data()) {}
+  public:
+    StyleLoaderException(std::string_view str)
+        : std::runtime_error(std::move(str).data()) {}
+    StyleLoaderException(const YAMLError &err)
+        : std::runtime_error(err.Description.data()) {}
 };
 
 template <Vector4 Vec> struct StyleInfo {
-  std::unordered_map<StyleColor, Vec> StyleColors;
-  std::unordered_map<ImGuiCol_, StyleColor> AttributeColors;
-  std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>> Shortcuts;
+    std::unordered_map<StyleColor, Vec> StyleColors;
+    std::unordered_map<ImGuiCol_, StyleColor> AttributeColors;
+    std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>> Shortcuts;
 };
 
 static const std::unordered_map<std::string_view, StyleColor> ColorDefinitions =
@@ -210,127 +210,129 @@ using StringConverter = std::function<std::optional<T>(std::string_view)>;
 template <typename T>
 static StringConverter<T>
 MakeConverter(const std::unordered_map<std::string_view, T> &map) {
-  return StringConverter<T>{[map](std::string_view str) {
-    if (map.count(str) == 0)
-      return std::optional<T>(std::nullopt);
-    return std::make_optional<T>(map.at(str));
-  }};
+    return StringConverter<T>{[map](std::string_view str) {
+        if (map.count(str) == 0)
+            return std::optional<T>(std::nullopt);
+        return std::make_optional<T>(map.at(str));
+    }};
 }
 
 template <typename Chord, typename KeyStroke>
 concept KeyChord = requires(Chord a, KeyStroke b) {
-  a | b;
-  a |= b;
+    a | b;
+    a |= b;
 };
 
 template <typename KeyStroke, KeyChord<KeyStroke> Chord>
 static StringConverter<Chord> MakeChordConverter(
     const std::unordered_map<std::string_view, KeyStroke> &keyMap) {
-  return StringConverter<Chord>{[keyMap](std::string_view str) {
-    std::optional<Chord> chord;
-    std::string token = "";
-    for (char c : str) {
-      if (c == '+') {
-        if (keyMap.count(token) == 0)
-          return std::optional<Chord>(std::nullopt);
+    return StringConverter<Chord>{[keyMap](std::string_view str) {
+        std::optional<Chord> chord;
+        std::string token = "";
+        for (char c : str) {
+            if (c == '+') {
+                if (keyMap.count(token) == 0)
+                    return std::optional<Chord>(std::nullopt);
 
+                chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
+                token = "";
+                continue;
+            }
+            token += c;
+        }
+        if (keyMap.count(token) == 0)
+            return std::optional<Chord>(std::nullopt);
         chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
-        token = "";
-        continue;
-      }
-      token += c;
-    }
-    if (keyMap.count(token) == 0)
-      return std::optional<Chord>(std::nullopt);
-    chord = !chord ? keyMap.at(token) : (*chord | keyMap.at(token));
-    return chord;
-  }};
+        return chord;
+    }};
 }
 
 template <typename T>
 static std::expected<T, YAMLError>
 ReadKey(int lineNum, const std::string &line,
         const StringConverter<T> &conversion) {
-  auto firstLetter = std::find_if(line.begin(), line.end(),
-                                  [](char c) { return std::isalpha(c); });
-  auto seperator = std::find(firstLetter, line.end(), ':');
+    auto firstLetter = std::find_if(line.begin(), line.end(),
+                                    [](char c) { return std::isalpha(c); });
+    auto seperator = std::find(firstLetter, line.end(), ':');
 
-  if (seperator == line.end()) {
-    return std::unexpected(YAMLError{
-        YAMLErrorType::ParseError,
-        std::format("Could not find ':' in line {}:\n    {}", lineNum, line)});
-  }
+    if (seperator == line.end()) {
+        return std::unexpected(
+            YAMLError{YAMLErrorType::ParseError,
+                      std::format("Could not find ':' in line {}:\n    {}",
+                                  lineNum, line)});
+    }
 
-  auto keyStr = std::string(firstLetter, seperator);
-  auto key = conversion(keyStr);
-  if (!key) {
-    return std::unexpected(
-        YAMLError{YAMLErrorType::ParseError,
-                  std::format("'{}' is not a valid key in line {}:\n    {}",
-                              keyStr, lineNum, line)});
-  }
-  return *key;
+    auto keyStr = std::string(firstLetter, seperator);
+    auto key = conversion(keyStr);
+    if (!key) {
+        return std::unexpected(
+            YAMLError{YAMLErrorType::ParseError,
+                      std::format("'{}' is not a valid key in line {}:\n    {}",
+                                  keyStr, lineNum, line)});
+    }
+    return *key;
 }
 
 template <typename T>
 static std::expected<std::vector<T>, YAMLError>
 ReadList(int lineNum, const std::string &line, std::string_view values,
          const StringConverter<T> &conversion, int numElements = -1) {
-  std::vector<T> result = {};
-  if (numElements >= 0)
-    result.reserve(numElements);
+    std::vector<T> result = {};
+    if (numElements >= 0)
+        result.reserve(numElements);
 
-  std::string token = "";
-  int index = 0;
-  for (char c : values) {
-    if (c == '[' || std::isspace(c))
-      continue;
-    if ((c == ',' || c == ']') && token.length() > 0) {
-      auto converted = conversion(token);
-      if (!converted) {
+    std::string token = "";
+    int index = 0;
+    for (char c : values) {
+        if (c == '[' || std::isspace(c))
+            continue;
+        if ((c == ',' || c == ']') && token.length() > 0) {
+            auto converted = conversion(token);
+            if (!converted) {
+                return std::unexpected(YAMLError{
+                    YAMLErrorType::InvalidArguments,
+                    std::format("{} is not a valid value in line {} o:\n    {}",
+                                token, lineNum, line)});
+            }
+            result.push_back(*converted);
+            index++;
+            token = "";
+            continue;
+        }
+        token += c;
+    }
+
+    if (numElements >= 0 && index != numElements) {
         return std::unexpected(YAMLError{
             YAMLErrorType::InvalidArguments,
-            std::format("{} is not a valid value in line {} o:\n    {}", token,
-                        lineNum, line)});
-      }
-      result.push_back(*converted);
-      index++;
-      token = "";
-      continue;
+            std::format(
+                "Expected {} parameters, received {} in line {}:\n    {}",
+                numElements, index, lineNum, line)});
     }
-    token += c;
-  }
 
-  if (numElements >= 0 && index != numElements) {
-    return std::unexpected(YAMLError{
-        YAMLErrorType::InvalidArguments,
-        std::format("Expected {} parameters, received {} in line {}:\n    {}",
-                    numElements, index, lineNum, line)});
-  }
-
-  return result;
+    return result;
 }
 
 template <Vector4 Vec>
 static Vec CreateVector4(const std::vector<float> &elements) {
-  auto result = Vec{};
-  for (size_t i = 0; i < elements.size(); i++) {
-    switch (i) {
-    case 0:
-      result.x = elements[i];
-      break;
-    case 1:
-      result.y = elements[i];
-      break;
-    case 2:
-      result.z = elements[i];
-      break;
-    case 3:
-      result.w = elements[i];
-      break;
+    auto result = Vec{};
+    for (size_t i = 0; i < elements.size(); i++) {
+        switch (i) {
+        case 0:
+            result.x = elements[i];
+            break;
+        case 1:
+            result.y = elements[i];
+            break;
+        case 2:
+            result.z = elements[i];
+            break;
+        case 3:
+            result.w = elements[i];
+            break;
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 template <typename Key, typename Value>
@@ -340,35 +342,35 @@ ReadListPair(int lineNum, const std::string &line,
              const StringConverter<Key> &keyConversion,
              const StringConverter<Value> &valueConversion,
              int numElements = -1) {
-  auto seperator = std::find(firstLetter, line.end(), ':');
+    auto seperator = std::find(firstLetter, line.end(), ':');
 
-  auto key = ReadKey<Key>(lineNum, line, keyConversion);
-  if (!key)
-    return std::unexpected(key.error());
+    auto key = ReadKey<Key>(lineNum, line, keyConversion);
+    if (!key)
+        return std::unexpected(key.error());
 
-  auto values = std::string_view(seperator + 1, line.end());
-  auto valueList =
-      ReadList<Value>(lineNum, line, values, valueConversion, numElements);
-  if (!valueList)
-    return std::unexpected(valueList.error());
+    auto values = std::string_view(seperator + 1, line.end());
+    auto valueList =
+        ReadList<Value>(lineNum, line, values, valueConversion, numElements);
+    if (!valueList)
+        return std::unexpected(valueList.error());
 
-  return std::pair<Key, std::vector<Value>>{*key, *valueList};
+    return std::pair<Key, std::vector<Value>>{*key, *valueList};
 }
 
 template <Vector4 Vec>
 static std::expected<std::pair<StyleColor, Vec>, YAMLError>
 ReadColorPair(int lineNum, const std::string &line,
               const std::string::const_iterator &firstLetter) {
-  StringConverter<float> toF = [](auto str) {
-    return std::make_optional<float>(std::strtof(str.data(), nullptr));
-  };
-  StringConverter<StyleColor> toC = MakeConverter(ColorDefinitions);
-  auto pair =
-      ReadListPair<StyleColor, float>(lineNum, line, firstLetter, toC, toF, 4);
-  if (!pair)
-    return std::unexpected(pair.error());
-  return std::pair<StyleColor, Vec>{pair->first,
-                                    CreateVector4<Vec>(pair->second)};
+    StringConverter<float> toF = [](auto str) {
+        return std::make_optional<float>(std::strtof(str.data(), nullptr));
+    };
+    StringConverter<StyleColor> toC = MakeConverter(ColorDefinitions);
+    auto pair = ReadListPair<StyleColor, float>(lineNum, line, firstLetter, toC,
+                                                toF, 4);
+    if (!pair)
+        return std::unexpected(pair.error());
+    return std::pair<StyleColor, Vec>{pair->first,
+                                      CreateVector4<Vec>(pair->second)};
 }
 
 template <typename Key, typename Value>
@@ -377,135 +379,139 @@ ReadPair(int lineNum, const std::string &line,
          const std::string::const_iterator &firstLetter,
          const StringConverter<Key> &keyConverter,
          const StringConverter<Value> &valueConverter) {
-  auto seperator = std::find(firstLetter, line.end(), ':');
+    auto seperator = std::find(firstLetter, line.end(), ':');
 
-  auto key = ReadKey<Key>(lineNum, line, keyConverter);
-  if (!key)
-    return std::unexpected(key.error());
+    auto key = ReadKey<Key>(lineNum, line, keyConverter);
+    if (!key)
+        return std::unexpected(key.error());
 
-  std::string valueStr = "";
-  for (auto it = seperator + 1; it != line.end(); it++) {
-    if (!std::isspace(*it))
-      valueStr += *it;
-  }
+    std::string valueStr = "";
+    for (auto it = seperator + 1; it != line.end(); it++) {
+        if (!std::isspace(*it))
+            valueStr += *it;
+    }
 
-  auto value = valueConverter(valueStr);
-  if (!value) {
-    return std::unexpected(
-        YAMLError{YAMLErrorType::ParseError,
-                  std::format("'{}' is not a valid color in line {}:\n    {}",
-                              valueStr, lineNum, line)});
-  }
+    auto value = valueConverter(valueStr);
+    if (!value) {
+        return std::unexpected(YAMLError{
+            YAMLErrorType::ParseError,
+            std::format("'{}' is not a valid color in line {}:\n    {}",
+                        valueStr, lineNum, line)});
+    }
 
-  return std::pair<Key, Value>{*key, *value};
+    return std::pair<Key, Value>{*key, *value};
 }
 
 template <Vector4 Vec>
 std::expected<StyleInfo<Vec>, YAMLError>
 LoadYAML(const std::filesystem::path &styleInfoPath) {
-  std::ifstream input(styleInfoPath);
-  if (!input.is_open()) {
-    return std::unexpected(
-        YAMLError{YAMLErrorType::FileOpenError,
-                  std::format("Could not open file '{}'",
-                              styleInfoPath.generic_string())});
-  }
-
-  std::string line = "";
-  std::ptrdiff_t indentWidth = 0;
-  int32_t lineNum = 0;
-
-  std::optional<SectionType> section{};
-  auto output = StyleInfo<Vec>{};
-
-  while (std::getline(input, line)) {
-    lineNum++;
-
-    auto start =
-        std::ranges::find_if(line, [](char c) { return std::isalpha(c); });
-    if (start == line.end())
-      continue;
-    if (std::ranges::find(line, '#') < start)
-      continue;
-
-    if (indentWidth == 0)
-      indentWidth = std::distance(line.begin(), start);
-    auto depth = indentWidth != 0
-                     ? (std::distance(line.begin(), start) / indentWidth)
-                     : 0;
-
-    if (depth == 0)
-      section = std::nullopt;
-
-    if (section) {
-      switch (*section) {
-        using enum SectionType;
-      case StyleColors: {
-        auto result = ReadColorPair<Vec>(lineNum, line, start);
-        if (!result)
-          return std::unexpected<YAMLError>(result.error());
-        output.StyleColors[result->first] = result->second;
-      } break;
-      case ImGUIStyle: {
-        auto result = ReadPair<ImGuiCol_, StyleColor>(
-            lineNum, line, start, MakeConverter(AttributeDefinitions),
-            MakeConverter(ColorDefinitions));
-        if (!result)
-          return std::unexpected<YAMLError>(result.error());
-        output.AttributeColors[result->first] = result->second;
-      } break;
-      case Shortcuts: {
-        {
-          auto result = ReadListPair<GameAction, ImGuiKeyChord>(
-              lineNum, line, start,
-              MakeConverter(Actions::GameActionDefinitions),
-              MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions));
-          if (result) {
-            output.Shortcuts[result->first] = result->second;
-            break;
-          }
-        }
-        {
-          auto result = ReadListPair<EditorAction, ImGuiKeyChord>(
-              lineNum, line, start,
-              MakeConverter(Actions::EditorActionDefinitions),
-              MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions));
-          if (result) {
-            output.Shortcuts[result->first] = result->second;
-            break;
-          }
-        }
-        {
-          auto result = ReadListPair<SelectionAction, ImGuiKeyChord>(
-              lineNum, line, start,
-              MakeConverter(Actions::SelectionActionDefinitions),
-              MakeChordConverter<ImGuiKey, ImGuiKeyChord>(ShortcutDefinitions));
-          if (result) {
-            output.Shortcuts[result->first] = result->second;
-            break;
-          }
-          return std::unexpected<YAMLError>(result.error());
-        }
-      }
-      }
+    std::ifstream input(styleInfoPath);
+    if (!input.is_open()) {
+        return std::unexpected(
+            YAMLError{YAMLErrorType::FileOpenError,
+                      std::format("Could not open file '{}'",
+                                  styleInfoPath.generic_string())});
     }
 
-    auto end = std::find_if(line.rbegin(), line.rend(),
-                            [](char c) { return !std::isspace(c); });
-    if (*end == ':') {
-      auto sectionHeader = std::string_view(start, --end.base());
-      if (SectionDefinitions.count(sectionHeader) == 0) {
-        return std::unexpected(YAMLError{
-            YAMLErrorType::InvalidArguments,
-            std::format("'{}' is not a valid section type in line {}:\n    {}",
+    std::string line = "";
+    std::ptrdiff_t indentWidth = 0;
+    int32_t lineNum = 0;
+
+    std::optional<SectionType> section{};
+    auto output = StyleInfo<Vec>{};
+
+    while (std::getline(input, line)) {
+        lineNum++;
+
+        auto start =
+            std::ranges::find_if(line, [](char c) { return std::isalpha(c); });
+        if (start == line.end())
+            continue;
+        if (std::ranges::find(line, '#') < start)
+            continue;
+
+        if (indentWidth == 0)
+            indentWidth = std::distance(line.begin(), start);
+        auto depth = indentWidth != 0
+                         ? (std::distance(line.begin(), start) / indentWidth)
+                         : 0;
+
+        if (depth == 0)
+            section = std::nullopt;
+
+        if (section) {
+            switch (*section) {
+                using enum SectionType;
+            case StyleColors: {
+                auto result = ReadColorPair<Vec>(lineNum, line, start);
+                if (!result)
+                    return std::unexpected<YAMLError>(result.error());
+                output.StyleColors[result->first] = result->second;
+            } break;
+            case ImGUIStyle: {
+                auto result = ReadPair<ImGuiCol_, StyleColor>(
+                    lineNum, line, start, MakeConverter(AttributeDefinitions),
+                    MakeConverter(ColorDefinitions));
+                if (!result)
+                    return std::unexpected<YAMLError>(result.error());
+                output.AttributeColors[result->first] = result->second;
+            } break;
+            case Shortcuts: {
+                {
+                    auto result = ReadListPair<GameAction, ImGuiKeyChord>(
+                        lineNum, line, start,
+                        MakeConverter(Actions::GameActionDefinitions),
+                        MakeChordConverter<ImGuiKey, ImGuiKeyChord>(
+                            ShortcutDefinitions));
+                    if (result) {
+                        output.Shortcuts[result->first] = result->second;
+                        break;
+                    }
+                }
+                {
+                    auto result = ReadListPair<EditorAction, ImGuiKeyChord>(
+                        lineNum, line, start,
+                        MakeConverter(Actions::EditorActionDefinitions),
+                        MakeChordConverter<ImGuiKey, ImGuiKeyChord>(
+                            ShortcutDefinitions));
+                    if (result) {
+                        output.Shortcuts[result->first] = result->second;
+                        break;
+                    }
+                }
+                {
+                    auto result = ReadListPair<SelectionAction, ImGuiKeyChord>(
+                        lineNum, line, start,
+                        MakeConverter(Actions::SelectionActionDefinitions),
+                        MakeChordConverter<ImGuiKey, ImGuiKeyChord>(
+                            ShortcutDefinitions));
+                    if (result) {
+                        output.Shortcuts[result->first] = result->second;
+                        break;
+                    }
+                    return std::unexpected<YAMLError>(result.error());
+                }
+            }
+            }
+        }
+
+        auto end = std::find_if(line.rbegin(), line.rend(),
+                                [](char c) { return !std::isspace(c); });
+        if (*end == ':') {
+            auto sectionHeader = std::string_view(start, --end.base());
+            if (SectionDefinitions.count(sectionHeader) == 0) {
+                return std::unexpected(YAMLError{
+                    YAMLErrorType::InvalidArguments,
+                    std::format(
+                        "'{}' is not a valid section type in line {}:\n    {}",
                         sectionHeader, lineNum, line)});
-      }
+            }
 
-      section = SectionDefinitions.at(sectionHeader);
+            section = SectionDefinitions.at(sectionHeader);
+        }
     }
-  }
 
-  return output;
+    return output;
 }
 } // namespace gol::StyleLoader
 

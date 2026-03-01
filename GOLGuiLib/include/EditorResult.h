@@ -8,15 +8,15 @@
 
 namespace gol {
 struct EditorResult {
-  std::filesystem::path CurrentFilePath{};
-  SimulationState State = SimulationState::Paint;
-  LifeAlgorithm Algorithm = LifeAlgorithm::SparseLife;
-  bool Active = true;
-  bool Closing = false;
-  bool SelectionActive = false;
-  bool UndosAvailable = false;
-  bool RedosAvailable = false;
-  bool HasUnsavedChanges = false;
+    std::filesystem::path CurrentFilePath{};
+    SimulationState State = SimulationState::Paint;
+    LifeAlgorithm Algorithm = LifeAlgorithm::SparseLife;
+    bool Active = true;
+    bool Closing = false;
+    bool SelectionActive = false;
+    bool UndosAvailable = false;
+    bool RedosAvailable = false;
+    bool HasUnsavedChanges = false;
 };
 } // namespace gol
 

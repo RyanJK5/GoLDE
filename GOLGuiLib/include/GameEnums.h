@@ -12,45 +12,45 @@ namespace gol {
 enum class SimulationState { None, Paint, Simulation, Paused, Stepping, Empty };
 
 enum class GameAction {
-  None,
-  Start,
-  Pause,
-  Resume,
-  Restart,
-  Reset,
-  Clear,
-  Step
+    None,
+    Start,
+    Pause,
+    Resume,
+    Restart,
+    Reset,
+    Clear,
+    Step
 };
 
 enum class EditorAction {
-  Resize,
-  GenerateNoise,
-  Undo,
-  Redo,
-  SaveAsNew,
-  NewFile,
-  Save,
-  Load,
-  Close,
+    Resize,
+    GenerateNoise,
+    Undo,
+    Redo,
+    SaveAsNew,
+    NewFile,
+    Save,
+    Load,
+    Close,
 };
 
 enum class SelectionAction {
-  Rotate,
-  Select,
-  Deselect,
-  Delete,
-  Copy,
-  Cut,
-  Paste,
-  SelectAll,
+    Rotate,
+    Select,
+    Deselect,
+    Delete,
+    Copy,
+    Cut,
+    Paste,
+    SelectAll,
 
-  NudgeLeft,
-  NudgeRight,
-  NudgeUp,
-  NudgeDown,
+    NudgeLeft,
+    NudgeRight,
+    NudgeUp,
+    NudgeDown,
 
-  FlipVertically,
-  FlipHorizontally
+    FlipVertically,
+    FlipHorizontally
 };
 
 using ActionVariant = std::variant<GameAction, EditorAction, SelectionAction>;

@@ -6,7 +6,7 @@
 #include "Graphics2D.h"
 
 template <> struct std::hash<gol::Vec2> {
-  size_t operator()(gol::Vec2 vec) const;
+    size_t operator()(gol::Vec2 vec) const;
 };
 
 namespace gol {
