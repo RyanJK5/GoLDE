@@ -1,5 +1,5 @@
-#ifndef __HashQuadtree_h__
-#define __HashQuadtree_h__
+#ifndef HashQuadtree_h_
+#define HashQuadtree_h_
 
 #include <bit>
 #include <bitset>
@@ -111,6 +111,7 @@ constexpr inline LifeNode StaticTrueNode = [] {
         nullptr,
         nullptr,
     };
+    ret.IsEmpty = false;
     ret.Population = 1;
     return ret;
 }();
@@ -266,9 +267,6 @@ class HashQuadtree {
     using ConstIterator = IteratorImpl<const Vec2>;
 
     bool empty() const;
-
-    // Synonymous with Population()
-    size_t size() const;
 
     Iterator begin();
     Iterator end();

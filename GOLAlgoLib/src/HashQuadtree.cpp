@@ -41,7 +41,7 @@ int64_t HashLife(HashQuadtree &data, int64_t numSteps,
     if (numSteps == 0) // Hyper speed
         return data.Advance(0, stopToken);
 
-    auto generation = static_cast<int64_t>(1);
+    auto generation = static_cast<int64_t>(0);
     while (generation < numSteps) {
         const auto maxAdvance = MaxAdvanceOf(numSteps - generation);
 
@@ -206,8 +206,6 @@ int64_t HashQuadtree::CalculateTreeSize() const {
 bool HashQuadtree::empty() const {
     return m_Root == FalseNode || m_Root->IsEmpty;
 }
-
-size_t HashQuadtree::size() const { return static_cast<size_t>(Population()); }
 
 uint64_t HashQuadtree::Population() const {
     return m_Root ? m_Root->Population : 0ULL;
