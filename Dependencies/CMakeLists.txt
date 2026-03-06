@@ -10,6 +10,9 @@ target_include_directories(unordered_dense INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 add_library(fontawesome INTERFACE)
 target_include_directories(fontawesome INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/FontAwesome)
 
+add_library(stb_image INTERFACE)
+target_include_directories(stb_image INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb_image)
+
 # Add GoogleTest
 add_subdirectory(GoogleTest)
 
@@ -90,6 +93,6 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 else()
     set(GLEW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GLEW/glew-2.1.0/lib/linux/x86/libGLEW.a")
     message(STATUS "GLEW: Using x86 library")
-    endif()
+endif()
     
 add_subdirectory(ImGUI)

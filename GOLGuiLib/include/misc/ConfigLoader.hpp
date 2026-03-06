@@ -23,7 +23,7 @@
 
 #include "GameEnums.hpp"
 
-namespace gol::StyleLoader {
+namespace gol::ConfigLoader {
 template <typename T>
 concept Vector4 =
     std::floating_point<decltype(T::x)> &&
@@ -42,15 +42,17 @@ struct YAMLError {
     std::string Description;
 };
 
-class StyleLoaderException : public std::runtime_error {
+class StyleLoaderException : public std::exception {
   public:
-    StyleLoaderException(std::string_view str)
-        : std::runtime_error(std::move(str).data()) {}
-    StyleLoaderException(const YAMLError &err)
-        : std::runtime_error(err.Description.data()) {}
+    StyleLoaderException(std::string_view error) : m_Error(error) {}
+
+    virtual const char* what() const override final { return m_Error.c_str(); }
+  private:
+    std::string m_Error;
 };
 
 template <Vector4 Vec> struct StyleInfo {
+    std::filesystem::path OriginPath;
     std::unordered_map<StyleColor, Vec> StyleColors;
     std::unordered_map<ImGuiCol_, StyleColor> AttributeColors;
     std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>> Shortcuts;
@@ -404,7 +406,7 @@ ReadPair(int lineNum, const std::string &line,
 
 template <Vector4 Vec>
 std::expected<StyleInfo<Vec>, YAMLError>
-LoadYAML(const std::filesystem::path &styleInfoPath) {
+TryLoadYAML(const std::filesystem::path &styleInfoPath) {
     std::ifstream input(styleInfoPath);
     if (!input.is_open()) {
         return std::unexpected(
@@ -418,7 +420,7 @@ LoadYAML(const std::filesystem::path &styleInfoPath) {
     int32_t lineNum = 0;
 
     std::optional<SectionType> section{};
-    auto output = StyleInfo<Vec>{};
+    StyleInfo<Vec> output{.OriginPath = styleInfoPath};
 
     while (std::getline(input, line)) {
         lineNum++;
@@ -512,6 +514,15 @@ LoadYAML(const std::filesystem::path &styleInfoPath) {
     }
 
     return output;
+}
+
+template <Vector4 Vec>
+StyleInfo<Vec> LoadYAML(const std::filesystem::path& styleInfoPath)
+{
+    auto result = TryLoadYAML<Vec>(styleInfoPath);
+    if (!result)
+        throw StyleLoaderException { result.error().Description };
+    return *result;
 }
 } // namespace gol::StyleLoader
 

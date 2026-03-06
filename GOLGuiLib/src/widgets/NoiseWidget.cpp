@@ -40,4 +40,9 @@ SimulationControlResult NoiseWidget::UpdateImpl(const EditorResult &state) {
                                    .NoiseDensity = m_Density,
                                    .FromShortcut = result.FromShortcut};
 }
+
+void NoiseWidget::SetShortcutsImpl(const ShortcutMap& shortcuts) {
+    m_Button.SetShortcuts(shortcuts.at(EditorAction::GenerateNoise));
+}
+
 } // namespace gol

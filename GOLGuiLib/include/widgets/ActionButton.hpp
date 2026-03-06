@@ -21,6 +21,8 @@ template <ActionType ActType> struct ActionButtonResult {
     bool FromShortcut = false;
 };
 
+using ShortcutMap = std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>;
+
 template <ActionType ActType, bool LineBreak> class MultiActionButton {
   public:
     constexpr static int32_t DefaultButtonHeight = 50;
@@ -65,6 +67,10 @@ template <ActionType ActType, bool LineBreak> class MultiActionButton {
         return result;
     }
 
+    void SetShortcuts(const std::unordered_map<ActType, std::vector<KeyShortcut>>
+            & shortcuts) {
+        m_Shortcuts = shortcuts;
+    }
   protected:
     virtual ActType Action(const EditorResult &state) const = 0;
 
@@ -88,8 +94,15 @@ class ActionButton : public MultiActionButton<ActType, LineBreak> {
                 allowRepeats
                     ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
                     : shortcuts | KeyShortcut::MapChordsToVector}}),
-          m_Action(action) {}
+          m_Action(action), m_AllowRepeats(allowRepeats) {}
 
+    void SetShortcuts(std::span<const ImGuiKeyChord> shortcuts)
+    {
+        MultiActionButton<ActType, LineBreak>::SetShortcuts(std::unordered_map<ActType, std::vector<KeyShortcut>>
+            {{m_Action, m_AllowRepeats
+                          ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
+                          : shortcuts | KeyShortcut::MapChordsToVector}});
+    }
   protected:
     virtual ActType Action(const EditorResult &) const override final {
         return m_Action;
@@ -97,6 +110,7 @@ class ActionButton : public MultiActionButton<ActType, LineBreak> {
 
   private:
     ActType m_Action;
+    bool m_AllowRepeats;
 };
 } // namespace gol
 

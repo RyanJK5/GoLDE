@@ -37,19 +37,23 @@ std::string UpdateFileButton::Label(const EditorResult &) const {
 bool UpdateFileButton::Enabled(const EditorResult &state) const {
     return (state.CurrentFilePath.empty() &&
             state.State == SimulationState::Paused) ||
-           state.State == SimulationState::Paint ||
-           state.State == SimulationState::Empty;
+           (state.CurrentFilePath.empty() &&
+            state.State == SimulationState::Empty) ||
+           state.State == SimulationState::Paint;
 }
 
 SaveButton::SaveButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(EditorAction::SaveAsNew, shortcuts) {}
+
 Size2F SaveButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 2.f,
             ActionButton::DefaultButtonHeight};
 }
+
 std::string SaveButton::Label(const EditorResult &) const {
     return ICON_FA_FLOPPY_DISK;
 }
+
 bool SaveButton::Enabled(const EditorResult &state) const {
     return state.State == SimulationState::Paint ||
            state.State == SimulationState::Paused;
@@ -61,13 +65,15 @@ Size2F LoadButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x,
             ActionButton::DefaultButtonHeight};
 }
+
 std::string LoadButton::Label(const EditorResult &) const {
     return ICON_FA_FOLDER_OPEN;
 }
+
 bool LoadButton::Enabled(const EditorResult &) const { return true; }
 
 FileWidget::FileWidget(
-    const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>
+    const ShortcutMap
         &shortcutInfo)
     : m_NewFileButton(shortcutInfo.at(EditorAction::NewFile)),
       m_UpdateFileButton(shortcutInfo.at(EditorAction::Save)),
@@ -124,5 +130,13 @@ SimulationControlResult FileWidget::UpdateImpl(const EditorResult &state) {
     return {.Action = result.Action,
             .FilePath = *filePath,
             .FromShortcut = result.FromShortcut};
+}
+
+void FileWidget::SetShortcutsImpl(const ShortcutMap& shortcutInfo)
+{
+    m_NewFileButton.SetShortcuts(shortcutInfo.at(EditorAction::NewFile));
+    m_UpdateFileButton.SetShortcuts(shortcutInfo.at(EditorAction::Save));
+    m_SaveButton.SetShortcuts(shortcutInfo.at(EditorAction::SaveAsNew));
+    m_LoadButton.SetShortcuts(shortcutInfo.at(EditorAction::Load));
 }
 } // namespace gol

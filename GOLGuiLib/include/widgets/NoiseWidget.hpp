@@ -38,7 +38,8 @@ class NoiseWidget : public Widget {
 
   private:
     SimulationControlResult UpdateImpl(const EditorResult &state);
-
+    
+    void SetShortcutsImpl(const ShortcutMap &shortcuts);
   private:
     float m_Density = 0.5f;
 

@@ -43,3 +43,8 @@ gol::ResizeWidget::UpdateImpl(const EditorResult &state) {
             .NewDimensions = m_Dimensions,
             .FromShortcut = result.FromShortcut};
 }
+
+void gol::ResizeWidget::SetShortcutsImpl(const ShortcutMap& shortcuts)
+{
+    m_Button.SetShortcuts(shortcuts.at(EditorAction::Resize));
+}

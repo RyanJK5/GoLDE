@@ -196,7 +196,7 @@ bool RedoButton::Enabled(const EditorResult &state) const {
 }
 
 EditorWidget::EditorWidget(
-    const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>
+    const ShortcutMap
         &shortcuts)
     : m_CopyButton(shortcuts.at(SelectionAction::Copy)),
       m_CutButton(shortcuts.at(SelectionAction::Cut)),
@@ -233,4 +233,20 @@ SimulationControlResult EditorWidget::UpdateImpl(const EditorResult &state) {
 
     return result;
 }
+
+void EditorWidget::SetShortcutsImpl(const ShortcutMap& shortcuts)
+{
+    m_CopyButton.SetShortcuts(shortcuts.at(SelectionAction::Copy));
+    m_CutButton.SetShortcuts(shortcuts.at(SelectionAction::Cut));
+    m_PasteButton.SetShortcuts(shortcuts.at(SelectionAction::Paste));
+    m_DeleteButton.SetShortcuts(shortcuts.at(SelectionAction::Delete));
+    m_DeselectButton.SetShortcuts(shortcuts.at(SelectionAction::Deselect));
+    m_RotateButton.SetShortcuts(shortcuts.at(SelectionAction::Rotate));
+    m_FlipHorizontalButton.SetShortcuts(shortcuts.at(SelectionAction::FlipHorizontally));
+    m_FlipVerticalButton.SetShortcuts(shortcuts.at(SelectionAction::FlipVertically));
+    m_SelectAllButton.SetShortcuts(shortcuts.at(SelectionAction::SelectAll));
+    m_UndoButton.SetShortcuts(shortcuts.at(EditorAction::Undo));
+    m_RedoButton.SetShortcuts(shortcuts.at(EditorAction::Redo)) ;
+}
+
 } // namespace gol

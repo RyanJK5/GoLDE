@@ -18,6 +18,11 @@ class Widget {
         return self.UpdateImpl(state);
     }
 
+    void SetShortcuts(this auto&& self, const ShortcutMap
+        & shortcuts)
+    {
+        return self.SetShortcutsImpl(shortcuts);
+    }
   protected:
     template <ActionType ActType>
     inline static void UpdateResult(SimulationControlResult &result,

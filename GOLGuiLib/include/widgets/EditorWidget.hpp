@@ -127,13 +127,14 @@ class RedoButton : public ActionButton<EditorAction, false> {
 class EditorWidget : public Widget {
   public:
     EditorWidget(
-        const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>
-            &shortcuts = {});
+        const ShortcutMap
+            &shortcuts);
     friend Widget;
 
   public:
     SimulationControlResult UpdateImpl(const EditorResult &state);
 
+    void SetShortcutsImpl(const ShortcutMap &shortcuts);
   private:
     CopyButton m_CopyButton;
     CutButton m_CutButton;

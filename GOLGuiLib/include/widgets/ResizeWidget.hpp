@@ -39,7 +39,7 @@ class ResizeWidget : public Widget {
 
   private:
     SimulationControlResult UpdateImpl(const EditorResult &state);
-
+    void SetShortcutsImpl(const ShortcutMap &shortcuts);
   private:
     ResizeButton m_Button;
     Size2 m_Dimensions;

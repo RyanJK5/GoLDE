@@ -3,7 +3,7 @@ file(GLOB_RECURSE HEADERS "include/*.hpp")
 
 message(STATUS "GOLGraphicsLib sources: ${SOURCES}")
 
-add_library(GOLGraphicsLib STATIC ${SOURCES} ${HEADERS})
+add_library(GOLGraphicsLib STATIC ${SOURCES} ${HEADERS} )
 
 target_include_directories(GOLGraphicsLib
     PUBLIC
@@ -16,8 +16,10 @@ target_link_libraries(GOLGraphicsLib
         glew
         glfw
         imgui_lib
+        stb_image
         OpenGL::GL
         GOLLoggingLib
+        stb_image
 )
 
 # GLEW needs GLEW_STATIC defined

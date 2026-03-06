@@ -16,6 +16,7 @@ target_link_libraries(GOLCoreLib
         GOLGraphicsLib
         GOLGuiLib
         GOLLoggingLib
+        stb_image
         glew
         glfw
 )

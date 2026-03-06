@@ -1,11 +1,6 @@
-#include <exception>
-#include <filesystem>
-#include <iostream>
-
 #include "Game.hpp"
 
 int main() {
-  const auto configPath = std::filesystem::path{"config"} / "style.yaml";
-  gol::Game game{configPath};
+  gol::Game game{};
   game.Begin();
 }

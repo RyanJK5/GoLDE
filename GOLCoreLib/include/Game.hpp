@@ -28,10 +28,10 @@ class OpenGLWindow {
     OpenGLWindow &operator=(const OpenGLWindow &other) = delete;
     OpenGLWindow &operator=(OpenGLWindow &&other) noexcept = delete;
 
-    GLFWwindow *Get() const { return Underlying; }
+    GLFWwindow *Get() const { return m_Underlying; }
 
   private:
-    GLFWwindow *Underlying;
+    GLFWwindow *m_Underlying;
 };
 
 // A single instance of GOLDE. The core event loop runs through here.
@@ -44,7 +44,7 @@ class Game {
 
   public:
     // Takes in a file to be parsed by ConfigLoader.
-    Game(const std::filesystem::path &configPath);
+    Game();
     ~Game();
 
     Game(const Game &other) = delete;

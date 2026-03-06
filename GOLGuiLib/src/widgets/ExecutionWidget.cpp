@@ -93,3 +93,17 @@ gol::ExecutionWidget::UpdateImpl(const EditorResult &state) {
 
     return result;
 }
+
+void gol::ExecutionWidget::SetShortcutsImpl(const ShortcutMap& shortcuts)
+{
+    m_StartButton.SetShortcuts(
+        {{GameAction::Start,
+          shortcuts.at(GameAction::Start) | KeyShortcut::MapChordsToVector},
+         {GameAction::Pause,
+          shortcuts.at(GameAction::Pause) | KeyShortcut::MapChordsToVector},
+         {GameAction::Resume,
+          shortcuts.at(GameAction::Resume) | KeyShortcut::MapChordsToVector}});
+    m_ClearButton.SetShortcuts(shortcuts.at(GameAction::Clear));
+    m_ResetButton.SetShortcuts(shortcuts.at(GameAction::Reset));
+    m_RestartButton.SetShortcuts(shortcuts.at(GameAction::Restart));
+}

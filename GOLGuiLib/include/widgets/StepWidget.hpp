@@ -42,6 +42,8 @@ class StepWidget : public Widget {
   private:
     SimulationControlResult UpdateImpl(const EditorResult &state);
 
+    void SetShortcutsImpl(const ShortcutMap &) { }
+
     void SetStepCount(int64_t stepCount);
 
     void ShowInputText();

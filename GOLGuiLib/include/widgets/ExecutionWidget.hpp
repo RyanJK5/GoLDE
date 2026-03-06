@@ -70,7 +70,7 @@ class RestartButton : public ActionButton<GameAction, false> {
 class ExecutionWidget : public Widget {
   public:
     ExecutionWidget(
-        const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>
+        const ShortcutMap
             &shortcuts)
         : m_StartButton(shortcuts),
           m_ClearButton(shortcuts.at(GameAction::Clear)),
@@ -81,6 +81,7 @@ class ExecutionWidget : public Widget {
   private:
     SimulationControlResult UpdateImpl(const EditorResult &state);
 
+    void SetShortcutsImpl(const ShortcutMap &shortcuts);
   private:
     StartButton m_StartButton;
     ClearButton m_ClearButton;

@@ -58,13 +58,15 @@ class LoadButton : public ActionButton<EditorAction, false> {
 class FileWidget : public Widget {
   public:
     FileWidget(
-        const std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>
+        const ShortcutMap
             &shortcutInfo);
     friend Widget;
 
   private:
     SimulationControlResult UpdateImpl(const EditorResult &state);
-
+    void SetShortcutsImpl(
+        const ShortcutMap
+            &shortcutInfo);
   private:
     NewFileButton m_NewFileButton;
     UpdateFileButton m_UpdateFileButton;

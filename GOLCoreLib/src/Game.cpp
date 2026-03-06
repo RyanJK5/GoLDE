@@ -21,8 +21,10 @@
 #include "PresetSelectionResult.hpp"
 #include "SimulationControlResult.hpp"
 #include "SimulationEditor.hpp"
-#include <cassert>
-#include <ranges>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <vector>
 
 namespace gol {
@@ -30,14 +32,26 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
     : Bounds(0, 0, width, height) {
     if (!glfwInit())
         throw GLException("Failed to initialize glfw");
+    
+    m_Underlying =
+        glfwCreateWindow(width, height, "GOLDE", NULL, NULL);
+  
+    const auto deleteStbiImage = [](unsigned char *pixels) { stbi_image_free(pixels); };
 
-    Underlying =
-        glfwCreateWindow(width, height, "Conway's Game of Life", NULL, NULL);
+    auto iconWidth = 0;
+    auto iconHeight = 0;
+    [[maybe_unused]] auto iconChannels = 0;
+        
+    std::unique_ptr<unsigned char, decltype(deleteStbiImage)> pixels{
+        stbi_load("resources/icon.png", &iconWidth, &iconHeight, &iconChannels, 4),
+        deleteStbiImage};
+    const GLFWimage icon{.width = iconWidth, .height = iconHeight, .pixels = pixels.get()};
+    glfwSetWindowIcon(m_Underlying, 1, &icon);
 
-    if (!Underlying)
+    if (!m_Underlying)
         throw GLException("Failed to create window");
 
-    glfwMakeContextCurrent(Underlying);
+    glfwMakeContextCurrent(m_Underlying);
     GL_DEBUG(glLineWidth(4));
     GL_DEBUG(glfwSwapInterval(1));
 
@@ -49,16 +63,17 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
 
 OpenGLWindow::~OpenGLWindow() { glfwTerminate(); }
 
-Game::Game(const std::filesystem::path &configPath)
+Game::Game()
     : m_Window(DefaultWindowWidth, DefaultWindowHeight),
       m_UnsavedWarning("Unsaved Changes",
                        std::bind_front(&Game::HandleWindowClose, this)),
-      m_Control(*StyleLoader::LoadYAML<ImVec4>(configPath)),
+      m_Control(ConfigLoader::LoadYAML<ImVec4>(std::filesystem::path{"config"} /
+                                               "shortcuts.yml")),
       m_PresetSelection(std::filesystem::current_path() / "templates") {
     m_Editors.emplace_back(m_EditorCounter++, std::filesystem::path{},
                            Size2{DefaultWindowWidth, DefaultWindowHeight},
                            Size2{DefaultGridWidth, DefaultGridHeight});
-    InitImGUI(std::filesystem::path("config") / "style.yaml");
+    InitImGUI(std::filesystem::path{"config"} / "style.yml");
 }
 
 Game::~Game() {
@@ -142,9 +157,7 @@ void Game::UpdateEditors(SimulationControlResult &controlResult,
 }
 
 void Game::InitImGUI(const std::filesystem::path &stylePath) {
-    auto styleInfo = StyleLoader::LoadYAML<ImVec4>(stylePath);
-    if (!styleInfo)
-        throw StyleLoader::StyleLoaderException(styleInfo.error());
+    const auto styleInfo = ConfigLoader::LoadYAML<ImVec4>(stylePath);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -172,8 +185,8 @@ void Game::InitImGUI(const std::filesystem::path &stylePath) {
     ImGuiStyle &style = ImGui::GetStyle();
     style.WindowMenuButtonPosition = ImGuiDir_None;
 
-    for (auto &&pair : styleInfo->AttributeColors)
-        style.Colors[pair.first] = styleInfo->StyleColors[pair.second];
+    for (auto &&[imguiCol, styleCol] : styleInfo.AttributeColors)
+        style.Colors[imguiCol] = styleInfo.StyleColors.at(styleCol);
 
     ImGui_ImplGlfw_InitForOpenGL(m_Window.Get(), true);
     ImGui_ImplOpenGL3_Init();
