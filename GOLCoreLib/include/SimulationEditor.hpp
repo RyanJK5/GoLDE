@@ -5,18 +5,15 @@
 #include <glm/glm.hpp>
 #include <optional>
 
+#include "EditorModel.hpp"
 #include "EditorResult.hpp"
 #include "ErrorWindow.hpp"
 #include "GameEnums.hpp"
-#include "GameGrid.hpp"
 #include "Graphics2D.hpp"
 #include "GraphicsHandler.hpp"
 #include "PresetSelectionResult.hpp"
-#include "SelectionManager.hpp"
 #include "SimulationCommand.hpp"
 #include "SimulationControlResult.hpp"
-#include "SimulationWorker.hpp"
-#include "VersionManager.hpp"
 #include "WarnWindow.hpp"
 
 namespace gol {
@@ -32,15 +29,15 @@ class SimulationEditor {
     Rect WindowBounds() const;
     Rect ViewportBounds() const;
     const std::filesystem::path &CurrentFilePath() const {
-        return m_CurrentFilePath;
+        return m_Model.CurrentFilePath();
     }
 
     EditorResult Update(std::optional<bool> activeOverride,
                         const SimulationControlResult &controlArgs,
                         const PresetSelectionResult &presetArgs);
 
-    uint32_t EditorID() const { return m_EditorID; }
-    bool IsSaved() const;
+    uint32_t EditorID() const { return m_Model.EditorID(); }
+    bool IsSaved() const { return m_Model.IsSaved(); }
     bool operator==(const SimulationEditor &other) const;
 
   private:
@@ -58,20 +55,13 @@ class SimulationEditor {
     void DrawHashLifeData(const HashQuadtree &quadtree,
                           const GraphicsHandlerArgs &args);
 
-    SimulationState StartSimulation();
-    void StopSimulation(bool stealGrid);
-
     DisplayResult DisplaySimulation(bool grabFocus);
 
     SimulationState UpdateState(const SimulationControlResult &action);
 
-    void PasteSelection();
-
-    void LoadFile(const std::filesystem::path &path);
-
-    void SaveToFile(const std::filesystem::path &path, bool markAsSaved);
-
-    SimulationState ResizeGrid(Size2 newDimensions);
+    void SaveWithErrorHandling(const std::filesystem::path &path,
+                               bool markAsSaved);
+    void HandlePasteResult(const PasteResult &result);
 
     void UpdateViewport();
 
@@ -89,12 +79,7 @@ class SimulationEditor {
     static constexpr double DefaultTickDelayMs = 0.;
 
   private:
-    SelectionManager m_SelectionManager;
-
-    GameGrid m_Grid;
-    GameGrid m_InitialGrid;
-
-    VersionManager m_VersionManager;
+    EditorModel m_Model;
 
     GraphicsHandler m_Graphics;
 
@@ -102,21 +87,13 @@ class SimulationEditor {
     WarnWindow m_PasteWarning;
     WarnWindow m_SaveWarning;
 
-    std::filesystem::path m_CurrentFilePath;
-
     RectF m_WindowBounds;
-
-    std::unique_ptr<SimulationWorker> m_Worker;
 
     Vec2F m_LeftDeltaLast;
     Vec2F m_RightDeltaLast;
 
-    uint32_t m_EditorID;
-
     EditorMode m_EditorMode = EditorMode::None;
-    SimulationState m_State = SimulationState::Paint;
 
-    bool m_StopStepCommand = false;
     bool m_TakeKeyboardInput = false;
     bool m_TakeMouseInput = false;
 };

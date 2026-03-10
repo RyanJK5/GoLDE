@@ -1,12 +1,14 @@
 #ifndef HashQuadtree_h_
 #define HashQuadtree_h_
 
+#include <array>
 #include <bit>
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
-#include <deque>
 #include <iterator>
+#include <memory>
+#include <vector>
 #include <limits>
 #include <print>
 #include <ranges>
@@ -32,7 +34,7 @@ template <int32_t Size> constexpr static int32_t Index2D(int32_t x, int32_t y) {
 // Represents one node of the quadtree structure.
 struct LifeNode {
     // Raw pointers are used with care here. For cache efficiency, all nodes are
-    // stored in a deque, which ensures these pointers remain valid (see below).
+    // stored in a block arena, which ensures these pointers remain valid (see below).
     const LifeNode *NorthWest;
     const LifeNode *NorthEast;
     const LifeNode *SouthWest;
@@ -40,14 +42,13 @@ struct LifeNode {
 
     uint64_t Hash = 0ULL; // Pre-computed hash
     uint64_t Population = 0ULL; // Recursive population of all subnodes combined
-    bool IsEmpty = false; // Flag for skipping large empty cells
+
+    constexpr bool IsEmpty() const { return Population == 0ULL; }
 
     constexpr LifeNode(const LifeNode *nw, const LifeNode *ne,
                        const LifeNode *sw, const LifeNode *se)
         : NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se) {
-        
-        IsEmpty = CheckEmpty(nw) && CheckEmpty(ne) && CheckEmpty(sw) &&
-                  CheckEmpty(se);
+
         Population = NodePopulation(nw) + NodePopulation(ne) +
                      NodePopulation(sw) + NodePopulation(se);
 
@@ -55,25 +56,31 @@ struct LifeNode {
         }
         else
         {
-            Hash = HashCombine(Hash, std::bit_cast<uint64_t>(NorthWest));
-            Hash = HashCombine(Hash, std::bit_cast<uint64_t>(NorthEast));
-            Hash = HashCombine(Hash, std::bit_cast<uint64_t>(SouthWest));
-            Hash = HashCombine(Hash, std::bit_cast<uint64_t>(SouthEast));
+            Hash = ComputeHash(NorthWest, NorthEast, SouthWest, SouthEast);
         }
     }
 
-  private:
-    constexpr static bool CheckEmpty(const LifeNode *n) {
-        return n == nullptr || n->IsEmpty;
+    // Computes a hash from 4 child pointers. Exposed so LifeNodeKey can reuse it
+    // without constructing a full LifeNode.
+    static uint64_t ComputeHash(const LifeNode *nw, const LifeNode *ne,
+                                const LifeNode *sw, const LifeNode *se) {
+        // Shift pointers right by 4 to discard alignment zeros, then mix.
+        auto a = std::bit_cast<uint64_t>(nw) >> 4;
+        auto b = std::bit_cast<uint64_t>(ne) >> 4;
+        auto c = std::bit_cast<uint64_t>(sw) >> 4;
+        auto d = std::bit_cast<uint64_t>(se) >> 4;
+
+        // Fast 4-to-1 mix using rotations + xor-fold + splitmix64 finalizer.
+        uint64_t h = a ^ std::rotl(b, 16) ^ std::rotl(c, 32) ^ std::rotl(d, 48);
+        h = (h ^ (h >> 30)) * 0xBF58476D1CE4E5B9ULL;
+        h = (h ^ (h >> 27)) * 0x94D049BB133111EBULL;
+        h = h ^ (h >> 31);
+        return h;
     }
 
+  private:
     constexpr static uint64_t NodePopulation(const LifeNode *n) {
         return n ? n->Population : 0ULL;
-    }
-
-    // Arbitrary hash function using a magic number.
-    constexpr static uint64_t HashCombine(uint64_t seed, uint64_t v) {
-        return seed ^ (v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
     }
 };
 
@@ -82,6 +89,21 @@ struct LifeNode {
 struct NodeUpdateInfo {
     const LifeNode *Node;
     int64_t Generations;
+};
+
+// Lightweight key for heterogeneous lookup into NodeMap.
+// Avoids constructing a full LifeNode (which computes Population) on every lookup.
+struct LifeNodeKey {
+    const LifeNode *NorthWest;
+    const LifeNode *NorthEast;
+    const LifeNode *SouthWest;
+    const LifeNode *SouthEast;
+    uint64_t Hash;
+
+    LifeNodeKey(const LifeNode *nw, const LifeNode *ne,
+                const LifeNode *sw, const LifeNode *se)
+        : NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se),
+          Hash(LifeNode::ComputeHash(nw, ne, sw, se)) {}
 };
 
 struct LifeNodeEqual {
@@ -96,11 +118,26 @@ struct LifeNodeEqual {
                lhs->SouthWest == rhs->SouthWest &&
                lhs->SouthEast == rhs->SouthEast;
     }
+    // Heterogeneous overload: compare LifeNode* against LifeNodeKey
+    bool operator()(const LifeNode *lhs, const LifeNodeKey &rhs) const {
+        if (!lhs)
+            return false;
+        return lhs->NorthWest == rhs.NorthWest &&
+               lhs->NorthEast == rhs.NorthEast &&
+               lhs->SouthWest == rhs.SouthWest &&
+               lhs->SouthEast == rhs.SouthEast;
+    }
+    bool operator()(const LifeNodeKey &lhs, const LifeNode *rhs) const {
+        return operator()(rhs, lhs);
+    }
 };
 
 struct LifeNodeHash {
     using is_transparent = void;
     size_t operator()(const LifeNode *node) const;
+    size_t operator()(const LifeNodeKey &key) const {
+        return static_cast<size_t>(key.Hash);
+    }
 };
 
 // Underlying node for TrueNode.
@@ -111,7 +148,6 @@ constexpr inline LifeNode StaticTrueNode = [] {
         nullptr,
         nullptr,
     };
-    ret.IsEmpty = false;
     ret.Population = 1;
     return ret;
 }();
@@ -132,11 +168,49 @@ struct SlowHash {
     size_t operator()(const SlowKey &key) const noexcept;
 };
 
+// Block-based arena for append-only LifeNode storage. Provides pointer
+// stability (blocks never move once allocated) and fast bump-pointer
+// allocation. All nodes are freed in bulk when the arena is destroyed or
+// cleared.
+class LifeNodeArena {
+  public:
+    template <typename... Args>
+    LifeNode *emplace(Args &&...args) {
+        if (m_Current == BlockCapacity) {
+            auto *raw = static_cast<LifeNode *>(
+                ::operator new(BlockCapacity * sizeof(LifeNode)));
+            m_Blocks.emplace_back(raw);
+            m_Current = 0;
+        }
+        auto *node = m_Blocks.back().get() + m_Current++;
+        std::construct_at(node, std::forward<Args>(args)...);
+        return node;
+    }
+
+    // Returns the most recently emplaced node.
+    LifeNode *last() const { return m_Blocks.back().get() + (m_Current - 1); }
+
+    void clear() {
+        m_Blocks.clear();
+        m_Current = BlockCapacity;
+    }
+  private:
+    static constexpr size_t BlockCapacity = 65536 / sizeof(LifeNode);
+
+    struct BlockDeleter {
+        void operator()(LifeNode *p) const {
+            ::operator delete(p);
+        }
+    };
+    std::vector<std::unique_ptr<LifeNode, BlockDeleter>> m_Blocks;
+    size_t m_Current = BlockCapacity; // Force first allocation
+};
+
 // The cache used for the HashLife algorithm.
 struct HashLifeCache {
-    // A stable container where all LifeNodes are stored. They are only
+    // Bump-pointer arena where all LifeNodes are stored. Nodes are only
     // accessed by pointer outside of the cache.
-    std::deque<LifeNode> NodeStorage{};
+    LifeNodeArena NodeStorage{};
 
     // The cache for the core HashLife algorithm, with hyper speed enabled.
     ankerl::unordered_dense::map<const LifeNode *, const LifeNode *,
@@ -147,9 +221,9 @@ struct HashLifeCache {
     ankerl::unordered_dense::map<SlowKey, const LifeNode *, SlowHash>
         SlowCache{};
     
-    // A cache that relates the level of an empty node to its actual representation.
-    // Useful for efficiently referencing large, empty regions of the universe.
-    ankerl::unordered_dense::map<int64_t, const LifeNode *> EmptyNodeCache{};
+    // Level-indexed cache for empty nodes. Index i holds the empty node for
+    // size 2^i. At most 64 entries needed (levels 0..63).
+    std::array<const LifeNode *, 64> EmptyNodeCache{};
 
     HashLifeCache()
     {
@@ -334,10 +408,10 @@ class HashQuadtree {
 
     // Helper function for converting a LifeHashSet into a quadtree.
     const LifeNode *BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
-                                    int64_t size);
+                                    int32_t level);
 
-    // Returns an empty tree with length and width `size`.
-    const LifeNode *EmptyTree(int64_t size) const;
+    // Returns an empty tree at the given level (size 2^level).
+    const LifeNode *EmptyTree(int32_t level) const;
 
     const LifeNode *BuildTree(const LifeHashSet &data);
 
@@ -379,6 +453,7 @@ class HashQuadtree {
 
     const LifeNode *m_Root = FalseNode;
     Vec2L m_RootOffset;
+    int32_t m_Depth = 0; // Cached depth of the tree (number of levels from root to leaf)
 };
 
 // Slight build time optimization since we know the only two instantiations of IteratorImpl.
@@ -450,7 +525,7 @@ template <typename T> void HashQuadtree::IteratorImpl<T>::AdvanceToNext() {
         }
         m_Stack.top().quadrant = frame.quadrant;
 
-        if (child != FalseNode && !child->IsEmpty &&
+        if (child != FalseNode && !child->IsEmpty() &&
             IntersectsBounds(childPos, halfSize)) {
             m_Stack.push({child, childPos, halfSize, 0});
         }
