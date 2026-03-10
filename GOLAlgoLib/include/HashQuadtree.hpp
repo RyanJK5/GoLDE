@@ -351,8 +351,11 @@ class HashQuadtree {
     const LifeNode *Combine2x2(const T &nodes, int32_t topLeftX,
                                int32_t topLeftY) const;
 
-    // Handles the base case for HashLife.
+    // Handles the base case for HashLife (8x8 node, advances 2 generations).
     const LifeNode *AdvanceBase(const LifeNode *node) const;
+
+    // Handles the base case for HashLife with 1-generation advancement.
+    const LifeNode *AdvanceBaseOneGen(const LifeNode *node) const;
 
     // Handles bounded advancement.    
     NodeUpdateInfo AdvanceSlow(std::stop_token stopToken, const LifeNode *node,

@@ -9,7 +9,7 @@
 #include "SimulationWorker.hpp"
 
 namespace gol {
-static void StressTest(const std::filesystem::path &universe,
+static void StressTest(const std::filesystem::path& universe,
                        int32_t threadCount, int32_t genCount) {
     auto decodeResult = RLEEncoder::ReadRegion(universe);
     ASSERT_TRUE(decodeResult.has_value()) << decodeResult.error();
@@ -38,7 +38,7 @@ static void StressTest(const std::filesystem::path &universe,
     decodeResult->Grid.Update(genCount);
     endCounter.wait();
 
-    bool allMatch = std::ranges::all_of(result, [&](auto &future) {
+    bool allMatch = std::ranges::all_of(result, [&](auto& future) {
         return future.get().Data() == decodeResult->Grid.Data();
     });
 

@@ -8,13 +8,13 @@
 #include <numbers>
 
 namespace gol {
-void LoadingSpinner(const char *label, float radius, float thickness,
+void LoadingSpinner(const char* label, float radius, float thickness,
                     ImU32 color) {
-    auto *window = ImGui::GetCurrentWindow();
+    auto* window = ImGui::GetCurrentWindow();
     if (window->SkipItems)
         return;
 
-    const auto &style = GImGui->Style;
+    const auto& style = GImGui->Style;
     const auto id = window->GetID(label);
 
     const auto pos = window->DC.CursorPos;

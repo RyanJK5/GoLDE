@@ -10,7 +10,7 @@
 
 namespace gol {
 // Helper to verify the tree iterator yields exactly the expected points
-static void VerifyContent(HashQuadtree &tree, const LifeHashSet &expected) {
+static void VerifyContent(HashQuadtree& tree, const LifeHashSet& expected) {
     LifeHashSet actual{};
 
     // Test range-based for loop
@@ -25,8 +25,8 @@ static void VerifyContent(HashQuadtree &tree, const LifeHashSet &expected) {
             << "Tree missing a cell that should be there";
 }
 
-static void CheckAgainstFile(const std::filesystem::path &unevolved,
-                             const std::filesystem::path &evolved,
+static void CheckAgainstFile(const std::filesystem::path& unevolved,
+                             const std::filesystem::path& evolved,
                              uint64_t expectedGenerationsPerJump,
                              int32_t numJumps = 1, int32_t stepSize = 0) {
     ASSERT_TRUE(std::filesystem::exists(unevolved));

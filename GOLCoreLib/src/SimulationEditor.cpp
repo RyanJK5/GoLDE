@@ -36,7 +36,7 @@
 
 namespace gol {
 SimulationEditor::SimulationEditor(uint32_t id,
-                                   const std::filesystem::path &path,
+                                   const std::filesystem::path& path,
                                    Size2 windowSize, Size2 gridSize)
     : m_Grid(gridSize),
       m_Graphics(std::filesystem::path("resources") / "shader",
@@ -50,14 +50,14 @@ SimulationEditor::SimulationEditor(uint32_t id,
 
 bool SimulationEditor::IsSaved() const { return m_VersionManager.IsSaved(); }
 
-bool SimulationEditor::operator==(const SimulationEditor &other) const {
+bool SimulationEditor::operator==(const SimulationEditor& other) const {
     return m_EditorID == other.m_EditorID;
 }
 
 EditorResult
 SimulationEditor::Update(std::optional<bool> activeOverride,
-                         const SimulationControlResult &controlArgs,
-                         const PresetSelectionResult &presetArgs) {
+                         const SimulationControlResult& controlArgs,
+                         const PresetSelectionResult& presetArgs) {
     auto displayResult = DisplaySimulation(
         (controlArgs.Action || !presetArgs.ClipboardText.empty()) &&
         activeOverride && (*activeOverride));
@@ -143,8 +143,8 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
             .HasUnsavedChanges = !m_VersionManager.IsSaved()};
 }
 
-void SimulationEditor::DrawHashLifeData(const HashQuadtree &quadtree,
-                                        const GraphicsHandlerArgs &args) {
+void SimulationEditor::DrawHashLifeData(const HashQuadtree& quadtree,
+                                        const GraphicsHandlerArgs& args) {
     const auto viewBounds = args.ViewportBounds;
     const auto topLeftWorld = m_Graphics.Camera.ScreenToWorldPos(
         Vec2F{static_cast<float>(viewBounds.X),
@@ -176,7 +176,7 @@ void SimulationEditor::DrawHashLifeData(const HashQuadtree &quadtree,
 }
 
 SimulationState
-SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs &args) {
+SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args) {
     const auto snapshot = m_Worker->GetResult();
 
     const auto data = snapshot->IterableData();
@@ -192,7 +192,7 @@ SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs &args) {
     return SimulationState::Simulation;
 }
 
-SimulationState SimulationEditor::PaintUpdate(const GraphicsHandlerArgs &args) {
+SimulationState SimulationEditor::PaintUpdate(const GraphicsHandlerArgs& args) {
     auto gridPos = CursorGridPos();
 
     m_Graphics.DrawGrid({0, 0}, m_Grid.Data(), args);
@@ -217,7 +217,7 @@ SimulationState SimulationEditor::PaintUpdate(const GraphicsHandlerArgs &args) {
                : SimulationState::Paint;
 }
 
-SimulationState SimulationEditor::PauseUpdate(const GraphicsHandlerArgs &args) {
+SimulationState SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& args) {
     auto gridPos = CursorGridPos();
     if (gridPos)
         m_VersionManager.TryPushChange(
@@ -361,7 +361,7 @@ std::optional<Vec2> SimulationEditor::CursorGridPos() {
     return ConvertToGridPos(ImGui::GetMousePos());
 }
 
-void SimulationEditor::UpdateVersion(const SimulationControlResult &args) {
+void SimulationEditor::UpdateVersion(const SimulationControlResult& args) {
     if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
         return;
 
@@ -377,11 +377,11 @@ void SimulationEditor::UpdateVersion(const SimulationControlResult &args) {
 }
 
 SimulationState
-SimulationEditor::UpdateState(const SimulationControlResult &result) {
+SimulationEditor::UpdateState(const SimulationControlResult& result) {
     if (result.FromShortcut && !m_TakeKeyboardInput)
         return result.State;
 
-    if (auto *action = std::get_if<GameAction>(&*result.Action)) {
+    if (auto* action = std::get_if<GameAction>(&*result.Action)) {
         switch (*action) {
             using enum GameAction;
         case Start:
@@ -425,7 +425,7 @@ SimulationEditor::UpdateState(const SimulationControlResult &result) {
         }
     }
 
-    if (auto *action = std::get_if<EditorAction>(&*result.Action)) {
+    if (auto* action = std::get_if<EditorAction>(&*result.Action)) {
         switch (*action) {
             using enum EditorAction;
         case Resize:
@@ -480,7 +480,7 @@ SimulationEditor::UpdateState(const SimulationControlResult &result) {
         }
     }
 
-    if (auto *action = std::get_if<SelectionAction>(&*result.Action)) {
+    if (auto* action = std::get_if<SelectionAction>(&*result.Action)) {
         if (*action == SelectionAction::Paste) {
             PasteSelection();
             return result.State;
@@ -540,7 +540,7 @@ void SimulationEditor::PasteSelection() {
     }
 }
 
-void SimulationEditor::LoadFile(const SimulationControlResult &result) {
+void SimulationEditor::LoadFile(const SimulationControlResult& result) {
     m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
 
     auto loadResult = m_SelectionManager.Load(*result.FilePath);
@@ -553,7 +553,7 @@ void SimulationEditor::LoadFile(const SimulationControlResult &result) {
     }
 }
 
-void SimulationEditor::SaveToFile(const SimulationControlResult &result) {
+void SimulationEditor::SaveToFile(const SimulationControlResult& result) {
     if (m_SelectionManager.Save(m_Grid, *result.FilePath)) {
         if (m_CurrentFilePath.empty())
             m_CurrentFilePath = *result.FilePath;
@@ -567,7 +567,7 @@ void SimulationEditor::SaveToFile(const SimulationControlResult &result) {
 }
 
 SimulationState
-SimulationEditor::ResizeGrid(const SimulationControlResult &result) {
+SimulationEditor::ResizeGrid(const SimulationControlResult& result) {
     if (result.NewDimensions->Width == m_Grid.Width() &&
         result.NewDimensions->Height == m_Grid.Height())
         return SimulationState::Paint;

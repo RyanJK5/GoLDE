@@ -17,7 +17,7 @@
 #include "VersionManager.hpp"
 
 namespace gol {
-SelectionUpdateResult SelectionManager::UpdateSelectionArea(GameGrid &grid,
+SelectionUpdateResult SelectionManager::UpdateSelectionArea(GameGrid& grid,
                                                             Vec2 gridPos) {
     const bool shiftDown = ImGui::IsKeyDown(ImGuiKey_LeftShift) ||
                            ImGui::IsKeyDown(ImGuiKey_RightShift);
@@ -52,7 +52,7 @@ SelectionUpdateResult SelectionManager::UpdateSelectionArea(GameGrid &grid,
     return {.Change = deselectChange, .BeginSelection = false};
 }
 
-SelectionUpdateResult SelectionManager::UpdateUnlockedSelection(Vec2 &gridPos) {
+SelectionUpdateResult SelectionManager::UpdateUnlockedSelection(Vec2& gridPos) {
     if (gridPos == *m_SentinelSelection && m_UnlockedOriginalPosition) {
         auto result = SelectionUpdateResult{
             .Change = VersionChange{.Action = SelectionAction::NudgeDown,
@@ -84,7 +84,7 @@ bool SelectionManager::TryResetSelection() {
     return true;
 }
 
-std::optional<VersionChange> SelectionManager::Deselect(GameGrid &grid) {
+std::optional<VersionChange> SelectionManager::Deselect(GameGrid& grid) {
     const auto retValue = [this, &grid]() {
         if (!m_Selected)
             return std::optional<VersionChange>{};
@@ -106,7 +106,7 @@ std::optional<VersionChange> SelectionManager::Deselect(GameGrid &grid) {
     return retValue;
 }
 
-std::optional<VersionChange> SelectionManager::SelectAll(GameGrid &grid) {
+std::optional<VersionChange> SelectionManager::SelectAll(GameGrid& grid) {
     const auto bounds = grid.BoundingBox();
     m_AnchorSelection = bounds.UpperLeft();
     m_SentinelSelection = bounds.LowerRight() - Vec2{1, 1};
@@ -121,7 +121,7 @@ std::optional<VersionChange> SelectionManager::SelectAll(GameGrid &grid) {
                          .CellsDeleted = std::move(regionDestroyed).Data()};
 }
 
-std::optional<VersionChange> SelectionManager::Copy(GameGrid &grid) {
+std::optional<VersionChange> SelectionManager::Copy(GameGrid& grid) {
     if (!m_Selected)
         return std::nullopt;
 
@@ -252,7 +252,7 @@ std::optional<VersionChange> SelectionManager::InsertNoise(Rect selectionBounds,
 }
 
 std::expected<VersionChange, std::string>
-SelectionManager::Load(const std::filesystem::path &filePath) {
+SelectionManager::Load(const std::filesystem::path& filePath) {
     auto result = RLEEncoder::ReadRegion(filePath);
     if (!result)
         return std::unexpected{std::move(result.error())};
@@ -268,8 +268,8 @@ SelectionManager::Load(const std::filesystem::path &filePath) {
                          .CellsDeleted = {}};
 }
 
-bool SelectionManager::Save(const GameGrid &grid,
-                            const std::filesystem::path &filePath) const {
+bool SelectionManager::Save(const GameGrid& grid,
+                            const std::filesystem::path& filePath) const {
     if (!m_Selected) {
         auto boundingBox = grid.BoundingBox();
         return RLEEncoder::WriteRegion(grid, boundingBox, filePath,
@@ -280,7 +280,7 @@ bool SelectionManager::Save(const GameGrid &grid,
 }
 
 std::optional<VersionChange>
-SelectionManager::HandleAction(SelectionAction action, GameGrid &grid,
+SelectionManager::HandleAction(SelectionAction action, GameGrid& grid,
                                int32_t nudgeSize) {
     switch (action) {
         using enum SelectionAction;
@@ -315,8 +315,8 @@ SelectionManager::HandleAction(SelectionAction action, GameGrid &grid,
 }
 
 void SelectionManager::HandleVersionChange(EditorAction undoRedo,
-                                           GameGrid &grid,
-                                           const VersionChange &change) {
+                                           GameGrid& grid,
+                                           const VersionChange& change) {
     if (!change.Action) {
         RestoreGridVersion(undoRedo, grid, change);
         return;
@@ -324,7 +324,7 @@ void SelectionManager::HandleVersionChange(EditorAction undoRedo,
 
     m_UnlockedOriginalPosition = std::nullopt;
 
-    if (auto *editorAction = std::get_if<EditorAction>(&*change.Action)) {
+    if (auto* editorAction = std::get_if<EditorAction>(&*change.Action)) {
         if (!change.GridResize)
             return;
 
@@ -341,7 +341,7 @@ void SelectionManager::HandleVersionChange(EditorAction undoRedo,
         }
     }
 
-    if (auto *gameAction = std::get_if<GameAction>(&*change.Action)) {
+    if (auto* gameAction = std::get_if<GameAction>(&*change.Action)) {
         switch (*gameAction) {
         case GameAction::Clear:
             if (undoRedo == EditorAction::Undo) {
@@ -357,7 +357,7 @@ void SelectionManager::HandleVersionChange(EditorAction undoRedo,
         }
     }
 
-    auto *action = std::get_if<SelectionAction>(&*change.Action);
+    auto* action = std::get_if<SelectionAction>(&*change.Action);
     if (!action)
         return;
 
@@ -425,15 +425,15 @@ void SelectionManager::HandleVersionChange(EditorAction undoRedo,
     }
 }
 
-void SelectionManager::RestoreGridVersion(EditorAction undoRedo, GameGrid &grid,
-                                          const VersionChange &change) {
-    const auto &insertions = undoRedo == EditorAction::Undo
+void SelectionManager::RestoreGridVersion(EditorAction undoRedo, GameGrid& grid,
+                                          const VersionChange& change) {
+    const auto& insertions = undoRedo == EditorAction::Undo
                                  ? change.CellsDeleted
                                  : change.CellsInserted;
     for (const auto pos : insertions)
         grid.Set(pos.X, pos.Y, true);
 
-    const auto &deletions = undoRedo == EditorAction::Undo
+    const auto& deletions = undoRedo == EditorAction::Undo
                                 ? change.CellsInserted
                                 : change.CellsDeleted;
     for (const auto pos : deletions)
@@ -451,7 +451,7 @@ bool SelectionManager::GridAlive() const {
     return m_Selected && m_Selected->Population() > 0;
 }
 
-const LifeHashSet &SelectionManager::GridData() const {
+const LifeHashSet& SelectionManager::GridData() const {
     return m_Selected->Data();
 }
 
@@ -470,7 +470,7 @@ bool SelectionManager::CanDrawLargeSelection() const {
 
 bool SelectionManager::CanDrawGrid() const { return m_Selected.has_value(); }
 
-void SelectionManager::SetSelectionBounds(const Rect &bounds) {
+void SelectionManager::SetSelectionBounds(const Rect& bounds) {
     m_AnchorSelection = bounds.Pos();
     m_SentinelSelection =
         *m_AnchorSelection + Vec2{bounds.Width - 1, bounds.Height - 1};

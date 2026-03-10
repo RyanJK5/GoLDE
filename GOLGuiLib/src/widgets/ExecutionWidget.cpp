@@ -15,7 +15,7 @@ Size2F StartButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 4.f,
             MultiActionButton::DefaultButtonHeight};
 }
-std::string StartButton::Label(const EditorResult &state) const {
+std::string StartButton::Label(const EditorResult& state) const {
     switch (state.State) {
         using enum SimulationState;
     case Simulation:
@@ -24,7 +24,7 @@ std::string StartButton::Label(const EditorResult &state) const {
         return ICON_FA_PLAY;
     }
 }
-GameAction StartButton::Action(const EditorResult &state) const {
+GameAction StartButton::Action(const EditorResult& state) const {
     switch (state.State) {
         using enum SimulationState;
     case Paint:
@@ -38,7 +38,7 @@ GameAction StartButton::Action(const EditorResult &state) const {
     }
     std::unreachable();
 }
-bool StartButton::Enabled(const EditorResult &state) const {
+bool StartButton::Enabled(const EditorResult& state) const {
     return state.State == SimulationState::Paint ||
            state.State == SimulationState::Paused ||
            state.State == SimulationState::Simulation;
@@ -48,10 +48,10 @@ Size2F ResetButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 3.f,
             ActionButton::DefaultButtonHeight};
 }
-std::string ResetButton::Label(const EditorResult &) const {
+std::string ResetButton::Label(const EditorResult&) const {
     return ICON_FA_STOP;
 }
-bool ResetButton::Enabled(const EditorResult &state) const {
+bool ResetButton::Enabled(const EditorResult& state) const {
     return state.State == SimulationState::Simulation ||
            state.State == SimulationState::Paused ||
            state.State == SimulationState::Stepping;
@@ -61,10 +61,10 @@ Size2F RestartButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 2.f,
             ActionButton::DefaultButtonHeight};
 }
-std::string RestartButton::Label(const EditorResult &) const {
+std::string RestartButton::Label(const EditorResult&) const {
     return ICON_FA_REPEAT;
 }
-bool RestartButton::Enabled(const EditorResult &state) const {
+bool RestartButton::Enabled(const EditorResult& state) const {
     return state.State == SimulationState::Simulation ||
            state.State == SimulationState::Paused;
 }
@@ -73,14 +73,14 @@ Size2F ClearButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x,
             ActionButton::DefaultButtonHeight};
 }
-std::string ClearButton::Label(const EditorResult &) const {
+std::string ClearButton::Label(const EditorResult&) const {
     return ICON_FA_TRASH;
 }
-bool ClearButton::Enabled(const EditorResult &state) const {
+bool ClearButton::Enabled(const EditorResult& state) const {
     return state.State != SimulationState::Empty;
 }
 
-SimulationControlResult ExecutionWidget::UpdateImpl(const EditorResult &state) {
+SimulationControlResult ExecutionWidget::UpdateImpl(const EditorResult& state) {
     auto result = SimulationControlResult{};
     UpdateResult(result, m_StartButton.Update(state));
     UpdateResult(result, m_ResetButton.Update(state));
@@ -94,7 +94,7 @@ SimulationControlResult ExecutionWidget::UpdateImpl(const EditorResult &state) {
     return result;
 }
 
-void ExecutionWidget::SetShortcutsImpl(const ShortcutMap &shortcuts) {
+void ExecutionWidget::SetShortcutsImpl(const ShortcutMap& shortcuts) {
     m_StartButton.SetShortcuts(
         {{GameAction::Start,
           shortcuts.at(GameAction::Start) | KeyShortcut::MapChordsToVector},

@@ -14,7 +14,7 @@
 #include "RLEEncoder.hpp"
 
 namespace gol::RLEEncoder {
-std::string EncodeRegion(const GameGrid &grid, const Rect &region,
+std::string EncodeRegion(const GameGrid& grid, const Rect& region,
                          Vec2 offset) {
     std::vector<char> result{'g', 'o', 'l', 'd', 'e'};
 
@@ -166,8 +166,8 @@ DecodeRegion(std::string_view data, uint32_t warnThreshold) {
     return DecodeResult{std::move(result), offset};
 }
 
-bool WriteRegion(const GameGrid &grid, const Rect &region,
-                 const std::filesystem::path &filePath, Vec2 offset) {
+bool WriteRegion(const GameGrid& grid, const Rect& region,
+                 const std::filesystem::path& filePath, Vec2 offset) {
     auto out = std::ofstream{filePath};
     if (!out.is_open())
         return false;
@@ -179,7 +179,7 @@ bool WriteRegion(const GameGrid &grid, const Rect &region,
 }
 
 std::expected<DecodeResult, std::string>
-ReadRegion(const std::filesystem::path &filePath) {
+ReadRegion(const std::filesystem::path& filePath) {
     auto in = std::ifstream{filePath};
     if (!in.is_open())
         return std::unexpected{"Failed to open file for reading."};

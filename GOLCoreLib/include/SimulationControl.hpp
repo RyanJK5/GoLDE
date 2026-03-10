@@ -70,9 +70,9 @@ class SimulationControl {
 
 void SimulationControl::ForEachWidget(auto&& widgetFunc) {
     widgetFunc(m_ButtonlessShortcuts);
+    widgetFunc(m_FileWidget);
     widgetFunc(m_ExecutionWidget);
     widgetFunc(m_EditorWidget);
-    widgetFunc(m_FileWidget);
     widgetFunc(m_ResizeWidget);
     widgetFunc(m_StepWidget);
     widgetFunc(m_DelayWidget);

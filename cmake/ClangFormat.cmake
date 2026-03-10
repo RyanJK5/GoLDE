@@ -3,7 +3,7 @@ find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
     # Use a script to handle the heavy lifting. 
     # This avoids the "Argument list too long" error.
-    add_custom_target(format
+    add_custom_target(Format
         COMMAND ${CMAKE_COMMAND} 
             -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR} 
             -P "${PROJECT_SOURCE_DIR}/cmake/RunFormat.cmake"

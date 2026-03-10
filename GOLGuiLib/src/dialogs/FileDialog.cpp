@@ -8,13 +8,13 @@
 
 namespace gol {
 namespace {
-using NFDFunction = std::function<nfdresult_t(const nfdchar_t *,
-                                              const nfdchar_t *, nfdchar_t **)>;
+using NFDFunction =
+    std::function<nfdresult_t(const nfdchar_t*, const nfdchar_t*, nfdchar_t**)>;
 
 std::expected<std::filesystem::path, FileDialogFailure>
-CallNFDFunction(NFDFunction nfdFunction, const std::string &filters,
-                const std::string &defaultPath) {
-    nfdchar_t *outPath = nullptr;
+CallNFDFunction(NFDFunction nfdFunction, const std::string& filters,
+                const std::string& defaultPath) {
+    nfdchar_t* outPath = nullptr;
     auto result = nfdFunction(filters.c_str(), defaultPath.c_str(), &outPath);
 
     if (result == NFD_OKAY) {
@@ -34,8 +34,8 @@ CallNFDFunction(NFDFunction nfdFunction, const std::string &filters,
 } // namespace
 
 std::expected<std::filesystem::path, FileDialogFailure>
-FileDialog::OpenFileDialog(const std::string &filters,
-                           const std::string &defaultPath) {
+FileDialog::OpenFileDialog(const std::string& filters,
+                           const std::string& defaultPath) {
     auto result = CallNFDFunction(NFD_OpenDialog, filters, defaultPath);
     if (result && result->extension().string() != ".gol") {
         return std::unexpected<FileDialogFailure>{
@@ -47,8 +47,8 @@ FileDialog::OpenFileDialog(const std::string &filters,
 }
 
 std::expected<std::filesystem::path, FileDialogFailure>
-FileDialog::SaveFileDialog(const std::string &filters,
-                           const std::string &defaultPath) {
+FileDialog::SaveFileDialog(const std::string& filters,
+                           const std::string& defaultPath) {
     auto result = CallNFDFunction(NFD_SaveDialog, filters, defaultPath);
     if (result) {
         if (result->extension().empty())
@@ -60,10 +60,10 @@ FileDialog::SaveFileDialog(const std::string &filters,
 }
 
 std::expected<std::filesystem::path, FileDialogFailure>
-FileDialog::SelectFolderDialog(const std::string &defaultPath) {
-    constexpr static auto pickFolder = [](const nfdchar_t *,
-                                          const nfdchar_t *defaultPath,
-                                          nfdchar_t **outPath) {
+FileDialog::SelectFolderDialog(const std::string& defaultPath) {
+    constexpr static auto pickFolder = [](const nfdchar_t*,
+                                          const nfdchar_t* defaultPath,
+                                          nfdchar_t** outPath) {
         return NFD_PickFolder(defaultPath, outPath);
     };
 

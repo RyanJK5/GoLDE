@@ -34,9 +34,142 @@ constexpr static int64_t MaxAdvanceOf(int64_t stepSize) {
     return Pow2(power - static_cast<int64_t>(1));
 }
 
+// ============================================================================
+// Base case infrastructure for the 8x8 HashLife leaf computation.
+//
+// Bit layout for a 4x4 grid stored as a 16-bit value:
+//   Row 0 (top):    bits 15, 14, 13, 12
+//   Row 1:          bits 11, 10,  9,  8
+//   Row 2:          bits  7,  6,  5,  4
+//   Row 3 (bottom): bits  3,  2,  1,  0
+//
+// The 2x2 quadrants within this layout:
+//   NW = bits {15,14,11,10} = 0xCC00
+//   NE = bits {13,12, 9, 8} = 0x3300
+//   SW = bits { 7, 6, 3, 2} = 0x00CC
+//   SE = bits { 5, 4, 1, 0} = 0x0033
+// ============================================================================
+
+// Total number of possible 4x4 cell configurations.
+constexpr static uint32_t NumLeafPatterns = 65536;
+
+// Bitmasks for extracting 2x2 quadrants from a 16-bit 4x4 grid.
+constexpr static uint16_t MaskNW = 0xCC00;
+constexpr static uint16_t MaskNE = 0x3300;
+constexpr static uint16_t MaskSW = 0x00CC;
+constexpr static uint16_t MaskSE = 0x0033;
+
+// Returns the bit position (0-15) for a cell at (col, row) in a 4x4 grid.
+constexpr static int BitPosition(int col, int row) {
+    return (3 - row) * 4 + (3 - col);
+}
+
+// Precomputed lookup table for Conway's Game of Life (B3/S23).
+// Maps each 16-bit 4x4 pattern to the next-generation state of the center 2x2,
+// encoded in bits {5, 4, 1, 0} (the SE quadrant positions). This encoding
+// allows the results of 9 overlapping lookups to be efficiently assembled
+// via shifts into a full 4x4 result.
+static auto BuildRuleTable() {
+    // The four center cells of a 4x4 grid whose next state we compute.
+    constexpr std::array centerCol{1, 2, 1, 2};
+    constexpr std::array centerRow{1, 1, 2, 2};
+    // Where each center cell's result is placed in the output.
+    constexpr std::array resultBit{5, 4, 1, 0};
+
+    std::array<uint16_t, NumLeafPatterns> table{};
+    for (uint32_t pattern = 0; pattern < NumLeafPatterns; ++pattern) {
+        uint16_t result = 0;
+        for (int cell = 0; cell < 4; ++cell) {
+            const int col = centerCol[cell];
+            const int row = centerRow[cell];
+            int neighborCount = 0;
+            for (int dy = -1; dy <= 1; ++dy) {
+                for (int dx = -1; dx <= 1; ++dx) {
+                    if (dx == 0 && dy == 0)
+                        continue;
+                    neighborCount += static_cast<int>(
+                        (pattern >> BitPosition(col + dx, row + dy)) & 1);
+                }
+            }
+            const bool isAlive = ((pattern >> BitPosition(col, row)) & 1) != 0;
+            const bool survives = isAlive && neighborCount == 2;
+            const bool born = neighborCount == 3;
+            if (survives || born)
+                result |= static_cast<uint16_t>(1 << resultBit[cell]);
+        }
+        table[pattern] = result;
+    }
+    return table;
+}
+
+static const auto RuleTable = BuildRuleTable();
+
+// Encodes a single level-1 quadrant (2x2 of leaf cells) into bits at the
+// given mask positions within a 16-bit 4x4 value. The quadrant's four cells
+// map to the four set bits in `quadrantMask`, ordered from MSB to LSB as:
+// NW, NE, SW, SE of the quadrant.
+static uint16_t EncodeQuadrant(const LifeNode* quadrant,
+                               uint16_t quadrantMask) {
+    if (quadrant == FalseNode)
+        return 0;
+    uint16_t bits = 0;
+    // Extract the four bit positions from the mask, ordered high to low
+    std::array<int, 4> positions{};
+    int count = 0;
+    for (int bit = 15; bit >= 0 && count < 4; --bit) {
+        if ((quadrantMask >> bit) & 1)
+            positions[count++] = bit;
+    }
+    if (quadrant->NorthWest == TrueNode)
+        bits |= static_cast<uint16_t>(1 << positions[0]);
+    if (quadrant->NorthEast == TrueNode)
+        bits |= static_cast<uint16_t>(1 << positions[1]);
+    if (quadrant->SouthWest == TrueNode)
+        bits |= static_cast<uint16_t>(1 << positions[2]);
+    if (quadrant->SouthEast == TrueNode)
+        bits |= static_cast<uint16_t>(1 << positions[3]);
+    return bits;
+}
+
+// Encodes a level-2 node (4x4 grid of leaf cells) as a 16-bit value.
+static uint16_t EncodeLevel2(const LifeNode* node) {
+    if (node == FalseNode || node->IsEmpty)
+        return 0;
+    return EncodeQuadrant(node->NorthWest, MaskNW) |
+           EncodeQuadrant(node->NorthEast, MaskNE) |
+           EncodeQuadrant(node->SouthWest, MaskSW) |
+           EncodeQuadrant(node->SouthEast, MaskSE);
+}
+
+// Converts a single bit to a leaf cell pointer.
+static const LifeNode* BitToCell(uint16_t bits, int position) {
+    return ((bits >> position) & 1) != 0 ? TrueNode : FalseNode;
+}
+
+// Decodes a 16-bit 4x4 value back to a level-2 LifeNode.
+// The result is a node with four level-1 quadrant children, each
+// containing four leaf cells.
+template <typename FindOrCreateFn>
+static const LifeNode* DecodeLevel2(uint16_t bits,
+                                    FindOrCreateFn&& findOrCreate) {
+    const auto* quadrantNW =
+        findOrCreate(BitToCell(bits, 15), BitToCell(bits, 14),
+                     BitToCell(bits, 11), BitToCell(bits, 10));
+    const auto* quadrantNE =
+        findOrCreate(BitToCell(bits, 13), BitToCell(bits, 12),
+                     BitToCell(bits, 9), BitToCell(bits, 8));
+    const auto* quadrantSW =
+        findOrCreate(BitToCell(bits, 7), BitToCell(bits, 6), BitToCell(bits, 3),
+                     BitToCell(bits, 2));
+    const auto* quadrantSE =
+        findOrCreate(BitToCell(bits, 5), BitToCell(bits, 4), BitToCell(bits, 1),
+                     BitToCell(bits, 0));
+    return findOrCreate(quadrantNW, quadrantNE, quadrantSW, quadrantSE);
+}
+
 // Free function form of calling HashQuadtree::Advance, with the added bonus of
 // supporting an exact `stepCount` rather than just a `maxAdvance`.
-int64_t HashLife(HashQuadtree &data, int64_t numSteps,
+int64_t HashLife(HashQuadtree& data, int64_t numSteps,
                  std::stop_token stopToken) {
     if (numSteps == 0) // Hyper speed
         return data.Advance(0, stopToken);
@@ -54,14 +187,14 @@ int64_t HashLife(HashQuadtree &data, int64_t numSteps,
     return generation;
 }
 
-size_t LifeNodeHash::operator()(const LifeNode *node) const {
+size_t LifeNodeHash::operator()(const LifeNode* node) const {
     if (!node)
-        return std::hash<const void *>{}(nullptr);
+        return std::hash<const void*>{}(nullptr);
     return node->Hash;
 }
 
 // Arbitrary magic number hash
-size_t SlowHash::operator()(const SlowKey &key) const noexcept {
+size_t SlowHash::operator()(const SlowKey& key) const noexcept {
     const auto h1 = static_cast<uint64_t>(LifeNodeHash{}(key.Node));
     const auto h2 = static_cast<uint64_t>(
         static_cast<uint64_t>(key.MaxAdvance) + 0x9e3779b97f4a7c15ULL);
@@ -78,7 +211,7 @@ size_t SlowHash::operator()(const SlowKey &key) const noexcept {
 template class HashQuadtree::IteratorImpl<Vec2>;
 template class HashQuadtree::IteratorImpl<const Vec2>;
 
-HashQuadtree::HashQuadtree(const LifeHashSet &data, Vec2 offset) {
+HashQuadtree::HashQuadtree(const LifeHashSet& data, Vec2 offset) {
     if (data.empty())
         return;
 
@@ -87,9 +220,9 @@ HashQuadtree::HashQuadtree(const LifeHashSet &data, Vec2 offset) {
         {static_cast<int64_t>(offset.X), static_cast<int64_t>(offset.Y)};
 }
 
-HashQuadtree::HashQuadtree(const HashQuadtree &other) { Copy(other); }
+HashQuadtree::HashQuadtree(const HashQuadtree& other) { Copy(other); }
 
-HashQuadtree &HashQuadtree::operator=(const HashQuadtree &other) {
+HashQuadtree& HashQuadtree::operator=(const HashQuadtree& other) {
     if (this != &other) {
         Copy(other);
     }
@@ -98,11 +231,11 @@ HashQuadtree &HashQuadtree::operator=(const HashQuadtree &other) {
 
 // Generic form of HashQuadtree::FindOrCreate that we can also use
 // for building a transfer cache.
-static const LifeNode *FindOrCreateFromCache(HashLifeCache &cache,
-                                             const LifeNode *nw,
-                                             const LifeNode *ne,
-                                             const LifeNode *sw,
-                                             const LifeNode *se) {
+static const LifeNode* FindOrCreateFromCache(HashLifeCache& cache,
+                                             const LifeNode* nw,
+                                             const LifeNode* ne,
+                                             const LifeNode* sw,
+                                             const LifeNode* se) {
     LifeNode toFind{nw, ne, sw, se};
     if (const auto itr = cache.NodeMap.find(&toFind);
         itr != cache.NodeMap.end()) {
@@ -117,10 +250,10 @@ static const LifeNode *FindOrCreateFromCache(HashLifeCache &cache,
 // Simple container for using some dynamic programming when preparing
 // quadtree copies.
 using TransferMap =
-    ankerl::unordered_dense::map<const LifeNode *, const LifeNode *>;
-static const LifeNode *BuildCache(TransferMap &transferMap,
-                                  HashLifeCache &cache,
-                                  const LifeNode *original) {
+    ankerl::unordered_dense::map<const LifeNode*, const LifeNode*>;
+static const LifeNode* BuildCache(TransferMap& transferMap,
+                                  HashLifeCache& cache,
+                                  const LifeNode* original) {
     // Base cases: leaf nodes
     if (original == FalseNode)
         return FalseNode;
@@ -130,17 +263,17 @@ static const LifeNode *BuildCache(TransferMap &transferMap,
     if (const auto it = transferMap.find(original); it != transferMap.end())
         return it->second;
 
-    const auto *nw = BuildCache(transferMap, cache, original->NorthWest);
-    const auto *ne = BuildCache(transferMap, cache, original->NorthEast);
-    const auto *sw = BuildCache(transferMap, cache, original->SouthWest);
-    const auto *se = BuildCache(transferMap, cache, original->SouthEast);
+    const auto* nw = BuildCache(transferMap, cache, original->NorthWest);
+    const auto* ne = BuildCache(transferMap, cache, original->NorthEast);
+    const auto* sw = BuildCache(transferMap, cache, original->SouthWest);
+    const auto* se = BuildCache(transferMap, cache, original->SouthEast);
 
-    const auto *ret = FindOrCreateFromCache(cache, nw, ne, sw, se);
+    const auto* ret = FindOrCreateFromCache(cache, nw, ne, sw, se);
     transferMap[original] = ret;
     return ret;
 }
 
-void HashQuadtree::Copy(const HashQuadtree &other) {
+void HashQuadtree::Copy(const HashQuadtree& other) {
     m_Root = FalseNode;
     m_RootOffset = other.m_RootOffset;
 
@@ -170,7 +303,7 @@ int32_t HashQuadtree::CalculateDepth() const {
     }
 
     auto depth = 0;
-    const auto *current = m_Root;
+    const auto* current = m_Root;
     while (current != TrueNode && current != FalseNode) {
         current = current->NorthWest;
         depth++;
@@ -179,7 +312,7 @@ int32_t HashQuadtree::CalculateDepth() const {
 }
 
 // TODO: Improve efficiency of equality comparison
-bool HashQuadtree::operator==(const HashQuadtree &other) const {
+bool HashQuadtree::operator==(const HashQuadtree& other) const {
     if (m_Root == other.m_Root && m_RootOffset == other.m_RootOffset) {
         return true;
     }
@@ -190,7 +323,7 @@ bool HashQuadtree::operator==(const HashQuadtree &other) const {
     return hashSet1 == hashSet2;
 }
 
-bool HashQuadtree::operator!=(const HashQuadtree &other) const {
+bool HashQuadtree::operator!=(const HashQuadtree& other) const {
     return !(*this == other);
 }
 
@@ -229,7 +362,7 @@ HashQuadtree::ConstIterator HashQuadtree::begin() const {
     return ConstIterator{m_Root, m_RootOffset, size, false};
 }
 
-HashQuadtree::Iterator HashQuadtree::begin(const Rect &bounds) {
+HashQuadtree::Iterator HashQuadtree::begin(const Rect& bounds) {
     if (m_Root == FalseNode) {
         return end();
     }
@@ -238,7 +371,7 @@ HashQuadtree::Iterator HashQuadtree::begin(const Rect &bounds) {
     return Iterator{m_Root, m_RootOffset, size, false, &bounds};
 }
 
-HashQuadtree::ConstIterator HashQuadtree::begin(const Rect &bounds) const {
+HashQuadtree::ConstIterator HashQuadtree::begin(const Rect& bounds) const {
     if (m_Root == FalseNode)
         return end();
 
@@ -250,16 +383,16 @@ HashQuadtree::ConstIterator HashQuadtree::end() const {
     return ConstIterator{};
 }
 
-const LifeNode *HashQuadtree::FindOrCreate(const LifeNode *nw,
-                                           const LifeNode *ne,
-                                           const LifeNode *sw,
-                                           const LifeNode *se) const {
+const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw,
+                                           const LifeNode* ne,
+                                           const LifeNode* sw,
+                                           const LifeNode* se) const {
     // Defer to more generic function
     return FindOrCreateFromCache(s_Cache, nw, ne, sw, se);
 }
 
-const LifeNode *HashQuadtree::CenteredHorizontal(const LifeNode &west,
-                                                 const LifeNode &east) const {
+const LifeNode* HashQuadtree::CenteredHorizontal(const LifeNode& west,
+                                                 const LifeNode& east) const {
     // Imagine these two nodes:
     // west:  east:
     // -----  -----
@@ -277,8 +410,8 @@ const LifeNode *HashQuadtree::CenteredHorizontal(const LifeNode &west,
                         east.SouthWest);
 }
 
-const LifeNode *HashQuadtree::CenteredVertical(const LifeNode &north,
-                                               const LifeNode &south) const {
+const LifeNode* HashQuadtree::CenteredVertical(const LifeNode& north,
+                                               const LifeNode& south) const {
     // Imagine these two nodes:
     // north: south:
     // -----  -----
@@ -297,7 +430,7 @@ const LifeNode *HashQuadtree::CenteredVertical(const LifeNode &north,
                         south.NorthEast);
 }
 
-const LifeNode *HashQuadtree::CenteredSubNode(const LifeNode &node) const {
+const LifeNode* HashQuadtree::CenteredSubNode(const LifeNode& node) const {
     // Imagine this node:
     // ---------
     // |A|B|C|D|
@@ -318,47 +451,142 @@ const LifeNode *HashQuadtree::CenteredSubNode(const LifeNode &node) const {
                         node.SouthWest->NorthEast, node.SouthEast->NorthWest);
 }
 
-// TODO: Use more sophisticated algorithm for base case
-const LifeNode *HashQuadtree::AdvanceBase(const LifeNode *node) const {
-    // Some implementations use an 8x8 base case, which may be more efficient.
-    constexpr static auto gridSize = 4;
+// Extracts the four 16-bit quadrant encodings from a level-3 node.
+struct LeafQuadrants {
+    uint16_t nw, ne, sw, se;
+};
 
-    // Imagine cells as a 2D grid, 4x4 grid.
-    const std::array cells{
-        node->NorthWest->NorthWest, node->NorthWest->NorthEast,
-        node->NorthEast->NorthWest, node->NorthEast->NorthEast,
-        node->NorthWest->SouthWest, node->NorthWest->SouthEast,
-        node->NorthEast->SouthWest, node->NorthEast->SouthEast,
-        node->SouthWest->NorthWest, node->SouthWest->NorthEast,
-        node->SouthEast->NorthWest, node->SouthEast->NorthEast,
-        node->SouthWest->SouthWest, node->SouthWest->SouthEast,
-        node->SouthEast->SouthWest, node->SouthEast->SouthEast};
+static LeafQuadrants EncodeLevel3(const LifeNode* node) {
+    return {EncodeLevel2(node->NorthWest), EncodeLevel2(node->NorthEast),
+            EncodeLevel2(node->SouthWest), EncodeLevel2(node->SouthEast)};
+}
 
-    LifeHashSet result{};
-    for (auto x = 0; x < gridSize; x++) {
-        for (auto y = 0; y < gridSize; y++) {
-            const auto index = y * gridSize + x;
-            if (cells[index] == TrueNode) {
-                result.insert({x, y});
-            }
-        }
-    }
-    // Simple deference to our other algorithm
-    result = SparseLife(result, {0, 0, gridSize, gridSize});
+// The 8x8 grid formed by 4 quadrants can be sliced into 9 overlapping 4x4
+// windows. Each window consists of bits extracted and shifted from adjacent
+// quadrants. These helpers construct the indices into the rule table.
+//
+// Window layout (each window is centered on the grid intersection shown):
+//   NW   N    NE
+//    W   C    E
+//   SW   S    SE
+//
+// The bitwise shifts correspond to how Golly's `leafres` extracts overlapping
+// 4x4 regions from the four 4x4 quadrant values.
 
-    // We still return the inner node in the base case.
-    return FindOrCreate(result.contains({1, 1}) ? TrueNode : FalseNode,
-                        result.contains({2, 1}) ? TrueNode : FalseNode,
-                        result.contains({1, 2}) ? TrueNode : FalseNode,
-                        result.contains({2, 2}) ? TrueNode : FalseNode);
+static uint16_t WindowN(uint16_t nw, uint16_t ne) {
+    return ((nw << 2) & 0xCCCC) | ((ne >> 2) & 0x3333);
+}
+static uint16_t WindowW(uint16_t nw, uint16_t sw) {
+    return ((nw << 8) & 0xFF00) | ((sw >> 8) & 0x00FF);
+}
+static uint16_t WindowE(uint16_t ne, uint16_t se) {
+    return ((ne << 8) & 0xFF00) | ((se >> 8) & 0x00FF);
+}
+static uint16_t WindowS(uint16_t sw, uint16_t se) {
+    return ((sw << 2) & 0xCCCC) | ((se >> 2) & 0x3333);
+}
+static uint16_t WindowCenter(uint16_t nw, uint16_t ne, uint16_t sw,
+                             uint16_t se) {
+    return ((nw << 10) & MaskNW) | ((ne << 6) & MaskNE) | ((sw >> 6) & MaskSW) |
+           ((se >> 10) & MaskSE);
+}
+
+// Computes the 9 first-generation 2x2 results from the overlapping 4x4 windows
+// of an 8x8 grid. Each result uses the SE-quadrant bit encoding {5,4,1,0}.
+struct FirstGenResults {
+    uint16_t nw, n, ne, w, center, e, sw, s, se;
+};
+
+static FirstGenResults ComputeFirstGeneration(const LeafQuadrants& q) {
+    return {
+        RuleTable[q.nw],
+        RuleTable[WindowN(q.nw, q.ne)],
+        RuleTable[q.ne],
+        RuleTable[WindowW(q.nw, q.sw)],
+        RuleTable[WindowCenter(q.nw, q.ne, q.sw, q.se)],
+        RuleTable[WindowE(q.ne, q.se)],
+        RuleTable[q.sw],
+        RuleTable[WindowS(q.sw, q.se)],
+        RuleTable[q.se],
+    };
+}
+
+// Assembles a 4x4 result (16 bits) from four 2x2 sub-results.
+// Each sub-result occupies the SE-quadrant bits {5,4,1,0} and is shifted
+// into its respective quadrant position.
+static uint16_t AssembleQuadrants(uint16_t resultNW, uint16_t resultNE,
+                                  uint16_t resultSW, uint16_t resultSE) {
+    return static_cast<uint16_t>(
+        ((resultNW << 10) & MaskNW) | ((resultNE << 8) & MaskNE) |
+        ((resultSW << 2) & MaskSW) | (resultSE & MaskSE));
+}
+
+// Combines four 2x2 results (in SE-quadrant encoding) into a 16-bit index
+// for a second rule table lookup.
+static uint16_t Combine2x2ForLookup(uint16_t topLeft, uint16_t topRight,
+                                    uint16_t bottomLeft, uint16_t bottomRight) {
+    return static_cast<uint16_t>((topLeft << 10) | (topRight << 8) |
+                                 (bottomLeft << 2) | bottomRight);
+}
+
+// Assembles the 6x6 one-generation result (as a centered 4x4) from the
+// nine 2x2 sub-results. Each sub-result encodes a 2x2 in bits {5,4,1,0}.
+// This is the "combine9" operation from Golly.
+static uint16_t AssembleCentered6x6(const FirstGenResults& gen1) {
+    return static_cast<uint16_t>(
+        (gen1.nw << 15) | (gen1.n << 13) | ((gen1.ne << 11) & 0x1000) |
+        ((gen1.w << 7) & 0x0880) | (gen1.center << 5) |
+        ((gen1.e << 3) & 0x0110) | ((gen1.sw >> 1) & 0x0008) | (gen1.s >> 3) |
+        (gen1.se >> 5));
+}
+
+// 8x8 base case for HashLife. Advances a level-3 node by 2 generations,
+// returning a level-2 node (center 4x4).
+const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) const {
+    const auto quadrants = EncodeLevel3(node);
+    const auto gen1 = ComputeFirstGeneration(quadrants);
+
+    // Second generation: combine adjacent 2x2 results into four overlapping
+    // 4x4 windows, look up each to get a 2x2 result, then assemble.
+    const auto secondGenNW =
+        RuleTable[Combine2x2ForLookup(gen1.nw, gen1.n, gen1.w, gen1.center)];
+    const auto secondGenNE =
+        RuleTable[Combine2x2ForLookup(gen1.n, gen1.ne, gen1.center, gen1.e)];
+    const auto secondGenSW =
+        RuleTable[Combine2x2ForLookup(gen1.w, gen1.center, gen1.sw, gen1.s)];
+    const auto secondGenSE =
+        RuleTable[Combine2x2ForLookup(gen1.center, gen1.e, gen1.s, gen1.se)];
+
+    const auto resultBits =
+        AssembleQuadrants(secondGenNW, secondGenNE, secondGenSW, secondGenSE);
+
+    const auto findOrCreate = [this](const LifeNode* nw, const LifeNode* ne,
+                                     const LifeNode* sw, const LifeNode* se) {
+        return FindOrCreate(nw, ne, sw, se);
+    };
+    return DecodeLevel2(resultBits, findOrCreate);
+}
+
+// 8x8 base case for 1-generation advancement. Advances a level-3 node
+// by 1 generation, returning a level-2 node (center 4x4).
+const LifeNode* HashQuadtree::AdvanceBaseOneGen(const LifeNode* node) const {
+    const auto quadrants = EncodeLevel3(node);
+    const auto gen1 = ComputeFirstGeneration(quadrants);
+    const auto resultBits = AssembleCentered6x6(gen1);
+
+    const auto findOrCreate = [this](const LifeNode* nw, const LifeNode* ne,
+                                     const LifeNode* sw, const LifeNode* se) {
+        return FindOrCreate(nw, ne, sw, se);
+    };
+    return DecodeLevel2(resultBits, findOrCreate);
 }
 
 NodeUpdateInfo HashQuadtree::AdvanceNode(std::stop_token stopToken,
-                                         const LifeNode *node, int32_t level,
+                                         const LifeNode* node, int32_t level,
                                          int64_t maxAdvance) const {
     if (stopToken.stop_requested())
         return {node, 0};
-    if (node == FalseNode || level < 2)
+    if (node == FalseNode || level < 3)
         return {node, 0};
 
     // Currently GOLExecutable cannot handle depth >= 63, so we bound it here.
@@ -372,7 +600,7 @@ NodeUpdateInfo HashQuadtree::AdvanceNode(std::stop_token stopToken,
 
 // TODO: Refactor AdvanceSlow
 NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
-                                         const LifeNode *node, int32_t level,
+                                         const LifeNode* node, int32_t level,
                                          int64_t maxAdvance) const {
     // At a high level, AdvanceSlow will split `node` into an 8x8 grid of
     // subnodes. Then, we can use overlapping components to take the 4x4 grids
@@ -384,8 +612,14 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
 
     if (node == FalseNode)
         return {FalseNode, 0};
-    if (level <= 2) // Base case is capped at 1 generation anyway
-        return AdvanceFast(stopToken, node, level, maxAdvance);
+    if (level <= 3) {
+        // At the 8x8 base case, choose between 1-gen and 2-gen advancement.
+        const auto generations = (maxAdvance >= 2) ? int64_t{2} : int64_t{1};
+        const auto* result =
+            (maxAdvance >= 2) ? AdvanceBase(node) : AdvanceBaseOneGen(node);
+        s_Cache.SlowCache[{node, generations}] = result;
+        return {result, generations};
+    }
     if (const auto it = s_Cache.SlowCache.find({node, maxAdvance});
         it != s_Cache.SlowCache.end())
         return {it->second, maxAdvance};
@@ -395,9 +629,9 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
         return y * subdivisions + x;
     };
 
-    std::array<const LifeNode *, subdivisions * subdivisions> segments{};
+    std::array<const LifeNode*, subdivisions * subdivisions> segments{};
     const auto fetchSegment = [&](int32_t x, int32_t y) {
-        const auto *current = node;
+        const auto* current = node;
         for (auto bit = 2; bit >= 0 && current != FalseNode; --bit) {
             const bool east = (x >> bit) & 1;
             const bool south = (y >> bit) & 1;
@@ -427,17 +661,17 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
     };
 
     const auto buildWindow = [&](int32_t startX, int32_t startY) {
-        const auto *nw = combine2x2(startX, startY);
-        const auto *ne = combine2x2(startX + 2, startY);
-        const auto *sw = combine2x2(startX, startY + 2);
-        const auto *se = combine2x2(startX + 2, startY + 2);
+        const auto* nw = combine2x2(startX, startY);
+        const auto* ne = combine2x2(startX + 2, startY);
+        const auto* sw = combine2x2(startX, startY + 2);
+        const auto* se = combine2x2(startX + 2, startY + 2);
         return FindOrCreate(nw, ne, sw, se);
     };
 
-    const auto *window00 = buildWindow(1, 1);
-    const auto *window01 = buildWindow(3, 1);
-    const auto *window10 = buildWindow(1, 3);
-    const auto *window11 = buildWindow(3, 3);
+    const auto* window00 = buildWindow(1, 1);
+    const auto* window01 = buildWindow(3, 1);
+    const auto* window10 = buildWindow(1, 3);
+    const auto* window11 = buildWindow(3, 3);
 
     const auto result00 =
         AdvanceNode(stopToken, window00, level - 1, maxAdvance);
@@ -449,7 +683,7 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
         AdvanceNode(stopToken, window11, level - 1, maxAdvance);
 
     const auto generations = result00.Generations;
-    const auto *combined = FindOrCreate(result00.Node, result01.Node,
+    const auto* combined = FindOrCreate(result00.Node, result01.Node,
                                         result10.Node, result11.Node);
 
     s_Cache.SlowCache[{node, generations}] = combined;
@@ -457,7 +691,7 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
 }
 
 NodeUpdateInfo HashQuadtree::AdvanceFast(std::stop_token stopToken,
-                                         const LifeNode *node, int32_t level,
+                                         const LifeNode* node, int32_t level,
                                          int64_t maxAdvance) const {
     // At a high level, we want to assemble a node that is half the size of
     // `node`, but centered at the same point. By following this logic all the
@@ -478,10 +712,10 @@ NodeUpdateInfo HashQuadtree::AdvanceFast(std::stop_token stopToken,
         return {itr->second, generations};
     }
 
-    if (level == 2) {
-        const auto *base = AdvanceBase(node);
+    if (level == 3) {
+        const auto* base = AdvanceBase(node);
         s_Cache.NodeMap[node] = base;
-        return {base, 1};
+        return {base, 2};
     }
 
     const auto n00 =
@@ -520,20 +754,20 @@ NodeUpdateInfo HashQuadtree::AdvanceFast(std::stop_token stopToken,
         stopToken, FindOrCreate(n11.Node, n12.Node, n21.Node, n22.Node),
         level - 1, maxAdvance);
 
-    const auto *result = FindOrCreate(topLeft.Node, topRight.Node,
+    const auto* result = FindOrCreate(topLeft.Node, topRight.Node,
                                       bottomLeft.Node, bottomRight.Node);
     s_Cache.NodeMap[node] = result;
     const auto generations = Pow2(level - 2);
     return {result, generations};
 }
 
-bool HashQuadtree::NeedsExpansion(const LifeNode *node, int32_t level) const {
+bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const {
     if (node == FalseNode)
         return false;
-    if (level <= 2)
+    if (level <= 3)
         return true;
 
-    constexpr static auto notEmpty = [](const LifeNode *n) {
+    constexpr static auto notEmpty = [](const LifeNode* n) {
         return n != FalseNode && !n->IsEmpty;
     };
 
@@ -542,52 +776,52 @@ bool HashQuadtree::NeedsExpansion(const LifeNode *node, int32_t level) const {
     // unnecessary expansion, but it is a fairly low-overhead procedure that may
     // actually result in better performance when hyper speed is enabled.
 
-    const auto *nw = node->NorthWest;
+    const auto* nw = node->NorthWest;
     if (notEmpty(nw)) {
         if (notEmpty(nw->NorthWest) || notEmpty(nw->NorthEast) ||
             notEmpty(nw->SouthWest))
             return true;
 
-        const auto *nwSe = nw->SouthEast;
+        const auto* nwSe = nw->SouthEast;
         if (notEmpty(nwSe) &&
             (notEmpty(nwSe->NorthWest) || notEmpty(nwSe->NorthEast) ||
              notEmpty(nwSe->SouthWest)))
             return true;
     }
 
-    const auto *ne = node->NorthEast;
+    const auto* ne = node->NorthEast;
     if (notEmpty(ne)) {
         if (notEmpty(ne->NorthWest) || notEmpty(ne->NorthEast) ||
             notEmpty(ne->SouthEast))
             return true;
 
-        const auto *ne_sw = ne->SouthWest;
+        const auto* ne_sw = ne->SouthWest;
         if (notEmpty(ne_sw) &&
             (notEmpty(ne_sw->NorthWest) || notEmpty(ne_sw->NorthEast) ||
              notEmpty(ne_sw->SouthEast)))
             return true;
     }
 
-    const auto *sw = node->SouthWest;
+    const auto* sw = node->SouthWest;
     if (notEmpty(sw)) {
         if (notEmpty(sw->NorthWest) || notEmpty(sw->SouthWest) ||
             notEmpty(sw->SouthEast))
             return true;
 
-        const auto *sw_ne = sw->NorthEast;
+        const auto* sw_ne = sw->NorthEast;
         if (notEmpty(sw_ne) &&
             (notEmpty(sw_ne->NorthWest) || notEmpty(sw_ne->SouthWest) ||
              notEmpty(sw_ne->SouthEast)))
             return true;
     }
 
-    const auto *se = node->SouthEast;
+    const auto* se = node->SouthEast;
     if (notEmpty(se)) {
         if (notEmpty(se->NorthEast) || notEmpty(se->SouthWest) ||
             notEmpty(se->SouthEast))
             return true;
 
-        const auto *se_nw = se->NorthWest;
+        const auto* se_nw = se->NorthWest;
         if (notEmpty(se_nw) &&
             (notEmpty(se_nw->NorthEast) || notEmpty(se_nw->SouthWest) ||
              notEmpty(se_nw->SouthEast)))
@@ -597,7 +831,7 @@ bool HashQuadtree::NeedsExpansion(const LifeNode *node, int32_t level) const {
     return false;
 }
 
-const LifeNode *HashQuadtree::ExpandUniverse(const LifeNode *node,
+const LifeNode* HashQuadtree::ExpandUniverse(const LifeNode* node,
                                              int32_t level) const {
     if (node == FalseNode)
         return EmptyTree(Pow2(level + 1));
@@ -607,11 +841,11 @@ const LifeNode *HashQuadtree::ExpandUniverse(const LifeNode *node,
 
     const auto childSize =
         level > 0 ? Pow2(level - 1) : static_cast<int64_t>(1);
-    const auto *empty = EmptyTree(childSize);
-    const auto *expandedNW = FindOrCreate(empty, empty, empty, node->NorthWest);
-    const auto *expandedNE = FindOrCreate(empty, empty, node->NorthEast, empty);
-    const auto *expandedSW = FindOrCreate(empty, node->SouthWest, empty, empty);
-    const auto *expandedSE = FindOrCreate(node->SouthEast, empty, empty, empty);
+    const auto* empty = EmptyTree(childSize);
+    const auto* expandedNW = FindOrCreate(empty, empty, empty, node->NorthWest);
+    const auto* expandedNE = FindOrCreate(empty, empty, node->NorthEast, empty);
+    const auto* expandedSW = FindOrCreate(empty, node->SouthWest, empty, empty);
+    const auto* expandedSE = FindOrCreate(node->SouthEast, empty, empty, empty);
 
     return FindOrCreate(expandedNW, expandedNE, expandedSW, expandedSE);
 }
@@ -620,7 +854,7 @@ int64_t HashQuadtree::Advance(int64_t maxAdvance, std::stop_token stopToken) {
     if (m_Root == FalseNode)
         return {};
 
-    const auto *root = m_Root;
+    const auto* root = m_Root;
 
     // Before we can actually advance, we must make sure the universe is
     // sufficiently large so that no data is lost after advancing (remember that
@@ -657,7 +891,7 @@ int64_t HashQuadtree::Advance(int64_t maxAdvance, std::stop_token stopToken) {
     return advanced.Generations;
 }
 
-const LifeNode *HashQuadtree::EmptyTree(int64_t size) const {
+const LifeNode* HashQuadtree::EmptyTree(int64_t size) const {
     if (size <= 1)
         return FalseNode;
 
@@ -674,7 +908,7 @@ const LifeNode *HashQuadtree::EmptyTree(int64_t size) const {
     return result;
 }
 
-const LifeNode *HashQuadtree::BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
+const LifeNode* HashQuadtree::BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
                                               int64_t size) {
     if (cells.empty())
         return EmptyTree(size);
@@ -706,7 +940,7 @@ const LifeNode *HashQuadtree::BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
                         half));
 }
 
-const LifeNode *HashQuadtree::BuildTree(const LifeHashSet &cells) {
+const LifeNode* HashQuadtree::BuildTree(const LifeHashSet& cells) {
     if (cells.empty()) {
         m_RootOffset = Vec2L{0LL, 0LL};
         return FalseNode;

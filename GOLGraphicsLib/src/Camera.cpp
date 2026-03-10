@@ -7,7 +7,7 @@
 #include "Graphics2D.hpp"
 
 namespace gol {
-void GraphicsCamera::ZoomBy(Vec2F screenPos, const RectF &viewBounds,
+void GraphicsCamera::ZoomBy(Vec2F screenPos, const RectF& viewBounds,
                             float zoom) {
     Zoom *= 1.f + zoom;
     if (Zoom < MaxZoom)
@@ -18,7 +18,7 @@ void GraphicsCamera::ZoomBy(Vec2F screenPos, const RectF &viewBounds,
 void GraphicsCamera::Translate(glm::vec2 delta) { Center -= delta / Zoom; }
 
 glm::vec2 GraphicsCamera::ScreenToWorldPos(Vec2F pos,
-                                           const Rect &viewBounds) const {
+                                           const Rect& viewBounds) const {
     auto vec = glm::vec2{pos.X - viewBounds.X, pos.Y - viewBounds.Y};
     vec -= glm::vec2{viewBounds.Width / 2, viewBounds.Height / 2};
     vec /= Zoom;
@@ -26,7 +26,7 @@ glm::vec2 GraphicsCamera::ScreenToWorldPos(Vec2F pos,
     return vec;
 }
 
-glm::vec2 GraphicsCamera::WorldToScreenPos(Vec2F pos, const Rect &viewBounds,
+glm::vec2 GraphicsCamera::WorldToScreenPos(Vec2F pos, const Rect& viewBounds,
                                            Size2F worldSize) const {
     auto vec = glm::vec2(pos);
     vec.x -= Center.x;

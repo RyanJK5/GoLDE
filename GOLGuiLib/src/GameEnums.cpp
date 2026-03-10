@@ -9,23 +9,23 @@
 namespace gol {
 std::string Actions::ToString(ActionVariant action) {
     std::string result{[action]() {
-        if (auto *value = std::get_if<GameAction>(&action))
+        if (auto* value = std::get_if<GameAction>(&action))
             return std::find_if(
                        GameActionDefinitions.begin(),
                        GameActionDefinitions.end(),
-                       [value](auto &&pair) { return pair.second == *value; })
+                       [value](auto&& pair) { return pair.second == *value; })
                 ->first;
-        if (auto *value = std::get_if<EditorAction>(&action))
+        if (auto* value = std::get_if<EditorAction>(&action))
             return std::find_if(
                        EditorActionDefinitions.begin(),
                        EditorActionDefinitions.end(),
-                       [value](auto &&pair) { return pair.second == *value; })
+                       [value](auto&& pair) { return pair.second == *value; })
                 ->first;
-        if (auto *value = std::get_if<SelectionAction>(&action))
+        if (auto* value = std::get_if<SelectionAction>(&action))
             return std::find_if(
                        SelectionActionDefinitions.begin(),
                        SelectionActionDefinitions.end(),
-                       [value](auto &&pair) { return pair.second == *value; })
+                       [value](auto&& pair) { return pair.second == *value; })
                 ->first;
         std::unreachable();
     }()};

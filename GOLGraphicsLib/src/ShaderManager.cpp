@@ -14,7 +14,7 @@
 #include "ShaderManager.hpp"
 
 namespace gol {
-ShaderManager::ShaderManager(const std::filesystem::path &shaderFilePath) {
+ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath) {
     auto itr = s_Shaders.find(shaderFilePath);
     if (itr != s_Shaders.end()) {
         itr->second.RefCount++;
@@ -45,11 +45,11 @@ ShaderManager::ShaderManager(const std::filesystem::path &shaderFilePath) {
     m_ControlBlock = &s_Shaders[shaderFilePath];
 }
 
-ShaderManager::ShaderManager(ShaderManager &&other) noexcept {
+ShaderManager::ShaderManager(ShaderManager&& other) noexcept {
     m_ControlBlock = std::exchange(other.m_ControlBlock, nullptr);
 }
 
-ShaderManager &ShaderManager::operator=(ShaderManager &&other) noexcept {
+ShaderManager& ShaderManager::operator=(ShaderManager&& other) noexcept {
     if (this != &other) {
         Destroy();
         m_ControlBlock = std::exchange(other.m_ControlBlock, nullptr);
@@ -83,7 +83,7 @@ uint32_t ShaderManager::Program() const {
 uint32_t ShaderManager::CompileShader(uint32_t type,
                                       std::string_view source) const {
     uint32_t id = glCreateShader(type);
-    const char *src = source.data();
+    const char* src = source.data();
 
     GL_DEBUG(glShaderSource(id, 1, &src, nullptr));
     GL_DEBUG(glCompileShader(id));
@@ -106,7 +106,7 @@ uint32_t ShaderManager::CompileShader(uint32_t type,
 }
 
 std::optional<ShaderManager::IDPair>
-ShaderManager::ParseShader(const std::filesystem::path &shaderFilePath) const {
+ShaderManager::ParseShader(const std::filesystem::path& shaderFilePath) const {
     std::ifstream stream(shaderFilePath);
     if (!stream.is_open()) {
         return std::nullopt;
@@ -115,7 +115,7 @@ ShaderManager::ParseShader(const std::filesystem::path &shaderFilePath) const {
     std::string line;
     std::string shader;
 
-    auto setType = [](const std::string &line, std::optional<uint32_t> &type) {
+    auto setType = [](const std::string& line, std::optional<uint32_t>& type) {
         size_t spaceIndex = line.find(' ');
         std::string typeStr =
             line.substr(spaceIndex + 1, line.length() - spaceIndex);
@@ -160,19 +160,19 @@ ShaderManager::ParseShader(const std::filesystem::path &shaderFilePath) const {
 }
 
 void ShaderManager::AttachUniformVec2(std::string_view label,
-                                      const glm::vec2 &vec) {
+                                      const glm::vec2& vec) {
     auto loc = UniformLocation(label);
     GL_DEBUG(glUniform2f(loc, vec.x, vec.y));
 }
 
 void ShaderManager::AttachUniformVec4(std::string_view label,
-                                      const glm::vec4 &vec) {
+                                      const glm::vec4& vec) {
     auto loc = UniformLocation(label);
     GL_DEBUG(glUniform4f(loc, vec.x, vec.y, vec.z, vec.w));
 }
 
 void ShaderManager::AttachUniformMatrix4(std::string_view label,
-                                         const glm::mat4 &matrix) {
+                                         const glm::mat4& matrix) {
     GL_DEBUG(
         glUniformMatrix4fv(UniformLocation(label), 1, GL_FALSE, &matrix[0][0]));
 }

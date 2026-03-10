@@ -5,8 +5,8 @@
 #include <print>
 
 namespace gol {
-void SimulationWorker::Start(GameGrid &initialGrid, bool oneStep,
-                             const std::function<void()> &onStop) {
+void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
+                             const std::function<void()>& onStop) {
     initialGrid.PrepareCopyBetweenThreads();
     auto bufferA = std::make_shared<GameGrid>(initialGrid);
     auto bufferB = std::make_shared<GameGrid>(initialGrid);

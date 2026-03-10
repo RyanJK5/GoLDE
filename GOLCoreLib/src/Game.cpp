@@ -35,7 +35,7 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
 
     m_Underlying = glfwCreateWindow(width, height, "GOLDE", NULL, NULL);
 
-    const auto deleteStbiImage = [](unsigned char *pixels) {
+    const auto deleteStbiImage = [](unsigned char* pixels) {
         stbi_image_free(pixels);
     };
 
@@ -61,7 +61,7 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
     GL_DEBUG(auto result = glewInit());
     if (result != GLEW_OK)
         throw GLException(
-            reinterpret_cast<const char *>(glewGetErrorString(result)));
+            reinterpret_cast<const char*>(glewGetErrorString(result)));
 }
 
 OpenGLWindow::~OpenGLWindow() { glfwTerminate(); }
@@ -99,8 +99,8 @@ void Game::Begin() {
     }
 }
 
-void Game::UpdateEditors(SimulationControlResult &controlResult,
-                         const PresetSelectionResult &presetResult) {
+void Game::UpdateEditors(SimulationControlResult& controlResult,
+                         const PresetSelectionResult& presetResult) {
     ImGui::Begin("###EditorDockspace", nullptr,
                  ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_NoDecoration);
@@ -159,13 +159,13 @@ void Game::UpdateEditors(SimulationControlResult &controlResult,
     ImGui::End();
 }
 
-void Game::InitImGUI(const std::filesystem::path &stylePath) {
+void Game::InitImGUI(const std::filesystem::path& stylePath) {
     const auto styleInfo = ConfigLoader::LoadYAML<ImVec4>(stylePath);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
-    ImGuiIO &io = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
@@ -185,10 +185,10 @@ void Game::InitImGUI(const std::filesystem::path &stylePath) {
     config.MergeMode = true;
     io.Fonts->AddFontFromFileTTF(iconPath.string().c_str(), 30.0f, &config);
 
-    ImGuiStyle &style = ImGui::GetStyle();
+    ImGuiStyle& style = ImGui::GetStyle();
     style.WindowMenuButtonPosition = ImGuiDir_None;
 
-    for (auto &&[imguiCol, styleCol] : styleInfo.AttributeColors)
+    for (auto&& [imguiCol, styleCol] : styleInfo.AttributeColors)
         style.Colors[imguiCol] = styleInfo.StyleColors.at(styleCol);
 
     ImGui_ImplGlfw_InitForOpenGL(m_Window.Get(), true);
@@ -230,7 +230,7 @@ void Game::EndFrame() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    GLFWwindow *backup_current_context = glfwGetCurrentContext();
+    GLFWwindow* backup_current_context = glfwGetCurrentContext();
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
     glfwMakeContextCurrent(backup_current_context);
@@ -292,16 +292,16 @@ void Game::HandleWindowClose(PopupWindowState state) {
 
 bool Game::WindowCanClose() {
     if (std::ranges::all_of(
-            m_Editors, [](const auto &editor) { return editor.IsSaved(); }))
+            m_Editors, [](const auto& editor) { return editor.IsSaved(); }))
         return true;
 
-    const auto fileStringRepresentation = [](const SimulationEditor &editor) {
+    const auto fileStringRepresentation = [](const SimulationEditor& editor) {
         return editor.CurrentFilePath().empty()
                    ? "(untitled)"
                    : editor.CurrentFilePath().filename().string();
     };
 
-    auto fileNames = m_Editors | std::views::filter([](const auto &editor) {
+    auto fileNames = m_Editors | std::views::filter([](const auto& editor) {
                          return !editor.IsSaved();
                      }) |
                      std::views::transform(fileStringRepresentation) |
@@ -310,7 +310,7 @@ bool Game::WindowCanClose() {
 
     m_UnsavedWarning.Activate();
     m_UnsavedWarning.Message = "The following files have unsaved changes:";
-    for (const auto &fileName : fileNames)
+    for (const auto& fileName : fileNames)
         m_UnsavedWarning.Message += std::format("\n- {}", fileName);
     m_UnsavedWarning.Message +=
         "\nAre you sure you want to close the application without saving?";
@@ -318,7 +318,7 @@ bool Game::WindowCanClose() {
     return false;
 }
 
-bool Game::CheckForNewEditors(const SimulationControlResult &controlResult) {
+bool Game::CheckForNewEditors(const SimulationControlResult& controlResult) {
     if (!controlResult.FilePath)
         return true;
     if (!controlResult.Action)
@@ -330,7 +330,7 @@ bool Game::CheckForNewEditors(const SimulationControlResult &controlResult) {
     const bool fileOpen =
         controlResult.Action == ActionVariant{EditorAction::Load} &&
         std::ranges::any_of(m_Editors, [path = controlResult.FilePath](
-                                           const SimulationEditor &editor) {
+                                           const SimulationEditor& editor) {
             return editor.CurrentFilePath() == path;
         });
     if (fileOpen)

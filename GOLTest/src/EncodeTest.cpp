@@ -35,7 +35,7 @@ TEST(EncodeTest, EncodeDecode) {
 }
 
 static std::expected<RLEEncoder::DecodeResult, std::string>
-EncodeDecodeRegionTest(const GameGrid &grid, Rect region, Vec2 offset) {
+EncodeDecodeRegionTest(const GameGrid& grid, Rect region, Vec2 offset) {
     const auto encoded = RLEEncoder::EncodeRegion(grid, region, offset);
     const auto decodeResult = RLEEncoder::DecodeRegion(encoded, 1000000);
 

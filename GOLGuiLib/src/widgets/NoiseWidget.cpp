@@ -6,17 +6,17 @@ Size2F GenerateNoiseButton::Dimensions() const {
             ActionButton::DefaultButtonHeight};
 }
 
-std::string GenerateNoiseButton::Label(const EditorResult &) const {
+std::string GenerateNoiseButton::Label(const EditorResult&) const {
     return "Generate Noise";
 }
 
-bool GenerateNoiseButton::Enabled(const EditorResult &state) const {
+bool GenerateNoiseButton::Enabled(const EditorResult& state) const {
     return (state.State == SimulationState::Empty ||
             state.State == SimulationState::Paint) &&
            state.SelectionActive;
 }
 
-SimulationControlResult NoiseWidget::UpdateImpl(const EditorResult &state) {
+SimulationControlResult NoiseWidget::UpdateImpl(const EditorResult& state) {
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
 
     ImGui::Text("Noise Density");
@@ -41,7 +41,7 @@ SimulationControlResult NoiseWidget::UpdateImpl(const EditorResult &state) {
                                    .FromShortcut = result.FromShortcut};
 }
 
-void NoiseWidget::SetShortcutsImpl(const ShortcutMap &shortcuts) {
+void NoiseWidget::SetShortcutsImpl(const ShortcutMap& shortcuts) {
     m_Button.SetShortcuts(shortcuts.at(EditorAction::GenerateNoise));
 }
 

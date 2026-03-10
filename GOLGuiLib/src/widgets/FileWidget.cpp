@@ -20,10 +20,10 @@ Size2F NewFileButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 4.f,
             ActionButton::DefaultButtonHeight};
 }
-std::string NewFileButton::Label(const EditorResult &) const {
+std::string NewFileButton::Label(const EditorResult&) const {
     return ICON_FA_FILE_CIRCLE_PLUS;
 }
-bool NewFileButton::Enabled(const EditorResult &) const { return true; }
+bool NewFileButton::Enabled(const EditorResult&) const { return true; }
 
 UpdateFileButton::UpdateFileButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(EditorAction::Save, shortcuts) {}
@@ -31,10 +31,10 @@ Size2F UpdateFileButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 3.f,
             ActionButton::DefaultButtonHeight};
 }
-std::string UpdateFileButton::Label(const EditorResult &) const {
+std::string UpdateFileButton::Label(const EditorResult&) const {
     return ICON_FA_FILE_ARROW_UP;
 }
-bool UpdateFileButton::Enabled(const EditorResult &state) const {
+bool UpdateFileButton::Enabled(const EditorResult& state) const {
     return (state.CurrentFilePath.empty() &&
             state.State == SimulationState::Paused) ||
            (state.CurrentFilePath.empty() &&
@@ -50,11 +50,11 @@ Size2F SaveButton::Dimensions() const {
             ActionButton::DefaultButtonHeight};
 }
 
-std::string SaveButton::Label(const EditorResult &) const {
+std::string SaveButton::Label(const EditorResult&) const {
     return ICON_FA_FLOPPY_DISK;
 }
 
-bool SaveButton::Enabled(const EditorResult &state) const {
+bool SaveButton::Enabled(const EditorResult& state) const {
     return state.State == SimulationState::Paint ||
            state.State == SimulationState::Paused;
 }
@@ -66,20 +66,20 @@ Size2F LoadButton::Dimensions() const {
             ActionButton::DefaultButtonHeight};
 }
 
-std::string LoadButton::Label(const EditorResult &) const {
+std::string LoadButton::Label(const EditorResult&) const {
     return ICON_FA_FOLDER_OPEN;
 }
 
-bool LoadButton::Enabled(const EditorResult &) const { return true; }
+bool LoadButton::Enabled(const EditorResult&) const { return true; }
 
-FileWidget::FileWidget(const ShortcutMap &shortcutInfo)
+FileWidget::FileWidget(const ShortcutMap& shortcutInfo)
     : m_NewFileButton(shortcutInfo.at(EditorAction::NewFile)),
       m_UpdateFileButton(shortcutInfo.at(EditorAction::Save)),
       m_SaveButton(shortcutInfo.at(EditorAction::SaveAsNew)),
       m_LoadButton(shortcutInfo.at(EditorAction::Load)),
       m_FileNotOpened("File Not Opened", [](auto) {}) {}
 
-SimulationControlResult FileWidget::UpdateImpl(const EditorResult &state) {
+SimulationControlResult FileWidget::UpdateImpl(const EditorResult& state) {
     m_FileNotOpened.Update();
 
     auto result = SimulationControlResult{};
@@ -130,7 +130,7 @@ SimulationControlResult FileWidget::UpdateImpl(const EditorResult &state) {
             .FromShortcut = result.FromShortcut};
 }
 
-void FileWidget::SetShortcutsImpl(const ShortcutMap &shortcutInfo) {
+void FileWidget::SetShortcutsImpl(const ShortcutMap& shortcutInfo) {
     m_NewFileButton.SetShortcuts(shortcutInfo.at(EditorAction::NewFile));
     m_UpdateFileButton.SetShortcuts(shortcutInfo.at(EditorAction::Save));
     m_SaveButton.SetShortcuts(shortcutInfo.at(EditorAction::SaveAsNew));

@@ -13,7 +13,7 @@
 #include "ShaderManager.hpp"
 
 namespace gol {
-FrameBufferBinder::FrameBufferBinder(const GLFrameBuffer &buffer) {
+FrameBufferBinder::FrameBufferBinder(const GLFrameBuffer& buffer) {
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, buffer.ID()));
 }
 
@@ -21,7 +21,7 @@ FrameBufferBinder::~FrameBufferBinder() {
     GL_DEBUG(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
-GraphicsHandler::GraphicsHandler(const std::filesystem::path &shaderDirectory,
+GraphicsHandler::GraphicsHandler(const std::filesystem::path& shaderDirectory,
                                  int32_t windowWidth, int32_t windowHeight,
                                  Color bgColor)
     : m_BgColor(bgColor), m_GridShader(shaderDirectory / "grid.shader"),
@@ -83,8 +83,8 @@ void GraphicsHandler::InitGridBuffer() {
     GL_DEBUG(glBindVertexArray(0));
 }
 
-void GraphicsHandler::RescaleFrameBuffer(const Rect &windowBounds,
-                                         const Rect &viewportBounds) {
+void GraphicsHandler::RescaleFrameBuffer(const Rect& windowBounds,
+                                         const Rect& viewportBounds) {
     GL_DEBUG(glBindTexture(GL_TEXTURE_2D, m_Texture.ID()));
     GL_DEBUG(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowBounds.Width,
                           windowBounds.Height, 0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -107,7 +107,7 @@ void GraphicsHandler::RescaleFrameBuffer(const Rect &windowBounds,
                                        GL_RENDERBUFFER, m_renderBuffer.ID()));
 }
 
-void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs &args) {
+void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) {
     FrameBufferBinder binder{m_FrameBuffer};
 
     GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
@@ -146,7 +146,7 @@ void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs &args) {
 
 GraphicsHandler::GridLineInfo
 GraphicsHandler::CalculateGridLineInfo(Vec2,
-                                       const GraphicsHandlerArgs &args) const {
+                                       const GraphicsHandlerArgs& args) const {
     const auto cameraCorner =
         Vec2F{Camera.Center.x - args.ViewportBounds.Width / 2.f / Camera.Zoom,
               Camera.Center.y - args.ViewportBounds.Height / 2.f / Camera.Zoom};
@@ -205,7 +205,7 @@ GraphicsHandler::CalculateGridLineInfo(Vec2,
 }
 
 void GraphicsHandler::DrawGridLines(Vec2 offset,
-                                    const GraphicsHandlerArgs &args) {
+                                    const GraphicsHandlerArgs& args) {
     const auto gridInfo = CalculateGridLineInfo(offset, args);
 
     auto positions = std::vector<float>{};
@@ -234,7 +234,7 @@ void GraphicsHandler::DrawGridLines(Vec2 offset,
 }
 
 RectF GraphicsHandler::GridToScreenBounds(
-    const Rect &region, const GraphicsHandlerArgs &args) const {
+    const Rect& region, const GraphicsHandlerArgs& args) const {
     return RectF{
         region.X * args.CellSize.Width,
         region.Y * args.CellSize.Height,
@@ -243,8 +243,8 @@ RectF GraphicsHandler::GridToScreenBounds(
     };
 }
 
-void GraphicsHandler::DrawSelection(const Rect &region,
-                                    const GraphicsHandlerArgs &args) {
+void GraphicsHandler::DrawSelection(const Rect& region,
+                                    const GraphicsHandlerArgs& args) {
     FrameBufferBinder binder{m_FrameBuffer};
     GL_DEBUG(glUseProgram(m_SelectionShader.Program()));
 
@@ -275,7 +275,7 @@ void GraphicsHandler::DrawSelection(const Rect &region,
     GL_DEBUG(glDrawElements(GL_LINES, 8, GL_UNSIGNED_BYTE, nullptr));
 }
 
-void GraphicsHandler::CenterCamera(const GraphicsHandlerArgs &args) {
+void GraphicsHandler::CenterCamera(const GraphicsHandlerArgs& args) {
     Camera.Center = {args.GridSize.Width / 2.f * args.CellSize.Width,
                      args.GridSize.Height / 2.f * args.CellSize.Height};
 }

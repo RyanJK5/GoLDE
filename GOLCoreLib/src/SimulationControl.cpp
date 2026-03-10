@@ -12,11 +12,11 @@ using namespace std::chrono_literals;
 
 namespace gol {
 ButtonlessShortcuts::ButtonlessShortcuts(
-    const std::vector<ImGuiKeyChord> &left,
-    const std::vector<ImGuiKeyChord> &right,
-    const std::vector<ImGuiKeyChord> &up,
-    const std::vector<ImGuiKeyChord> &down,
-    const std::vector<ImGuiKeyChord> &close)
+    const std::vector<ImGuiKeyChord>& left,
+    const std::vector<ImGuiKeyChord>& right,
+    const std::vector<ImGuiKeyChord>& up,
+    const std::vector<ImGuiKeyChord>& down,
+    const std::vector<ImGuiKeyChord>& close)
     : Shortcuts(
           {{SelectionAction::NudgeLeft,
             left | KeyShortcut::RepeatableMapChordsToVector},
@@ -29,16 +29,16 @@ ButtonlessShortcuts::ButtonlessShortcuts(
            {EditorAction::Close, close | KeyShortcut::MapChordsToVector}}) {}
 
 SimulationControlResult
-ButtonlessShortcuts::UpdateImpl(const EditorResult &state) {
+ButtonlessShortcuts::UpdateImpl(const EditorResult& state) {
     SimulationControlResult result{.NudgeSize = 1};
-    for (auto &&[action, actionShortcuts] : Shortcuts) {
-        auto *selectionAction = std::get_if<SelectionAction>(&action);
+    for (auto&& [action, actionShortcuts] : Shortcuts) {
+        auto* selectionAction = std::get_if<SelectionAction>(&action);
         if (selectionAction && *selectionAction != SelectionAction::Deselect &&
             state.State != SimulationState::Paint)
             continue;
 
         bool resultActive = false;
-        for (auto &shortcut : actionShortcuts) {
+        for (auto& shortcut : actionShortcuts) {
             bool shortcutActive = shortcut.Active();
             if (shortcutActive && ((shortcut.Shortcut() & ImGuiMod_Shift) != 0))
                 result.NudgeSize = 10;
@@ -52,7 +52,7 @@ ButtonlessShortcuts::UpdateImpl(const EditorResult &state) {
     return result;
 }
 
-void ButtonlessShortcuts::SetShortcuts(const ShortcutMap &shortcuts) {
+void ButtonlessShortcuts::SetShortcuts(const ShortcutMap& shortcuts) {
     Shortcuts = {{{SelectionAction::NudgeLeft,
                    shortcuts.at(SelectionAction::NudgeLeft) |
                        KeyShortcut::RepeatableMapChordsToVector},
@@ -70,7 +70,7 @@ void ButtonlessShortcuts::SetShortcuts(const ShortcutMap &shortcuts) {
 }
 
 SimulationControl::SimulationControl(
-    const ConfigLoader::StyleInfo<ImVec4> &fileInfo)
+    const ConfigLoader::StyleInfo<ImVec4>& fileInfo)
 
     : m_ButtonlessShortcuts(fileInfo.Shortcuts.at(SelectionAction::NudgeLeft),
                             fileInfo.Shortcuts.at(SelectionAction::NudgeRight),
@@ -87,8 +87,8 @@ SimulationControl::SimulationControl(
           std::bind_front(&SimulationControl::TryUpdateShortcuts, this)) {}
 
 void SimulationControl::FillResults(
-    SimulationControlResult &current,
-    const SimulationControlResult &update) const {
+    SimulationControlResult& current,
+    const SimulationControlResult& update) const {
     if (!current.Algorithm)
         current.Algorithm = update.Algorithm;
     if (!current.Action)
@@ -126,7 +126,7 @@ void SimulationControl::TryUpdateShortcuts(std::stop_token stopToken) {
     }
 }
 
-SimulationControlResult SimulationControl::Update(const EditorResult &state) {
+SimulationControlResult SimulationControl::Update(const EditorResult& state) {
     ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNav);
 
     SimulationControlResult result{.State = state.State};
@@ -135,12 +135,12 @@ SimulationControlResult SimulationControl::Update(const EditorResult &state) {
         const auto fileInfo =
             ConfigLoader::LoadYAML<ImVec4>(m_ShortcutConfigPath);
 
-        ForEachWidget([&fileInfo](auto &&widget) {
+        ForEachWidget([&fileInfo](auto&& widget) {
             widget.SetShortcuts(fileInfo.Shortcuts);
         });
     }
 
-    ForEachWidget([&, this](auto &&widget) {
+    ForEachWidget([&, this](auto&& widget) {
         FillResults(result, widget.Update(state));
     });
 

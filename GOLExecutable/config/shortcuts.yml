@@ -25,8 +25,8 @@ shortcuts:
     cut: [Ctrl+X]
     paste: [Ctrl+V]
     rotate: [R]
-    flip_horizontal: [Ctrl+LeftBracket]
-    flip_vertical: [Ctrl+RightBracket]
+    flip_horizontal: [Ctrl+K]
+    flip_vertical: [Ctrl+L]
 
     nudge_left: [Left, Shift+Left]
     nudge_right: [Right, Shift+Right]

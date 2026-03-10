@@ -14,10 +14,10 @@ Size2F StepButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x,
             ActionButton::DefaultButtonHeight};
 }
-std::string StepButton::Label(const EditorResult &) const {
+std::string StepButton::Label(const EditorResult&) const {
     return ICON_FA_FORWARD_STEP;
 }
-bool StepButton::Enabled(const EditorResult &state) const {
+bool StepButton::Enabled(const EditorResult& state) const {
     return state.State == SimulationState::Paint ||
            state.State == SimulationState::Paused;
 }
@@ -78,7 +78,7 @@ void StepWidget::ShowInputText() {
                 static_cast<int64_t>(m_StepCount));
             assert(error == std::errc{});
             *end = '\0';
-        } catch (const std::exception &) {
+        } catch (const std::exception&) {
             SetStepCount(stepCountBefore);
         }
     }
@@ -90,7 +90,7 @@ void StepWidget::ShowInputText() {
     ImGui::PopItemWidth();
 }
 
-SimulationControlResult StepWidget::UpdateImpl(const EditorResult &state) {
+SimulationControlResult StepWidget::UpdateImpl(const EditorResult& state) {
     constexpr static auto beginGreyOutIf = [](bool condition) {
         if (condition) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);

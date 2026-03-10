@@ -7,7 +7,7 @@
 
 namespace gol {
 
-SimulationControlResult DelayWidget::UpdateImpl(const EditorResult &) {
+SimulationControlResult DelayWidget::UpdateImpl(const EditorResult&) {
 
     ImGui::Text("Simulation Delay (ms)");
     ImGui::SetItemTooltip(

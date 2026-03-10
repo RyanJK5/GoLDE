@@ -12,13 +12,13 @@ constexpr std::array<std::string_view, 4> TermBlacklist = {
 constexpr std::array<std::string_view, 1> TemplateBlacklist = {"basic_string"};
 
 static bool SkipAngleBrackets(
-    const std::string &expression, size_t &pos,
-    const std::array<std::string_view, TemplateBlacklist.size()> &skip) {
+    const std::string& expression, size_t& pos,
+    const std::array<std::string_view, TemplateBlacklist.size()>& skip) {
     if (expression[pos] != '<')
         return false;
 
     bool inSkip = false;
-    for (auto &token : skip) {
+    for (auto& token : skip) {
         size_t tokenBegin = pos - token.size();
         if (expression.find(token, tokenBegin) == tokenBegin) {
             inSkip = true;
@@ -44,9 +44,9 @@ static bool SkipAngleBrackets(
 }
 
 static bool
-SkipTokens(const std::string &expression, size_t &pos,
-           const std::array<std::string_view, TermBlacklist.size()> &skip) {
-    for (auto &token : skip) {
+SkipTokens(const std::string& expression, size_t& pos,
+           const std::array<std::string_view, TermBlacklist.size()>& skip) {
+    for (auto& token : skip) {
         if (expression.find(token, pos) == pos) {
             pos += token.length();
             if (expression[pos] != ' ')
@@ -57,7 +57,7 @@ SkipTokens(const std::string &expression, size_t &pos,
     return false;
 }
 
-std::string logimpl::SimplifyFileName(const std::string &fileName) {
+std::string logimpl::SimplifyFileName(const std::string& fileName) {
     size_t nameStart = fileName.find_last_of('\\');
     if (nameStart > 0 && nameStart < fileName.size() - 1) {
         return fileName.substr(nameStart + 1);
@@ -65,7 +65,7 @@ std::string logimpl::SimplifyFileName(const std::string &fileName) {
     return fileName;
 }
 
-std::string logimpl::SimplifyFunctionName(const std::string &funcName) {
+std::string logimpl::SimplifyFunctionName(const std::string& funcName) {
     std::string result = "";
     for (size_t i = 0; i < funcName.length(); i++) {
         if (SkipTokens(funcName, i, TermBlacklist))
@@ -92,7 +92,7 @@ constexpr std::string logimpl::StringRepresentation(LogCode code) {
     return "";
 }
 
-void LogGLErrors(const std::source_location &location) {
+void LogGLErrors(const std::source_location& location) {
     while (GLenum error = glGetError()) {
         Log(LogCode::GLError, location, "Error Code {}", error);
     }

@@ -67,7 +67,7 @@ GameGrid::GameGrid(int32_t width, int32_t height)
 
 GameGrid::GameGrid(Size2 size) : GameGrid(size.Width, size.Height) {}
 
-GameGrid::GameGrid(const GameGrid &other, Size2 size) : GameGrid(size) {
+GameGrid::GameGrid(const GameGrid& other, Size2 size) : GameGrid(size) {
     m_Population = other.m_Population;
     m_Data = other.Data() |
              std::views::filter([this](Vec2 pos) { return InBounds(pos); }) |
@@ -96,7 +96,7 @@ Rect GameGrid::BoundingBox() const {
         return {0, 0, m_Width, m_Height};
     }
 
-    const auto findBox = [](std::ranges::input_range auto &&data) {
+    const auto findBox = [](std::ranges::input_range auto&& data) {
         auto least = Vec2{std::numeric_limits<int32_t>::max(),
                           std::numeric_limits<int32_t>::max()};
         auto most = Vec2{std::numeric_limits<int32_t>::min(),
@@ -119,14 +119,14 @@ Rect GameGrid::BoundingBox() const {
     return findBox(m_Data);
 }
 
-const std::set<Vec2> &GameGrid::SortedData() const {
+const std::set<Vec2>& GameGrid::SortedData() const {
     if (m_CacheInvalidated) {
         ValidateCache(true);
     }
     return m_SortedData;
 }
 
-const LifeHashSet &GameGrid::Data() const {
+const LifeHashSet& GameGrid::Data() const {
     if (m_CacheInvalidated && m_HashLifeData) {
         ValidateCache(false);
     }
@@ -143,7 +143,7 @@ GameGrid::IterableData() const {
     return std::ref(m_Data);
 }
 
-int64_t GameGrid::Update(int64_t numSteps, const std::stop_token &stopToken) {
+int64_t GameGrid::Update(int64_t numSteps, const std::stop_token& stopToken) {
     m_CacheInvalidated = true;
 
     switch (m_Algorithm) {
@@ -226,8 +226,8 @@ GameGrid GameGrid::SubRegion(Rect region) const {
     const auto fillGrid =
         // We only have to check bounds when copying from m_Data, so we can
         // control at compile time whether to check or not
-        [region]<bool CheckBounds>(GameGrid &grid,
-                                   std::ranges::input_range auto &&range) {
+        [region]<bool CheckBounds>(GameGrid& grid,
+                                   std::ranges::input_range auto&& range) {
             for (const auto pos : range) {
                 if constexpr (CheckBounds) {
                     if (!region.InBounds(pos)) {
@@ -236,6 +236,7 @@ GameGrid GameGrid::SubRegion(Rect region) const {
                 }
                 grid.m_Population++;
                 grid.m_Data.insert(pos - region.Pos());
+                grid.m_SortedData.insert(pos - region.Pos());
             }
             return grid;
         };
@@ -269,14 +270,14 @@ void GameGrid::ClearRegion(Rect region) {
     m_CacheInvalidated = true;
 }
 
-void GameGrid::ClearData(const std::vector<Vec2> &data, Vec2 offset) {
+void GameGrid::ClearData(const std::vector<Vec2>& data, Vec2 offset) {
     for (const auto vec : data) {
         m_Population -= m_Data.erase({vec.X + offset.X, vec.Y + offset.Y});
     }
     m_CacheInvalidated = true;
 }
 
-LifeHashSet GameGrid::InsertGrid(const GameGrid &region, Vec2 pos) {
+LifeHashSet GameGrid::InsertGrid(const GameGrid& region, Vec2 pos) {
     ValidateCache(true); // HashQuadtree does not support insertion
     m_HashLifeData.reset();
 

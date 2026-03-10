@@ -6,7 +6,7 @@
 #include "SimulationControlResult.hpp"
 
 namespace gol {
-SimulationControlResult ResizeWidget::UpdateImpl(const EditorResult &state) {
+SimulationControlResult ResizeWidget::UpdateImpl(const EditorResult& state) {
     const float totalWidth = ImGui::GetContentRegionAvail().x;
     ImGui::SetCursorPosX(ImGui::GetStyle().FramePadding.x * 3);
     ImGui::Text("Width");
@@ -44,7 +44,7 @@ SimulationControlResult ResizeWidget::UpdateImpl(const EditorResult &state) {
             .FromShortcut = result.FromShortcut};
 }
 
-void ResizeWidget::SetShortcutsImpl(const ShortcutMap &shortcuts) {
+void ResizeWidget::SetShortcutsImpl(const ShortcutMap& shortcuts) {
     m_Button.SetShortcuts(shortcuts.at(EditorAction::Resize));
 }
 } // namespace gol

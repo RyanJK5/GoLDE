@@ -23,7 +23,7 @@ void VersionManager::AddPaintChange(Vec2 pos) {
         m_UndoStack.top().CellsDeleted.insert(pos);
 }
 
-void VersionManager::PushChange(const VersionChange &change) {
+void VersionManager::PushChange(const VersionChange& change) {
     if (BreakingChange(change))
         m_EditHeight++;
     m_UndoStack.push(change);
@@ -62,7 +62,7 @@ std::optional<VersionChange> VersionManager::Redo() {
     return state;
 }
 
-bool VersionManager::BreakingChange(const VersionChange &change) const {
+bool VersionManager::BreakingChange(const VersionChange& change) const {
     return !change.Action ||
            (change.Action != ActionVariant{SelectionAction::Select} &&
             change.Action != ActionVariant{SelectionAction::Deselect} &&

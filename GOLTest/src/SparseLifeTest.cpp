@@ -21,12 +21,12 @@ TEST(SparseLifeTest, SquigglesTest) {
         RLEEncoder::ReadRegion(directory / "squiggles4.gol")->Grid.Data();
     const Rect bounds{};
 
-    constexpr static auto DataEqual = [](const LifeHashSet &a,
-                                         const LifeHashSet &b) {
+    constexpr static auto DataEqual = [](const LifeHashSet& a,
+                                         const LifeHashSet& b) {
         auto offset = std::ranges::min(b) - std::ranges::min(a);
         if (a.size() != b.size())
             return false;
-        for (const auto &cell : a)
+        for (const auto& cell : a)
             if (!b.contains(cell + offset))
                 return false;
         return true;
