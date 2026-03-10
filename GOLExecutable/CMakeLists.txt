@@ -13,7 +13,6 @@ target_link_libraries(GOLExecutable PRIVATE
     OpenGL::GL
 )
 
-
 # Windows system libs
 if(WIN32)
     target_link_libraries(GOLExecutable PRIVATE
@@ -27,6 +26,16 @@ elseif(UNIX AND NOT APPLE)
     target_link_libraries(GOLExecutable PRIVATE
         ${CMAKE_DL_LIBS}  # for dlopen, dlsym, etc.
         pthread           # for threading
+    )
+endif()
+
+set_target_properties(GOLExecutable PROPERTIES
+    WIN32_EXECUTABLE $<CONFIG:Release>
+)
+if(MSVC)
+    # Allows using int main() even with WIN32_EXECUTABLE enabled
+    set_target_properties(GOLExecutable PROPERTIES 
+        LINK_FLAGS "/ENTRY:mainCRTStartup"
     )
 endif()
 
