@@ -19,7 +19,7 @@ class DelayWidget : public Widget {
     SimulationControlResult UpdateImpl(const EditorResult &state);
     void SetShortcutsImpl(const ShortcutMap &) { }
   private:
-    int32_t m_TickDelayMs = 0;
+    int32_t m_TickDelayMs = 1;
     bool m_GridLines = false;
 };
 } // namespace gol
