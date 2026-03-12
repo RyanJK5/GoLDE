@@ -5,7 +5,7 @@
 ## Build, Test, and Run
 
 **Requirements:**
-   - A C++23 capable compiler
+   - C++23 compiler
    - CMake 3.25
    - Build system (Ninja is recommended)
 
