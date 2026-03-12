@@ -6,6 +6,7 @@
 **/CMakeFiles/
 **/Testing/
 **/_deps/
+CMakeSettings.json
 CMakeCache.txt
 cmake_install.cmake
 CTestTestfile.cmake
