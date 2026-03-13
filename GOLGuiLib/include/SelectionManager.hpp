@@ -70,12 +70,12 @@ class SelectionManager {
     bool CanDrawGrid() const;
 
   private:
-    SelectionUpdateResult UpdateUnlockedSelection(Vec2& gridPos);
+    SelectionUpdateResult UpdateUnlockedSelection(Vec2 gridPos);
 
     void RestoreGridVersion(EditorAction undoRedo, GameGrid& grid,
                             const VersionChange& change);
 
-    void SetSelectionBounds(const Rect& bounds);
+    void SetSelectionBounds(Rect bounds);
 
     Vec2 RotatePoint(Vec2F center, Vec2F point, bool clockwise);
 

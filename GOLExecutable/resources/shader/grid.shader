@@ -2,14 +2,14 @@
 #version 330 core
 
 layout (location = 0) in vec2 a_QuadPos;
-layout (location = 1) in vec2 a_CellPos;
+layout (location = 1) in vec2 a_CellRelPos; // Relative offsets from Camera
 
 uniform mat4 u_MVP;
 uniform vec2 u_CellSize;
 
 void main()
 {
-    vec2 worldPos = (a_CellPos + a_QuadPos) * u_CellSize;
+    vec2 worldPos = a_CellRelPos * u_CellSize + a_QuadPos * u_CellSize;
     gl_Position = u_MVP * vec4(worldPos, 0.0, 1.0);
 }
 

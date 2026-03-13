@@ -386,7 +386,7 @@ HashQuadtree::ConstIterator HashQuadtree::begin() const {
     return ConstIterator{m_Root, m_RootOffset, size, false};
 }
 
-HashQuadtree::Iterator HashQuadtree::begin(const Rect& bounds) {
+HashQuadtree::Iterator HashQuadtree::begin(Rect bounds) {
     if (m_Root == FalseNode) {
         return end();
     }
@@ -395,7 +395,7 @@ HashQuadtree::Iterator HashQuadtree::begin(const Rect& bounds) {
     return Iterator{m_Root, m_RootOffset, size, false, &bounds};
 }
 
-HashQuadtree::ConstIterator HashQuadtree::begin(const Rect& bounds) const {
+HashQuadtree::ConstIterator HashQuadtree::begin(Rect bounds) const {
     if (m_Root == FalseNode)
         return end();
 
@@ -981,7 +981,7 @@ const LifeNode* HashQuadtree::BuildTree(const LifeHashSet& cells) {
     auto maxXv = std::numeric_limits<int32_t>::min();
     auto minYv = std::numeric_limits<int32_t>::max();
     auto maxYv = std::numeric_limits<int32_t>::min();
-    for (const auto& cell : cells) {
+    for (const auto cell : cells) {
         if (cell.X < minXv)
             minXv = cell.X;
         if (cell.X > maxXv)

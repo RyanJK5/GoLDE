@@ -51,12 +51,12 @@ class GraphicsHandler {
     GraphicsHandler& operator=(GraphicsHandler&& other) noexcept = default;
     ~GraphicsHandler() = default;
 
-    void RescaleFrameBuffer(const Rect& windowBounds,
-                            const Rect& viewportBounds);
+    void RescaleFrameBuffer(Rect windowBounds,
+                            Rect viewportBounds);
 
     void DrawGrid(Vec2 offset, std::ranges::input_range auto&& grid,
                   const GraphicsHandlerArgs& args);
-    void DrawSelection(const Rect& region, const GraphicsHandlerArgs& info);
+    void DrawSelection(Rect region, const GraphicsHandlerArgs& info);
     void ClearBackground(const GraphicsHandlerArgs& args);
 
     void CenterCamera(const GraphicsHandlerArgs& viewportBounds);
@@ -70,13 +70,13 @@ class GraphicsHandler {
                                         std::ranges::input_range auto&& grid,
                                         const GraphicsHandlerArgs& args) const;
 
-    RectF GridToScreenBounds(const Rect& region,
+    RectF GridToScreenBounds(Rect region,
                              const GraphicsHandlerArgs& args) const;
 
   private:
     struct GridLineInfo {
-        Vec2F UpperLeft;
-        Vec2F LowerRight;
+        Vec2D UpperLeft;
+        Vec2D LowerRight;
         Size2 GridSize;
     };
     GridLineInfo CalculateGridLineInfo(Vec2 offset,
@@ -132,12 +132,12 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset,
     }
 
     for (const auto vec : grid) {
-        const auto x = vec.X + offset.X;
-        const auto y = vec.Y + offset.Y;
+        const double x = static_cast<double>(vec.X + offset.X);
+        const double y = static_cast<double>(vec.Y + offset.Y);
         if (x < minCellX || x > maxCellX || y < minCellY || y > maxCellY)
             continue;
-        result.push_back(static_cast<float>(x));
-        result.push_back(static_cast<float>(y));
+        result.push_back(static_cast<float>(x - Camera.Center.x / args.CellSize.Width));
+        result.push_back(static_cast<float>(y - Camera.Center.y / args.CellSize.Height));
     }
 
     return result;

@@ -52,7 +52,7 @@ SelectionUpdateResult SelectionManager::UpdateSelectionArea(GameGrid& grid,
     return {.Change = deselectChange, .BeginSelection = false};
 }
 
-SelectionUpdateResult SelectionManager::UpdateUnlockedSelection(Vec2& gridPos) {
+SelectionUpdateResult SelectionManager::UpdateUnlockedSelection(Vec2 gridPos) {
     if (gridPos == *m_SentinelSelection && m_UnlockedOriginalPosition) {
         auto result = SelectionUpdateResult{
             .Change = VersionChange{.Action = SelectionAction::NudgeDown,
@@ -470,7 +470,7 @@ bool SelectionManager::CanDrawLargeSelection() const {
 
 bool SelectionManager::CanDrawGrid() const { return m_Selected.has_value(); }
 
-void SelectionManager::SetSelectionBounds(const Rect& bounds) {
+void SelectionManager::SetSelectionBounds(Rect bounds) {
     m_AnchorSelection = bounds.Pos();
     m_SentinelSelection =
         *m_AnchorSelection + Vec2{bounds.Width - 1, bounds.Height - 1};

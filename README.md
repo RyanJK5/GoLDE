@@ -1,23 +1,13 @@
 ![GOLDE](docs/logo.gif)
 
-<div align="center">
-
 # Game of Life Designer and Engine (GOLDE)
-
-</div>
-
-<div align="center">
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![CMake](https://img.shields.io/badge/CMake-3.25+-blue.svg)](https://cmake.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platform: Windows | Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20-brightgreen.svg)
 
-</div>
-
-<div align="center">
-  <img src="https://github.com/RyanJK5/GameOfLife/actions/workflows/build.yml/badge.svg" alt="Build Status">
-</div>
+![Build Status](https://github.com/RyanJK5/GameOfLife/actions/workflows/build.yml/badge.svg)
 
 ## Overview
 
@@ -29,6 +19,7 @@ GOLDE is a high-performance Conway's Game of Life simulator with an intuitive GU
 - **Simulation Control**: Play, pause, step, and adjust speed in real-time
 - **HashLife Stepping**: Jump any number of generations into the future using HashLife
 - **Pattern Editor**: Create and edit patterns with all the quality of life features of a paint program
+- **Customizable Shortcuts**: Edit keyboard shortcuts in real-time through [shortcuts.yml](GOLExecutable/config/shortcuts.yml)
 - **Preset Library**: Pre-loaded classic Game of Life patterns
 - **Multi-threaded**: Separation of concerns for maximum responsiveness
 - **Cross-platform**: Windows and Linux support
@@ -91,7 +82,7 @@ Start GOLDE and you'll be greeted with an interactive grid and control panel.
 
 ```
 GameOfLife/
-├── GOLAlgoLib/          # Core algorithms (HashLife, SparseLife, Quadtree)
+├── GOLAlgoLib/          # Core algorithms (HashLife, SparseLife)
 ├── GOLCoreLib/          # Game state & orchestration
 ├── GOLExecutable/       # Application entry point
 ├── GOLGraphicsLib/      # OpenGL rendering engine
@@ -143,4 +134,4 @@ ctest --test-dir build --verbose
 
 ## License
 
-This project is licensed under the terms of the [MIT license](LICENSE)
+This project is licensed under the terms of the [MIT license](LICENSE).

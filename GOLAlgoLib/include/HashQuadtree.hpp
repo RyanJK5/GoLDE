@@ -357,10 +357,10 @@ class HashQuadtree {
 
     // Returns an iterator over one region of space. This is useful for allowing
     // interaction and display of a small subsection of the universe.
-    Iterator begin(const Rect& bounds);
+    Iterator begin(Rect bounds);
     // Returns an iterator over one region of space. This is useful for allowing
     // interaction and display of a small subsection of the universe.
-    ConstIterator begin(const Rect& bounds) const;
+    ConstIterator begin(Rect bounds) const;
 
     uint64_t Population() const;
 

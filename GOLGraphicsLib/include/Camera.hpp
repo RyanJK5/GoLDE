@@ -13,18 +13,18 @@ class GraphicsCamera {
 
   public:
     float Zoom = 1.f;
-    glm::vec2 Center = {};
+    glm::dvec2 Center = {};
 
   public:
     GraphicsCamera() = default;
-    GraphicsCamera(float zoom, glm::vec2 center) : Zoom(zoom), Center(center) {}
+    GraphicsCamera(float zoom, glm::dvec2 center) : Zoom(zoom), Center(center) {}
 
   public:
-    void ZoomBy(Vec2F screenPos, const RectF& viewBounds, float zoom);
-    void Translate(glm::vec2 translation);
+    void ZoomBy(Vec2F screenPos, RectF viewBounds, float zoom);
+    void Translate(glm::dvec2 translation);
 
-    glm::vec2 ScreenToWorldPos(Vec2F pos, const Rect& viewBounds) const;
-    glm::vec2 WorldToScreenPos(Vec2F pos, const Rect& viewBounds,
+    glm::dvec2 ScreenToWorldPos(Vec2F pos, Rect viewBounds) const;
+    glm::dvec2 WorldToScreenPos(Vec2D pos, Rect viewBounds,
                                Size2F worldSize) const;
 
     glm::mat4 OrthographicProjection(Size2 viewSize) const;

@@ -160,7 +160,7 @@ ShaderManager::ParseShader(const std::filesystem::path& shaderFilePath) const {
 }
 
 void ShaderManager::AttachUniformVec2(std::string_view label,
-                                      const glm::vec2& vec) {
+                                      glm::vec2 vec) {
     auto loc = UniformLocation(label);
     GL_DEBUG(glUniform2f(loc, vec.x, vec.y));
 }

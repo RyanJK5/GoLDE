@@ -83,8 +83,8 @@ void GraphicsHandler::InitGridBuffer() {
     GL_DEBUG(glBindVertexArray(0));
 }
 
-void GraphicsHandler::RescaleFrameBuffer(const Rect& windowBounds,
-                                         const Rect& viewportBounds) {
+void GraphicsHandler::RescaleFrameBuffer(Rect windowBounds,
+                                         Rect viewportBounds) {
     GL_DEBUG(glBindTexture(GL_TEXTURE_2D, m_Texture.ID()));
     GL_DEBUG(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowBounds.Width,
                           windowBounds.Height, 0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -128,10 +128,10 @@ void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) {
     Size2F gridScreenDimensions{
         static_cast<float>(args.GridSize.Width) * args.CellSize.Width,
         static_cast<float>(args.GridSize.Height) * args.CellSize.Height};
-    auto origin = Camera.WorldToScreenPos(Vec2F{}, args.ViewportBounds,
+    auto origin = Camera.WorldToScreenPos(Vec2D{0.0, 0.0}, args.ViewportBounds,
                                           gridScreenDimensions);
     auto lowerRight = Camera.WorldToScreenPos(
-        {gridScreenDimensions.Width, gridScreenDimensions.Height},
+        Vec2D{gridScreenDimensions.Width, gridScreenDimensions.Height},
         args.ViewportBounds, gridScreenDimensions);
     GL_DEBUG(glScissor(static_cast<int32_t>(origin.x),
                        static_cast<int32_t>(origin.y),
@@ -148,35 +148,35 @@ GraphicsHandler::GridLineInfo
 GraphicsHandler::CalculateGridLineInfo(Vec2,
                                        const GraphicsHandlerArgs& args) const {
     const auto cameraCorner =
-        Vec2F{Camera.Center.x - args.ViewportBounds.Width / 2.f / Camera.Zoom,
-              Camera.Center.y - args.ViewportBounds.Height / 2.f / Camera.Zoom};
+        Vec2D{Camera.Center.x - args.ViewportBounds.Width / 2.0 / Camera.Zoom,
+              Camera.Center.y - args.ViewportBounds.Height / 2.0 / Camera.Zoom};
 
     const bool bounded = args.GridSize.Width != 0 && args.GridSize.Height != 0;
 
     const auto upperLeft = [cameraCorner, bounded, args]() {
         const auto unboundedReturn =
-            Vec2F{std::floor(cameraCorner.X / args.CellSize.Width) *
+            Vec2D{std::floor(cameraCorner.X / args.CellSize.Width) *
                       args.CellSize.Width,
                   std::floor(cameraCorner.Y / args.CellSize.Height) *
                       args.CellSize.Height};
 
         if (!bounded)
             return unboundedReturn;
-        return Vec2F{std::max(unboundedReturn.X, 0.f),
-                     std::max(unboundedReturn.Y, 0.f)};
+        return Vec2D{std::max(unboundedReturn.X, 0.0),
+                     std::max(unboundedReturn.Y, 0.0)};
     }();
 
     const auto lowerRight = [cameraCorner, bounded, args, this]() {
         const auto unboundedReturn =
-            Vec2F{cameraCorner.X + args.ViewportBounds.Width / Camera.Zoom,
+            Vec2D{cameraCorner.X + args.ViewportBounds.Width / Camera.Zoom,
                   cameraCorner.Y + args.ViewportBounds.Height / Camera.Zoom};
 
         if (!bounded)
             return unboundedReturn;
-        return Vec2F{std::min(unboundedReturn.X,
-                              args.GridSize.Width * args.CellSize.Width),
+        return Vec2D{std::min(unboundedReturn.X,
+                              static_cast<double>(args.GridSize.Width * args.CellSize.Width)),
                      std::min(unboundedReturn.Y,
-                              args.GridSize.Height * args.CellSize.Height)};
+                              static_cast<double>(args.GridSize.Height * args.CellSize.Height))};
     }();
 
     const auto gridSize = [upperLeft, bounded, args, this]() {
@@ -210,17 +210,17 @@ void GraphicsHandler::DrawGridLines(Vec2 offset,
 
     auto positions = std::vector<float>{};
     for (int32_t i = 0; i <= gridInfo.GridSize.Height; i++) {
-        positions.push_back(gridInfo.UpperLeft.X);
-        positions.push_back(gridInfo.UpperLeft.Y + args.CellSize.Height * i);
-        positions.push_back(gridInfo.LowerRight.X);
-        positions.push_back(gridInfo.UpperLeft.Y + args.CellSize.Height * i);
+        positions.push_back(static_cast<float>(gridInfo.UpperLeft.X - Camera.Center.x));
+        positions.push_back(static_cast<float>(gridInfo.UpperLeft.Y + args.CellSize.Height * i - Camera.Center.y));
+        positions.push_back(static_cast<float>(gridInfo.LowerRight.X - Camera.Center.x));
+        positions.push_back(static_cast<float>(gridInfo.UpperLeft.Y + args.CellSize.Height * i - Camera.Center.y));
     }
 
     for (int32_t i = 0; i <= gridInfo.GridSize.Width; i++) {
-        positions.push_back(gridInfo.UpperLeft.X + args.CellSize.Width * i);
-        positions.push_back(gridInfo.UpperLeft.Y);
-        positions.push_back(gridInfo.UpperLeft.X + args.CellSize.Width * i);
-        positions.push_back(gridInfo.LowerRight.Y);
+        positions.push_back(static_cast<float>(gridInfo.UpperLeft.X + args.CellSize.Width * i - Camera.Center.x));
+        positions.push_back(static_cast<float>(gridInfo.UpperLeft.Y - Camera.Center.y));
+        positions.push_back(static_cast<float>(gridInfo.UpperLeft.X + args.CellSize.Width * i - Camera.Center.x));
+        positions.push_back(static_cast<float>(gridInfo.LowerRight.Y - Camera.Center.y));
     }
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridLineBuffer.ID()));
@@ -234,16 +234,16 @@ void GraphicsHandler::DrawGridLines(Vec2 offset,
 }
 
 RectF GraphicsHandler::GridToScreenBounds(
-    const Rect& region, const GraphicsHandlerArgs& args) const {
+    Rect region, const GraphicsHandlerArgs& args) const {
     return RectF{
-        region.X * args.CellSize.Width,
-        region.Y * args.CellSize.Height,
-        region.Width * args.CellSize.Width,
-        region.Height * args.CellSize.Height,
+        static_cast<float>(static_cast<double>(region.X) * args.CellSize.Width - Camera.Center.x),
+        static_cast<float>(static_cast<double>(region.Y) * args.CellSize.Height - Camera.Center.y),
+        static_cast<float>(region.Width * args.CellSize.Width),
+        static_cast<float>(region.Height * args.CellSize.Height),
     };
 }
 
-void GraphicsHandler::DrawSelection(const Rect& region,
+void GraphicsHandler::DrawSelection(Rect region,
                                     const GraphicsHandlerArgs& args) {
     FrameBufferBinder binder{m_FrameBuffer};
     GL_DEBUG(glUseProgram(m_SelectionShader.Program()));
@@ -276,7 +276,7 @@ void GraphicsHandler::DrawSelection(const Rect& region,
 }
 
 void GraphicsHandler::CenterCamera(const GraphicsHandlerArgs& args) {
-    Camera.Center = {args.GridSize.Width / 2.f * args.CellSize.Width,
-                     args.GridSize.Height / 2.f * args.CellSize.Height};
+    Camera.Center = {args.GridSize.Width / 2.0 * args.CellSize.Width,
+                     args.GridSize.Height / 2.0 * args.CellSize.Height};
 }
 } // namespace gol

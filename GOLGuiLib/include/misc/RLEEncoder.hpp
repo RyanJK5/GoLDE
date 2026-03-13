@@ -109,7 +109,7 @@ constexpr int64_t DecodeNumber(std::string_view value) {
 
 template <std::unsigned_integral StorageType>
 inline std::vector<StorageType> EncodeRegion(const GameGrid& grid,
-                                             const Rect& region, Vec2 offset) {
+                                             Rect region, Vec2 offset) {
     constexpr static StorageType largestValue =
         std::numeric_limits<StorageType>::max() >> (2 * sizeof(StorageType));
 
@@ -202,13 +202,13 @@ struct DecodeResult {
     Vec2 Offset;
 };
 
-std::string EncodeRegion(const GameGrid& grid, const Rect& region,
+std::string EncodeRegion(const GameGrid& grid, Rect region,
                          Vec2 offset = {0, 0});
 
 std::expected<RLEEncoder::DecodeResult, std::optional<uint32_t>>
 DecodeRegion(std::string_view data, uint32_t warnThreshold);
 
-bool WriteRegion(const GameGrid& grid, const Rect& region,
+bool WriteRegion(const GameGrid& grid, Rect region,
                  const std::filesystem::path& filePath, Vec2 offset = {0, 0});
 
 std::expected<DecodeResult, std::string>
