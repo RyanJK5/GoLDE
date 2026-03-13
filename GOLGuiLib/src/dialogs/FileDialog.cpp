@@ -1,72 +1,88 @@
 #include <expected>
 #include <filesystem>
 #include <functional>
-#include <nfd.h>
+#include <nfd.hpp>
 #include <string>
 
 #include "FileDialog.hpp"
 
 namespace gol {
-namespace {
-using NFDFunction =
-    std::function<nfdresult_t(const nfdchar_t*, const nfdchar_t*, nfdchar_t**)>;
 
 std::expected<std::filesystem::path, FileDialogFailure>
-CallNFDFunction(NFDFunction nfdFunction, const std::string& filters,
-                const std::string& defaultPath) {
-    nfdchar_t* outPath = nullptr;
-    auto result = nfdFunction(filters.c_str(), defaultPath.c_str(), &outPath);
+FileDialog::OpenFileDialog(const std::string& filters,
+                           const std::string& defaultPath) {
+    const nfdfilteritem_t filterItem[] { { "Game of Life files", filters.c_str() } };
+    
+    NFD::UniquePathU8 outPath{};
+    const auto result = NFD::OpenDialog(
+        outPath, 
+        filters.empty() ? nullptr : filterItem, 
+        filters.empty() ? 0 : 1, 
+        defaultPath.empty() ? nullptr : defaultPath.c_str());
 
     if (result == NFD_OKAY) {
-        auto ret = std::filesystem::path{outPath};
-        auto extension = ret.extension().string();
-        delete outPath;
+        auto ret = std::filesystem::path{outPath.get()};
+        if (ret.extension().string() != ".gol") {
+            return std::unexpected<FileDialogFailure>{
+                {.Type = FileFailureType::Error,
+                 .Message =
+                     "Invalid file type selected. Please select a .gol file."}};
+        }
         return ret;
     } else if (result == NFD_CANCEL) {
         return std::unexpected<FileDialogFailure>{
             {.Type = FileFailureType::Cancelled}};
     }
 
-    auto error = std::string{NFD_GetError()};
     return std::unexpected<FileDialogFailure>{
-        {.Type = FileFailureType::Error, .Message = error}};
-}
-} // namespace
-
-std::expected<std::filesystem::path, FileDialogFailure>
-FileDialog::OpenFileDialog(const std::string& filters,
-                           const std::string& defaultPath) {
-    auto result = CallNFDFunction(NFD_OpenDialog, filters, defaultPath);
-    if (result && result->extension().string() != ".gol") {
-        return std::unexpected<FileDialogFailure>{
-            {.Type = FileFailureType::Error,
-             .Message =
-                 "Invalid file type selected. Please select a .gol file."}};
-    }
-    return result;
+        {.Type = FileFailureType::Error, .Message = NFD::GetError()}};
 }
 
 std::expected<std::filesystem::path, FileDialogFailure>
 FileDialog::SaveFileDialog(const std::string& filters,
                            const std::string& defaultPath) {
-    auto result = CallNFDFunction(NFD_SaveDialog, filters, defaultPath);
-    if (result) {
-        if (result->extension().empty())
-            *result += ".gol";
-        else if (result->extension().string() == ".")
-            *result += "gol";
+    const nfdfilteritem_t filterItem[] { { "GOLDE files", filters.c_str() } };
+    
+    NFD::UniquePathU8 outPath{};
+    const auto result = NFD::SaveDialog(
+        outPath, 
+        filters.empty() ? nullptr : filterItem, 
+        filters.empty() ? 0 : 1, 
+        defaultPath.empty() ? nullptr : defaultPath.c_str(), 
+        nullptr
+    );
+
+    if (result == NFD_OKAY) {
+        auto ret = std::filesystem::path{outPath.get()};
+        if (ret.extension().empty())
+            ret += ".gol";
+        else if (ret.extension().string() == ".")
+            ret += "gol";
+        return ret;
+    } else if (result == NFD_CANCEL) {
+        return std::unexpected<FileDialogFailure>{
+            {.Type = FileFailureType::Cancelled}};
     }
-    return result;
+
+    return std::unexpected<FileDialogFailure>{
+        {.Type = FileFailureType::Error, .Message = NFD::GetError()}};
 }
 
 std::expected<std::filesystem::path, FileDialogFailure>
 FileDialog::SelectFolderDialog(const std::string& defaultPath) {
-    constexpr static auto pickFolder = [](const nfdchar_t*,
-                                          const nfdchar_t* defaultPath,
-                                          nfdchar_t** outPath) {
-        return NFD_PickFolder(defaultPath, outPath);
-    };
+    
+    NFD::UniquePathU8 outPath{};
+    const auto result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
 
-    return CallNFDFunction(pickFolder, "", defaultPath);
+    if (result == NFD_OKAY) {
+        auto ret = std::filesystem::path{outPath.get()};
+        return ret;
+    } else if (result == NFD_CANCEL) {
+        return std::unexpected<FileDialogFailure>{
+            {.Type = FileFailureType::Cancelled}};
+    }
+
+    return std::unexpected<FileDialogFailure>{
+        {.Type = FileFailureType::Error, .Message = NFD::GetError()}};
 }
 } // namespace gol

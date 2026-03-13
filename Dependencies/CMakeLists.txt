@@ -75,17 +75,20 @@ if(NOT glew_fetch_POPULATED)
 endif()
 message(STATUS "GLEW configured from source")
 
-set(NFD_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/NFD/lib/Release/${PLAT_PATH}/${ARCH_PATH}/nfd.lib")
-add_library(nfd STATIC IMPORTED GLOBAL)
-    set_target_properties(nfd PROPERTIES
-        IMPORTED_LOCATION "${NFD_LIB_PATH}"
-        IMPORTED_LOCATION_DEBUG "${NFD_LIB_PATH}"
-        IMPORTED_LOCATION_RELEASE "${NFD_LIB_PATH}"
-        IMPORTED_LOCATION_MINSIZEREL "${NFD_LIB_PATH}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${NFD_LIB_PATH}"
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/NFD/include"
-        INTERFACE_LINK_LIBRARIES "${NFD_SYSTEM_LIBS}"
-    )
-message(STATUS "NFD configured: ${CMAKE_CURRENT_SOURCE_DIR}/NFD/include")
+# Fetch NFD-Extended
+FetchContent_Declare(
+    nfd
+    GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended.git
+    GIT_TAG v1.2.1
+)
+set(NFD_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(NFD_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(nfd)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(nfd PRIVATE -Wno-error)
+endif()
+
+message(STATUS "NFD Configured from source")
     
 add_subdirectory(ImGUI)

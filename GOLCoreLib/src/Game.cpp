@@ -10,6 +10,7 @@
 #include <imgui/imgui_internal.h>
 #include <optional>
 #include <utility>
+#include <nfd.hpp>
 
 #include "ConfigLoader.hpp"
 #include "GLException.hpp"
@@ -77,6 +78,7 @@ Game::Game()
     m_Editors.emplace_back(m_EditorCounter++, std::filesystem::path{},
                            Size2{DefaultWindowWidth, DefaultWindowHeight},
                            Size2{DefaultGridWidth, DefaultGridHeight});
+    NFD::Init();
     InitImGUI(std::filesystem::path{"config"} / "style.yml");
 }
 
@@ -84,6 +86,7 @@ Game::~Game() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    NFD::Quit();
 }
 
 void Game::Begin() {
