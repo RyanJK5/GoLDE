@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <imgui.h>
-#include <thread>
 #include <stop_token>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -25,27 +25,28 @@ namespace gol {
 struct ButtonlessShortcuts : public Widget {
     std::unordered_map<ActionVariant, std::vector<KeyShortcut>> Shortcuts;
 
-    ButtonlessShortcuts(const std::vector<ImGuiKeyChord> &left = {},
-                        const std::vector<ImGuiKeyChord> &right = {},
-                        const std::vector<ImGuiKeyChord> &up = {},
-                        const std::vector<ImGuiKeyChord> &down = {},
-                        const std::vector<ImGuiKeyChord> &close = {});
+    ButtonlessShortcuts(const std::vector<ImGuiKeyChord>& left = {},
+                        const std::vector<ImGuiKeyChord>& right = {},
+                        const std::vector<ImGuiKeyChord>& up = {},
+                        const std::vector<ImGuiKeyChord>& down = {},
+                        const std::vector<ImGuiKeyChord>& close = {});
 
-    WidgetResult UpdateImpl(const EditorResult &state);
+    WidgetResult UpdateImpl(const EditorResult& state);
 
-    void SetShortcuts(const ShortcutMap &shortcuts);
+    void SetShortcuts(const ShortcutMap& shortcuts);
 };
 
 class SimulationControl {
   public:
-    SimulationControl(const ConfigLoader::StyleInfo<ImVec4> &fileInfo);
+    SimulationControl(const ConfigLoader::StyleInfo<ImVec4>& fileInfo);
 
-    SimulationControlResult Update(const EditorResult &state);
+    SimulationControlResult Update(const EditorResult& state);
 
   private:
     void TryUpdateShortcuts(std::stop_token stopToken);
 
-    void ForEachWidget(auto &&widgetCall);
+    void ForEachWidget(auto&& widgetCall);
+
   private:
     static constexpr int32_t BigStep = 100;
     static constexpr int32_t StepWarning = 100;

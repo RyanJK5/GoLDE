@@ -16,8 +16,8 @@ class DelayWidget : public Widget {
     friend Widget;
 
   private:
-    WidgetResult UpdateImpl(const EditorResult &state);
-    void SetShortcutsImpl(const ShortcutMap &) { }
+    WidgetResult UpdateImpl(const EditorResult& state);
+    void SetShortcutsImpl(const ShortcutMap&) {}
 
   public:
     int32_t TickDelayMs() const { return m_TickDelayMs; }

@@ -23,8 +23,8 @@ class StepButton : public ActionButton<GameAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class StepWidget : public Widget {
@@ -41,9 +41,9 @@ class StepWidget : public Widget {
     friend Widget;
 
   private:
-    WidgetResult UpdateImpl(const EditorResult &state);
+    WidgetResult UpdateImpl(const EditorResult& state);
 
-    void SetShortcutsImpl(const ShortcutMap &) { }
+    void SetShortcutsImpl(const ShortcutMap&) {}
 
     void SetStepCount(int64_t stepCount);
 

@@ -19,7 +19,7 @@ struct PresetDisplay {
     std::string FileName;
     GraphicsHandler Graphics;
 
-    PresetDisplay(const GameGrid &grid, const std::string &fileName,
+    PresetDisplay(const GameGrid& grid, const std::string& fileName,
                   Size2 windowSize);
 };
 
@@ -28,13 +28,13 @@ class PresetSelection {
     static constexpr Size2 TemplateDimensions = {300, 300};
 
   public:
-    PresetSelection(const std::filesystem::path &defaultPath,
+    PresetSelection(const std::filesystem::path& defaultPath,
                     Size2 templateSize = TemplateDimensions);
 
-    PresetSelectionResult Update(const EditorResult &info);
+    PresetSelectionResult Update(const EditorResult& info);
 
   private:
-    void ReadFiles(const std::filesystem::path &path);
+    void ReadFiles(const std::filesystem::path& path);
 
     std::filesystem::path m_DefaultPath;
     Size2 m_WindowSize;

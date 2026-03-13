@@ -1,7 +1,7 @@
 # 1. Find all files
 file(GLOB_RECURSE FILES 
     "${PROJECT_SOURCE_DIR}/GOL*/src/*.cpp" 
-    "${PROJECT_SOURCE_DIR}/GOL*/include/*.h" 
+    "${PROJECT_SOURCE_DIR}/GOL*/include/*.hpp" 
 )
 
 # 2. Filter out what you don't want (Regex)

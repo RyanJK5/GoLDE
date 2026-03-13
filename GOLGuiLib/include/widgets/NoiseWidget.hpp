@@ -22,8 +22,8 @@ class GenerateNoiseButton : public ActionButton<EditorAction, true> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class NoiseWidget : public Widget {
@@ -37,9 +37,10 @@ class NoiseWidget : public Widget {
     friend Widget;
 
   private:
-    WidgetResult UpdateImpl(const EditorResult &state);
-    
-    void SetShortcutsImpl(const ShortcutMap &shortcuts);
+    WidgetResult UpdateImpl(const EditorResult& state);
+
+    void SetShortcutsImpl(const ShortcutMap& shortcuts);
+
   private:
     float m_Density = 0.5f;
 

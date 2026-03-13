@@ -11,15 +11,7 @@
 namespace gol {
 enum class SimulationState { None, Paint, Simulation, Paused, Stepping, Empty };
 
-enum class GameAction {
-    Start,
-    Pause,
-    Resume,
-    Restart,
-    Reset,
-    Clear,
-    Step
-};
+enum class GameAction { Start, Pause, Resume, Restart, Reset, Clear, Step };
 
 enum class EditorAction {
     Resize,

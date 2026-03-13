@@ -25,13 +25,13 @@ template <auto Generator, auto Deleter> class GLWrapper {
 
     GLWrapper();
 
-    GLWrapper(const GLWrapper<Generator, Deleter> &) = delete;
+    GLWrapper(const GLWrapper<Generator, Deleter>&) = delete;
 
-    auto &operator=(const GLWrapper<Generator, Deleter> &) = delete;
+    auto& operator=(const GLWrapper<Generator, Deleter>&) = delete;
 
-    GLWrapper(GLWrapper<Generator, Deleter> &&other) noexcept;
+    GLWrapper(GLWrapper<Generator, Deleter>&& other) noexcept;
 
-    auto &operator=(GLWrapper<Generator, Deleter> &&other) noexcept;
+    auto& operator=(GLWrapper<Generator, Deleter>&& other) noexcept;
 
     ~GLWrapper();
 
@@ -60,13 +60,13 @@ GLWrapper<Generator, Deleter>::GLWrapper() {
 
 template <auto Generator, auto Deleter>
 GLWrapper<Generator, Deleter>::GLWrapper(
-    GLWrapper<Generator, Deleter> &&other) noexcept {
+    GLWrapper<Generator, Deleter>&& other) noexcept {
     m_ID = std::exchange(other.m_ID, 0);
 }
 
 template <auto Generator, auto Deleter>
-auto &GLWrapper<Generator, Deleter>::operator=(
-    GLWrapper<Generator, Deleter> &&other) noexcept {
+auto& GLWrapper<Generator, Deleter>::operator=(
+    GLWrapper<Generator, Deleter>&& other) noexcept {
     if (this != &other)
         m_ID = std::exchange(other.m_ID, 0);
     return *this;

@@ -15,13 +15,13 @@ struct FileDialogFailure {
 
 namespace FileDialog {
 std::expected<std::filesystem::path, FileDialogFailure>
-OpenFileDialog(const std::string &filters, const std::string &defaultPath);
+OpenFileDialog(const std::string& filters, const std::string& defaultPath);
 
 std::expected<std::filesystem::path, FileDialogFailure>
-SaveFileDialog(const std::string &filters, const std::string &defaultPath);
+SaveFileDialog(const std::string& filters, const std::string& defaultPath);
 
 std::expected<std::filesystem::path, FileDialogFailure>
-SelectFolderDialog(const std::string &defaultPath);
+SelectFolderDialog(const std::string& defaultPath);
 }; // namespace FileDialog
 } // namespace gol
 

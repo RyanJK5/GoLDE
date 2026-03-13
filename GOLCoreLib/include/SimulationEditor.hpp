@@ -23,22 +23,22 @@ class SimulationEditor {
     static constexpr float DefaultCellHeight = 20.f;
 
   public:
-    SimulationEditor(uint32_t id, const std::filesystem::path &path,
+    SimulationEditor(uint32_t id, const std::filesystem::path& path,
                      Size2 windowSize, Size2 gridSize);
 
     Rect WindowBounds() const;
     Rect ViewportBounds() const;
-    const std::filesystem::path &CurrentFilePath() const {
+    const std::filesystem::path& CurrentFilePath() const {
         return m_Model.CurrentFilePath();
     }
 
     EditorResult Update(std::optional<bool> activeOverride,
-                        const SimulationControlResult &controlArgs,
-                        const PresetSelectionResult &presetArgs);
+                        const SimulationControlResult& controlArgs,
+                        const PresetSelectionResult& presetArgs);
 
     uint32_t EditorID() const { return m_Model.EditorID(); }
     bool IsSaved() const { return m_Model.IsSaved(); }
-    bool operator==(const SimulationEditor &other) const;
+    bool operator==(const SimulationEditor& other) const;
 
   private:
     struct DisplayResult {
@@ -48,20 +48,20 @@ class SimulationEditor {
     };
 
   private:
-    SimulationState SimulationUpdate(const GraphicsHandlerArgs &args);
-    SimulationState PaintUpdate(const GraphicsHandlerArgs &args);
-    SimulationState PauseUpdate(const GraphicsHandlerArgs &args);
+    SimulationState SimulationUpdate(const GraphicsHandlerArgs& args);
+    SimulationState PaintUpdate(const GraphicsHandlerArgs& args);
+    SimulationState PauseUpdate(const GraphicsHandlerArgs& args);
 
-    void DrawHashLifeData(const HashQuadtree &quadtree,
-                          const GraphicsHandlerArgs &args);
+    void DrawHashLifeData(const HashQuadtree& quadtree,
+                          const GraphicsHandlerArgs& args);
 
     DisplayResult DisplaySimulation(bool grabFocus);
 
-    SimulationState UpdateState(const SimulationControlResult &action);
+    SimulationState UpdateState(const SimulationControlResult& action);
 
-    void SaveWithErrorHandling(const std::filesystem::path &path,
+    void SaveWithErrorHandling(const std::filesystem::path& path,
                                bool markAsSaved);
-    void HandlePasteResult(const PasteResult &result);
+    void HandlePasteResult(const PasteResult& result);
 
     void UpdateViewport();
 

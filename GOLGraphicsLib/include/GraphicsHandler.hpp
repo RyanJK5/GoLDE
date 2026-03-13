@@ -25,15 +25,15 @@ struct GraphicsHandlerArgs {
 };
 
 struct FrameBufferBinder {
-    FrameBufferBinder(const GLFrameBuffer &buffer);
+    FrameBufferBinder(const GLFrameBuffer& buffer);
 
     ~FrameBufferBinder();
 
-    FrameBufferBinder(const FrameBufferBinder &) = delete;
-    auto &operator=(const FrameBufferBinder &) = delete;
+    FrameBufferBinder(const FrameBufferBinder&) = delete;
+    auto& operator=(const FrameBufferBinder&) = delete;
 
-    FrameBufferBinder(FrameBufferBinder &&) = delete;
-    auto &operator=(const FrameBufferBinder &&) = delete;
+    FrameBufferBinder(FrameBufferBinder&&) = delete;
+    auto& operator=(const FrameBufferBinder&&) = delete;
 };
 
 class GraphicsHandler {
@@ -41,25 +41,25 @@ class GraphicsHandler {
     GraphicsCamera Camera;
 
   public:
-    GraphicsHandler(const std::filesystem::path &shaderDirectory,
+    GraphicsHandler(const std::filesystem::path& shaderDirectory,
                     int32_t windowWidth, int32_t windowHeight, Color bgColor);
 
-    GraphicsHandler(const GraphicsHandler &other) = delete;
-    GraphicsHandler &operator=(const GraphicsHandler &other) = delete;
+    GraphicsHandler(const GraphicsHandler& other) = delete;
+    GraphicsHandler& operator=(const GraphicsHandler& other) = delete;
 
-    GraphicsHandler(GraphicsHandler &&other) noexcept = default;
-    GraphicsHandler &operator=(GraphicsHandler &&other) noexcept = default;
+    GraphicsHandler(GraphicsHandler&& other) noexcept = default;
+    GraphicsHandler& operator=(GraphicsHandler&& other) noexcept = default;
     ~GraphicsHandler() = default;
 
-    void RescaleFrameBuffer(const Rect &windowBounds,
-                            const Rect &viewportBounds);
+    void RescaleFrameBuffer(const Rect& windowBounds,
+                            const Rect& viewportBounds);
 
-    void DrawGrid(Vec2 offset, std::ranges::input_range auto &&grid,
-                  const GraphicsHandlerArgs &args);
-    void DrawSelection(const Rect &region, const GraphicsHandlerArgs &info);
-    void ClearBackground(const GraphicsHandlerArgs &args);
+    void DrawGrid(Vec2 offset, std::ranges::input_range auto&& grid,
+                  const GraphicsHandlerArgs& args);
+    void DrawSelection(const Rect& region, const GraphicsHandlerArgs& info);
+    void ClearBackground(const GraphicsHandlerArgs& args);
 
-    void CenterCamera(const GraphicsHandlerArgs &viewportBounds);
+    void CenterCamera(const GraphicsHandlerArgs& viewportBounds);
 
     uint32_t TextureID() const { return m_Texture.ID(); }
 
@@ -67,11 +67,11 @@ class GraphicsHandler {
     void InitGridBuffer();
 
     std::vector<float> GenerateGLBuffer(Vec2 offset,
-                                        std::ranges::input_range auto &&grid,
-                                        const GraphicsHandlerArgs &args) const;
+                                        std::ranges::input_range auto&& grid,
+                                        const GraphicsHandlerArgs& args) const;
 
-    RectF GridToScreenBounds(const Rect &region,
-                             const GraphicsHandlerArgs &args) const;
+    RectF GridToScreenBounds(const Rect& region,
+                             const GraphicsHandlerArgs& args) const;
 
   private:
     struct GridLineInfo {
@@ -80,9 +80,9 @@ class GraphicsHandler {
         Size2 GridSize;
     };
     GridLineInfo CalculateGridLineInfo(Vec2 offset,
-                                       const GraphicsHandlerArgs &args) const;
+                                       const GraphicsHandlerArgs& args) const;
 
-    void DrawGridLines(Vec2 offset, const GraphicsHandlerArgs &args);
+    void DrawGridLines(Vec2 offset, const GraphicsHandlerArgs& args);
 
   private:
     Color m_BgColor;
@@ -110,8 +110,8 @@ concept HasSize = requires(T a) { a.size(); };
 
 std::vector<float>
 GraphicsHandler::GenerateGLBuffer(Vec2 offset,
-                                       std::ranges::input_range auto &&grid,
-                                       const GraphicsHandlerArgs &args) const {
+                                  std::ranges::input_range auto&& grid,
+                                  const GraphicsHandlerArgs& args) const {
     std::vector<float> result{};
 
     const auto gridInfo = CalculateGridLineInfo(offset, args);
@@ -144,8 +144,8 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset,
 }
 
 void GraphicsHandler::DrawGrid(Vec2 offset,
-                                    std::ranges::input_range auto &&grid,
-                                    const GraphicsHandlerArgs &args) {
+                               std::ranges::input_range auto&& grid,
+                               const GraphicsHandlerArgs& args) {
     FrameBufferBinder binder{m_FrameBuffer};
 
     auto matrix = Camera.OrthographicProjection(args.ViewportBounds.Size());

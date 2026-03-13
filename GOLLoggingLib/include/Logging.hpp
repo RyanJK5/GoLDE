@@ -52,14 +52,14 @@ constexpr std::string StringRepresentation(LogCode code) {
     return "";
 }
 
-std::string SimplifyFileName(const std::string &fileName);
+std::string SimplifyFileName(const std::string& fileName);
 
-std::string SimplifyFunctionName(const std::string &funcName);
+std::string SimplifyFunctionName(const std::string& funcName);
 } // namespace logimpl
 
 template <typename... Args>
-inline void Log(LogCode code, const std::source_location &location,
-                std::format_string<Args...> str = "", Args &&...args) {
+inline void Log(LogCode code, const std::source_location& location,
+                std::format_string<Args...> str = "", Args&&... args) {
     if (code > Level)
         return;
 
@@ -73,7 +73,7 @@ inline void Log(LogCode code, const std::source_location &location,
 }
 
 void LogGLErrors(
-    const std::source_location &location = std::source_location::current());
+    const std::source_location& location = std::source_location::current());
 } // namespace gol
 
 #endif

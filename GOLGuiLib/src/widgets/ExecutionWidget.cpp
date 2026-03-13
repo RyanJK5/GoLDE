@@ -77,7 +77,9 @@ std::string ClearButton::Label(const EditorResult&) const {
     return ICON_FA_TRASH;
 }
 bool ClearButton::Enabled(const EditorResult& state) const {
-    return state.Simulation.State != SimulationState::Empty;
+    return state.Simulation.State == SimulationState::Paint ||
+           state.Simulation.State == SimulationState::Paused ||
+           state.Simulation.State == SimulationState::Simulation;
 }
 
 WidgetResult ExecutionWidget::UpdateImpl(const EditorResult& state) {

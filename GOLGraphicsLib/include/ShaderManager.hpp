@@ -15,29 +15,29 @@ class ShaderManager {
     using IDPair = typename std::pair<unsigned int, unsigned int>;
 
   public:
-    explicit ShaderManager(const std::filesystem::path &shaderFilePath);
+    explicit ShaderManager(const std::filesystem::path& shaderFilePath);
 
-    ShaderManager(const ShaderManager &other) = delete;
+    ShaderManager(const ShaderManager& other) = delete;
 
-    ShaderManager(ShaderManager &&other) noexcept;
+    ShaderManager(ShaderManager&& other) noexcept;
 
-    ShaderManager &operator=(const ShaderManager &other) = delete;
+    ShaderManager& operator=(const ShaderManager& other) = delete;
 
-    ShaderManager &operator=(ShaderManager &&other) noexcept;
+    ShaderManager& operator=(ShaderManager&& other) noexcept;
 
     ~ShaderManager();
 
     uint32_t Program() const;
 
-    void AttachUniformVec2(std::string_view label, const glm::vec2 &vec);
-    void AttachUniformVec4(std::string_view label, const glm::vec4 &vec);
-    void AttachUniformMatrix4(std::string_view label, const glm::mat4 &matrix);
+    void AttachUniformVec2(std::string_view label, const glm::vec2& vec);
+    void AttachUniformVec4(std::string_view label, const glm::vec4& vec);
+    void AttachUniformMatrix4(std::string_view label, const glm::mat4& matrix);
 
   private:
     uint32_t CompileShader(uint32_t type, std::string_view source) const;
 
     std::optional<IDPair>
-    ParseShader(const std::filesystem::path &filePath) const;
+    ParseShader(const std::filesystem::path& filePath) const;
 
     void CreateShader(uint32_t program, uint32_t shaderId);
 
@@ -56,7 +56,7 @@ class ShaderManager {
         s_Shaders = {};
 
   private:
-    ShaderControlBlock *m_ControlBlock;
+    ShaderControlBlock* m_ControlBlock;
 };
 } // namespace gol
 

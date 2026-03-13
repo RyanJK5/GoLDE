@@ -28,7 +28,7 @@ template <std::totally_ordered T> struct GenericVec {
     constexpr GenericVec() : X(0), Y(0) {}
     constexpr GenericVec(T x, T y) : X(x), Y(y) {}
 
-    constexpr auto operator<=>(const GenericVec<T> &) const = default;
+    constexpr auto operator<=>(const GenericVec<T>&) const = default;
 
     constexpr GenericVec operator-() const { return {-X, -Y}; }
 
@@ -39,12 +39,12 @@ template <std::totally_ordered T> struct GenericVec {
         return {X - other.X, Y - other.Y};
     }
 
-    constexpr GenericVec &operator+=(GenericVec<T> other) {
+    constexpr GenericVec& operator+=(GenericVec<T> other) {
         X += other.X;
         Y += other.Y;
         return *this;
     }
-    constexpr GenericVec &operator-=(GenericVec<T> other) {
+    constexpr GenericVec& operator-=(GenericVec<T> other) {
         X -= other.X;
         Y -= other.Y;
         return *this;
@@ -122,7 +122,7 @@ struct Size2F : public GenericSize<float> {
 
 struct RectF : public GenericRect<float> {
     constexpr RectF() : GenericRect() {}
-    constexpr RectF(const GenericRect<int> &rect)
+    constexpr RectF(const GenericRect<int>& rect)
         : RectF(static_cast<float>(rect.X), static_cast<float>(rect.Y),
                 static_cast<float>(rect.Width),
                 static_cast<float>(rect.Height)) {}
@@ -153,12 +153,12 @@ using RectDouble = GenericRect<double>;
 
 namespace std {
 template <std::totally_ordered T> struct formatter<gol::GenericVec<T>> {
-    constexpr auto parse(std::format_parse_context &context) {
+    constexpr auto parse(std::format_parse_context& context) {
         return context.begin();
     }
 
     template <typename Context>
-    auto format(const gol::GenericVec<T> &vec, Context &context) const {
+    auto format(const gol::GenericVec<T>& vec, Context& context) const {
         return std::format_to(context.out(), "({}, {})", vec.X, vec.Y);
     }
 };

@@ -18,7 +18,7 @@ namespace gol {
 class StartButton : public MultiActionButton<GameAction, true> {
   public:
     StartButton(const std::unordered_map<ActionVariant,
-                                         std::vector<ImGuiKeyChord>> &shortcuts)
+                                         std::vector<ImGuiKeyChord>>& shortcuts)
         : MultiActionButton(
               {{GameAction::Start, shortcuts.at(GameAction::Start) |
                                        KeyShortcut::MapChordsToVector},
@@ -29,9 +29,9 @@ class StartButton : public MultiActionButton<GameAction, true> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual GameAction Action(const EditorResult &state) const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual GameAction Action(const EditorResult& state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class ClearButton : public ActionButton<GameAction, false> {
@@ -41,8 +41,8 @@ class ClearButton : public ActionButton<GameAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class ResetButton : public ActionButton<GameAction, false> {
@@ -52,8 +52,8 @@ class ResetButton : public ActionButton<GameAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class RestartButton : public ActionButton<GameAction, false> {
@@ -63,15 +63,13 @@ class RestartButton : public ActionButton<GameAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class ExecutionWidget : public Widget {
   public:
-    ExecutionWidget(
-        const ShortcutMap
-            &shortcuts)
+    ExecutionWidget(const ShortcutMap& shortcuts)
         : m_StartButton(shortcuts),
           m_ClearButton(shortcuts.at(GameAction::Clear)),
           m_ResetButton(shortcuts.at(GameAction::Reset)),
@@ -79,9 +77,10 @@ class ExecutionWidget : public Widget {
     friend Widget;
 
   private:
-    WidgetResult UpdateImpl(const EditorResult &state);
+    WidgetResult UpdateImpl(const EditorResult& state);
 
-    void SetShortcutsImpl(const ShortcutMap &shortcuts);
+    void SetShortcutsImpl(const ShortcutMap& shortcuts);
+
   private:
     StartButton m_StartButton;
     ClearButton m_ClearButton;

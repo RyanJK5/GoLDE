@@ -1,12 +1,12 @@
 #ifndef GameGrid_h_
 #define GameGrid_h_
 
+#include <ankerl/unordered_dense.h>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <set>
 #include <stop_token>
-#include <ankerl/unordered_dense.h>
 #include <vector>
 
 #include "Graphics2D.hpp"
@@ -18,21 +18,24 @@ namespace gol {
 // The class responsible for the Game of Life universe.
 class GameGrid {
   public:
-    // Returns a GameGrid with randomly generated cells according to the provided density.
+    // Returns a GameGrid with randomly generated cells according to the
+    // provided density.
     static GameGrid GenerateNoise(Rect bounds, float density);
 
-    // Calling with `width` or `height` set to zero creates an unbounded universe.
+    // Calling with `width` or `height` set to zero creates an unbounded
+    // universe.
     GameGrid(int32_t width = 0, int32_t height = 0);
     GameGrid(Size2 size);
 
-    GameGrid(const GameGrid &other, Size2 size);
+    GameGrid(const GameGrid& other, Size2 size);
 
     LifeAlgorithm GetAlgorithm() const { return m_Algorithm; }
 
     void SetAlgorithm(LifeAlgorithm algorithm);
 
-    // IMPORTANT: This function MUST be called whenever a GameGrid is being copied
-    // across threads. The rationale behind this is explained in HashQuadtree.
+    // IMPORTANT: This function MUST be called whenever a GameGrid is being
+    // copied across threads. The rationale behind this is explained in
+    // HashQuadtree.
     void PrepareCopyBetweenThreads();
 
     // Advances the universe `numSteps` generations. A stop token can optionally
@@ -77,12 +80,12 @@ class GameGrid {
 
     // Removes any cells present in `data`. `offset` is added to
     // each value in `data`.
-    void ClearData(const std::vector<Vec2> &data, Vec2 offset);
+    void ClearData(const std::vector<Vec2>& data, Vec2 offset);
 
     // Adds all cells from `grid` to this object, with each cell
     // offset by `offset`. Returns the set of all sells that were
     // not already present in this object.
-    LifeHashSet InsertGrid(const GameGrid &grid, Vec2 offset);
+    LifeHashSet InsertGrid(const GameGrid& grid, Vec2 offset);
 
     // Performs a 90 degree rotation.
     void RotateGrid(bool clockwise = true);
@@ -100,9 +103,9 @@ class GameGrid {
     std::optional<bool> Get(Vec2 pos) const;
 
     // Returns a sorted set of the universe's data.
-    const std::set<Vec2> &SortedData() const;
+    const std::set<Vec2>& SortedData() const;
     // Returns an unordered set of the universe's data.
-    const LifeHashSet &Data() const;
+    const LifeHashSet& Data() const;
 
     // Returns the underlying data that the universe is currently
     // using. Typically, when simulating using the HashLife algorithm,
@@ -116,16 +119,21 @@ class GameGrid {
     // Used to validate `m_Data` and optionally `m_SortedData` based on
     // `validateSorted`.
     void ValidateCache(bool validateSorted) const;
+
   private:
     LifeAlgorithm m_Algorithm;
 
-    mutable LifeHashSet m_Data; // Declared mutable due to hidden cache validation
-    std::optional<HashQuadtree> m_HashLifeData; // Empty if the algorithm is not HashLife
+    mutable LifeHashSet
+        m_Data; // Declared mutable due to hidden cache validation
+    std::optional<HashQuadtree>
+        m_HashLifeData; // Empty if the algorithm is not HashLife
 
-    mutable std::set<Vec2> m_SortedData; // Declared mutable due to hidden cache validation
+    mutable std::set<Vec2>
+        m_SortedData; // Declared mutable due to hidden cache validation
 
     // TODO: Determine if this is actually functioning correctly
-    mutable bool m_CacheInvalidated = true; // Declared mutable due to hidden cache validation
+    mutable bool m_CacheInvalidated =
+        true; // Declared mutable due to hidden cache validation
 
     int32_t m_Width;
     int32_t m_Height;

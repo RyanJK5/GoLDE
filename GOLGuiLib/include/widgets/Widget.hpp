@@ -14,20 +14,18 @@ class Widget;
 
 class Widget {
   public:
-    WidgetResult Update(this auto &&self,
-                                   const EditorResult &state) {
+    WidgetResult Update(this auto&& self, const EditorResult& state) {
         return self.UpdateImpl(state);
     }
 
-    void SetShortcuts(this auto&& self, const ShortcutMap
-        & shortcuts)
-    {
+    void SetShortcuts(this auto&& self, const ShortcutMap& shortcuts) {
         return self.SetShortcutsImpl(shortcuts);
     }
+
   protected:
     template <ActionType ActType>
-    inline static void UpdateResult(WidgetResult &result,
-                                    const ActionButtonResult<ActType> &update) {
+    inline static void UpdateResult(WidgetResult& result,
+                                    const ActionButtonResult<ActType>& update) {
         if (!result.Command && update.Action)
             result.Command = ToCommand(*update.Action);
         if (!result.FromShortcut)

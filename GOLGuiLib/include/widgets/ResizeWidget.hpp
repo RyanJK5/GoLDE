@@ -22,10 +22,10 @@ class ResizeButton : public ActionButton<EditorAction, false> {
         return {ImGui::GetContentRegionAvail().x,
                 ActionButton::DefaultButtonHeight};
     }
-    virtual std::string Label(const EditorResult &) const override final {
+    virtual std::string Label(const EditorResult&) const override final {
         return "Apply";
     }
-    virtual bool Enabled(const EditorResult &state) const final {
+    virtual bool Enabled(const EditorResult& state) const final {
         return state.Simulation.State == SimulationState::Paint ||
                state.Simulation.State == SimulationState::Empty;
     }
@@ -38,8 +38,9 @@ class ResizeWidget : public Widget {
     friend Widget;
 
   private:
-    WidgetResult UpdateImpl(const EditorResult &state);
-    void SetShortcutsImpl(const ShortcutMap &shortcuts);
+    WidgetResult UpdateImpl(const EditorResult& state);
+    void SetShortcutsImpl(const ShortcutMap& shortcuts);
+
   private:
     ResizeButton m_Button;
     Size2 m_Dimensions;

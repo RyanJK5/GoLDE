@@ -27,7 +27,7 @@ class VersionManager {
     void BeginPaintChange(Vec2 pos, bool insert);
     void AddPaintChange(Vec2 pos);
 
-    void PushChange(const VersionChange &change);
+    void PushChange(const VersionChange& change);
     void TryPushChange(std::optional<VersionChange> change);
 
     std::optional<VersionChange> Undo();
@@ -40,7 +40,7 @@ class VersionManager {
     bool RedosAvailable() const { return !m_RedoStack.empty(); }
 
   private:
-    bool BreakingChange(const VersionChange &change) const;
+    bool BreakingChange(const VersionChange& change) const;
 
     void ClearRedos();
 

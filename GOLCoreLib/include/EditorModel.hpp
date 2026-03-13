@@ -26,7 +26,7 @@ struct PasteResult {
 
 class EditorModel {
   public:
-    EditorModel(uint32_t id, const std::filesystem::path &path, Size2 gridSize);
+    EditorModel(uint32_t id, const std::filesystem::path& path, Size2 gridSize);
 
     // Simulation lifecycle
     SimulationState StartSimulation();
@@ -36,9 +36,9 @@ class EditorModel {
     void CheckStopStep();
 
     // Apply per-frame settings from the control panel
-    void ApplySettings(const SimulationSettings &settings);
+    void ApplySettings(const SimulationSettings& settings);
 
-    // Command handlers — pure state operations, no ImGui
+    // Command handlers
     SimulationState HandleStart();
     SimulationState HandleClear();
     SimulationState HandleReset();
@@ -53,8 +53,8 @@ class EditorModel {
     void HandleSelectionAction(SelectionAction action, int32_t nudgeSize);
 
     // File operations
-    std::optional<std::string> LoadFile(const std::filesystem::path &path);
-    bool SaveToFile(const std::filesystem::path &path, bool markAsSaved);
+    std::optional<std::string> LoadFile(const std::filesystem::path& path);
+    bool SaveToFile(const std::filesystem::path& path, bool markAsSaved);
 
     // Paste operations
     PasteResult PasteSelection(std::optional<Vec2> cursorPos);
@@ -63,7 +63,6 @@ class EditorModel {
     // Deselect and paste from clipboard at the given position
     void InsertFromClipboard(Vec2 position);
 
-    // Fine-grained mutation for View/Controller
     bool UpdateSelectionAreaTracked(Vec2 gridPos);
     void TryResetSelection();
     void BeginPaintChange(Vec2 pos, bool insert);
@@ -71,10 +70,10 @@ class EditorModel {
     void MarkSaved();
 
     // Read-only accessors
-    const GameGrid &Grid() const { return m_Grid; }
-    const SelectionManager &Selection() const { return m_SelectionManager; }
-    const VersionManager &Versions() const { return m_VersionManager; }
-    const SimulationWorker &Worker() const { return *m_Worker; }
+    const GameGrid& Grid() const { return m_Grid; }
+    const SelectionManager& Selection() const { return m_SelectionManager; }
+    const VersionManager& Versions() const { return m_VersionManager; }
+    const SimulationWorker& Worker() const { return *m_Worker; }
 
     SimulationState State() const { return m_State; }
     void SetState(SimulationState state) { m_State = state; }
@@ -82,11 +81,11 @@ class EditorModel {
     uint32_t EditorID() const { return m_EditorID; }
     bool IsSaved() const { return m_VersionManager.IsSaved(); }
 
-    const std::filesystem::path &CurrentFilePath() const {
+    const std::filesystem::path& CurrentFilePath() const {
         return m_CurrentFilePath;
     }
 
-    bool operator==(const EditorModel &other) const;
+    bool operator==(const EditorModel& other) const;
 
   private:
     SelectionManager m_SelectionManager;

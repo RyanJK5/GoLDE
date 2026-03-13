@@ -21,17 +21,18 @@ template <ActionType ActType> struct ActionButtonResult {
     bool FromShortcut = false;
 };
 
-using ShortcutMap = std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>;
+using ShortcutMap =
+    std::unordered_map<ActionVariant, std::vector<ImGuiKeyChord>>;
 
 template <ActionType ActType, bool LineBreak> class MultiActionButton {
   public:
     constexpr static int32_t DefaultButtonHeight = 50;
 
     MultiActionButton(
-        const std::unordered_map<ActType, std::vector<KeyShortcut>> &shortcuts)
+        const std::unordered_map<ActType, std::vector<KeyShortcut>>& shortcuts)
         : m_Shortcuts(shortcuts) {}
 
-    ActionButtonResult<ActType> Update(const EditorResult &state) {
+    ActionButtonResult<ActType> Update(const EditorResult& state) {
         if (!Enabled(state)) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
@@ -44,7 +45,7 @@ template <ActionType ActType, bool LineBreak> class MultiActionButton {
         auto result = [this, state]() {
             bool active = false;
             if (Enabled(state))
-                for (auto &shortcut : m_Shortcuts.at(Action(state)))
+                for (auto& shortcut : m_Shortcuts.at(Action(state)))
                     active = shortcut.Active() || active;
 
             if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
@@ -57,7 +58,7 @@ template <ActionType ActType, bool LineBreak> class MultiActionButton {
             ImGui::PopStyleVar();
         } else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
             auto tooltip = Actions::ToString(Action(state));
-            const auto &shortcuts = m_Shortcuts.at(Action(state));
+            const auto& shortcuts = m_Shortcuts.at(Action(state));
             if (!shortcuts.empty())
                 tooltip += ": " + KeyShortcut::StringRepresentation(
                                       m_Shortcuts.at(Action(state)));
@@ -67,16 +68,18 @@ template <ActionType ActType, bool LineBreak> class MultiActionButton {
         return result;
     }
 
-    void SetShortcuts(const std::unordered_map<ActType, std::vector<KeyShortcut>>
-            & shortcuts) {
+    void
+    SetShortcuts(const std::unordered_map<ActType, std::vector<KeyShortcut>>&
+                     shortcuts) {
         m_Shortcuts = shortcuts;
     }
+
   protected:
-    virtual ActType Action(const EditorResult &state) const = 0;
+    virtual ActType Action(const EditorResult& state) const = 0;
 
     virtual Size2F Dimensions() const = 0;
-    virtual std::string Label(const EditorResult &state) const = 0;
-    virtual bool Enabled(const EditorResult &state) const = 0;
+    virtual std::string Label(const EditorResult& state) const = 0;
+    virtual bool Enabled(const EditorResult& state) const = 0;
 
   private:
     bool m_LineBreak = LineBreak;
@@ -96,15 +99,17 @@ class ActionButton : public MultiActionButton<ActType, LineBreak> {
                     : shortcuts | KeyShortcut::MapChordsToVector}}),
           m_Action(action), m_AllowRepeats(allowRepeats) {}
 
-    void SetShortcuts(std::span<const ImGuiKeyChord> shortcuts)
-    {
-        MultiActionButton<ActType, LineBreak>::SetShortcuts(std::unordered_map<ActType, std::vector<KeyShortcut>>
-            {{m_Action, m_AllowRepeats
-                          ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
-                          : shortcuts | KeyShortcut::MapChordsToVector}});
+    void SetShortcuts(std::span<const ImGuiKeyChord> shortcuts) {
+        MultiActionButton<ActType, LineBreak>::SetShortcuts(
+            std::unordered_map<ActType, std::vector<KeyShortcut>>{
+                {m_Action,
+                 m_AllowRepeats
+                     ? shortcuts | KeyShortcut::RepeatableMapChordsToVector
+                     : shortcuts | KeyShortcut::MapChordsToVector}});
     }
+
   protected:
-    virtual ActType Action(const EditorResult &) const override final {
+    virtual ActType Action(const EditorResult&) const override final {
         return m_Action;
     }
 

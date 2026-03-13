@@ -20,8 +20,8 @@ class CopyButton : public ActionButton<SelectionAction, true> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class CutButton : public ActionButton<SelectionAction, false> {
@@ -30,8 +30,8 @@ class CutButton : public ActionButton<SelectionAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class PasteButton : public ActionButton<SelectionAction, false> {
@@ -40,8 +40,8 @@ class PasteButton : public ActionButton<SelectionAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class DeleteButton : public ActionButton<SelectionAction, false> {
@@ -50,8 +50,8 @@ class DeleteButton : public ActionButton<SelectionAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class DeselectButton : public ActionButton<SelectionAction, true> {
@@ -60,8 +60,8 @@ class DeselectButton : public ActionButton<SelectionAction, true> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class RotateButton : public ActionButton<SelectionAction, false> {
@@ -70,8 +70,8 @@ class RotateButton : public ActionButton<SelectionAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class FlipHorizontalButton : public ActionButton<SelectionAction, false> {
@@ -80,8 +80,8 @@ class FlipHorizontalButton : public ActionButton<SelectionAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class FlipVerticalButton : public ActionButton<SelectionAction, false> {
@@ -90,8 +90,8 @@ class FlipVerticalButton : public ActionButton<SelectionAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class SelectAllButton : public ActionButton<SelectionAction, true> {
@@ -100,8 +100,8 @@ class SelectAllButton : public ActionButton<SelectionAction, true> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class UndoButton : public ActionButton<EditorAction, false> {
@@ -110,8 +110,8 @@ class UndoButton : public ActionButton<EditorAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class RedoButton : public ActionButton<EditorAction, false> {
@@ -120,21 +120,20 @@ class RedoButton : public ActionButton<EditorAction, false> {
 
   protected:
     virtual Size2F Dimensions() const final;
-    virtual std::string Label(const EditorResult &) const override final;
-    virtual bool Enabled(const EditorResult &state) const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
 };
 
 class EditorWidget : public Widget {
   public:
-    EditorWidget(
-        const ShortcutMap
-            &shortcuts);
+    EditorWidget(const ShortcutMap& shortcuts);
     friend Widget;
 
   public:
-    WidgetResult UpdateImpl(const EditorResult &state);
+    WidgetResult UpdateImpl(const EditorResult& state);
 
-    void SetShortcutsImpl(const ShortcutMap &shortcuts);
+    void SetShortcutsImpl(const ShortcutMap& shortcuts);
+
   private:
     CopyButton m_CopyButton;
     CutButton m_CutButton;

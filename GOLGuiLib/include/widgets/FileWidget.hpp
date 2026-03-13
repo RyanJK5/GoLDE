@@ -21,8 +21,8 @@ class NewFileButton : public ActionButton<EditorAction, true> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class UpdateFileButton : public ActionButton<EditorAction, false> {
@@ -31,8 +31,8 @@ class UpdateFileButton : public ActionButton<EditorAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class SaveButton : public ActionButton<EditorAction, false> {
@@ -41,8 +41,8 @@ class SaveButton : public ActionButton<EditorAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class LoadButton : public ActionButton<EditorAction, false> {
@@ -51,22 +51,19 @@ class LoadButton : public ActionButton<EditorAction, false> {
 
   protected:
     virtual Size2F Dimensions() const override final;
-    virtual std::string Label(const EditorResult &state) const override final;
-    virtual bool Enabled(const EditorResult &state) const override final;
+    virtual std::string Label(const EditorResult& state) const override final;
+    virtual bool Enabled(const EditorResult& state) const override final;
 };
 
 class FileWidget : public Widget {
   public:
-    FileWidget(
-        const ShortcutMap
-            &shortcutInfo);
+    FileWidget(const ShortcutMap& shortcutInfo);
     friend Widget;
 
   private:
-    WidgetResult UpdateImpl(const EditorResult &state);
-    void SetShortcutsImpl(
-        const ShortcutMap
-            &shortcutInfo);
+    WidgetResult UpdateImpl(const EditorResult& state);
+    void SetShortcutsImpl(const ShortcutMap& shortcutInfo);
+
   private:
     NewFileButton m_NewFileButton;
     UpdateFileButton m_UpdateFileButton;

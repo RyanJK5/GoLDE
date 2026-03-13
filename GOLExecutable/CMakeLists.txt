@@ -29,9 +29,12 @@ set_target_properties(GOLExecutable PROPERTIES
 
 # 2. Fix the Entry Point for Windows (MSVC and Clang-cl)
 if(WIN32)
-    # This tells the linker: "Even though I'm a Windows subsystem app, 
-    # look for 'main' instead of 'WinMain'."
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # look for 'main' instead of 'WinMain'.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_link_options(GOLExecutable PRIVATE 
+            $<$<CONFIG:Release>:SHELL:-Xlinker /subsystem:windows -Xlinker /ENTRY:mainCRTStartup>
+        )
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         target_link_options(GOLExecutable PRIVATE 
             $<$<CONFIG:Release>:-Xlinker;/subsystem:windows;-Xlinker;/ENTRY:mainCRTStartup>
         )

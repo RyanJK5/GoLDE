@@ -46,7 +46,10 @@ class StyleLoaderException : public std::exception {
   public:
     StyleLoaderException(std::string_view error) : m_Error(error) {}
 
-    virtual const char* what() const noexcept override final { return m_Error.c_str(); }
+    virtual const char* what() const noexcept override final {
+        return m_Error.c_str();
+    }
+
   private:
     std::string m_Error;
 };
@@ -211,7 +214,7 @@ using StringConverter = std::function<std::optional<T>(std::string_view)>;
 
 template <typename T>
 static StringConverter<T>
-MakeConverter(const std::unordered_map<std::string_view, T> &map) {
+MakeConverter(const std::unordered_map<std::string_view, T>& map) {
     return StringConverter<T>{[map](std::string_view str) {
         if (map.count(str) == 0)
             return std::optional<T>(std::nullopt);
@@ -227,7 +230,7 @@ concept KeyChord = requires(Chord a, KeyStroke b) {
 
 template <typename KeyStroke, KeyChord<KeyStroke> Chord>
 static StringConverter<Chord> MakeChordConverter(
-    const std::unordered_map<std::string_view, KeyStroke> &keyMap) {
+    const std::unordered_map<std::string_view, KeyStroke>& keyMap) {
     return StringConverter<Chord>{[keyMap](std::string_view str) {
         std::optional<Chord> chord;
         std::string token = "";
@@ -251,8 +254,8 @@ static StringConverter<Chord> MakeChordConverter(
 
 template <typename T>
 static std::expected<T, YAMLError>
-ReadKey(int lineNum, const std::string &line,
-        const StringConverter<T> &conversion) {
+ReadKey(int lineNum, const std::string& line,
+        const StringConverter<T>& conversion) {
     auto firstLetter = std::find_if(line.begin(), line.end(),
                                     [](char c) { return std::isalpha(c); });
     auto seperator = std::find(firstLetter, line.end(), ':');
@@ -277,8 +280,8 @@ ReadKey(int lineNum, const std::string &line,
 
 template <typename T>
 static std::expected<std::vector<T>, YAMLError>
-ReadList(int lineNum, const std::string &line, std::string_view values,
-         const StringConverter<T> &conversion, int numElements = -1) {
+ReadList(int lineNum, const std::string& line, std::string_view values,
+         const StringConverter<T>& conversion, int numElements = -1) {
     std::vector<T> result = {};
     if (numElements >= 0)
         result.reserve(numElements);
@@ -316,7 +319,7 @@ ReadList(int lineNum, const std::string &line, std::string_view values,
 }
 
 template <Vector4 Vec>
-static Vec CreateVector4(const std::vector<float> &elements) {
+static Vec CreateVector4(const std::vector<float>& elements) {
     auto result = Vec{};
     for (size_t i = 0; i < elements.size(); i++) {
         switch (i) {
@@ -339,10 +342,10 @@ static Vec CreateVector4(const std::vector<float> &elements) {
 
 template <typename Key, typename Value>
 static std::expected<std::pair<Key, std::vector<Value>>, YAMLError>
-ReadListPair(int lineNum, const std::string &line,
-             const std::string::const_iterator &firstLetter,
-             const StringConverter<Key> &keyConversion,
-             const StringConverter<Value> &valueConversion,
+ReadListPair(int lineNum, const std::string& line,
+             const std::string::const_iterator& firstLetter,
+             const StringConverter<Key>& keyConversion,
+             const StringConverter<Value>& valueConversion,
              int numElements = -1) {
     auto seperator = std::find(firstLetter, line.end(), ':');
 
@@ -361,8 +364,8 @@ ReadListPair(int lineNum, const std::string &line,
 
 template <Vector4 Vec>
 static std::expected<std::pair<StyleColor, Vec>, YAMLError>
-ReadColorPair(int lineNum, const std::string &line,
-              const std::string::const_iterator &firstLetter) {
+ReadColorPair(int lineNum, const std::string& line,
+              const std::string::const_iterator& firstLetter) {
     StringConverter<float> toF = [](auto str) {
         return std::make_optional<float>(std::strtof(str.data(), nullptr));
     };
@@ -377,10 +380,10 @@ ReadColorPair(int lineNum, const std::string &line,
 
 template <typename Key, typename Value>
 static std::expected<std::pair<Key, Value>, YAMLError>
-ReadPair(int lineNum, const std::string &line,
-         const std::string::const_iterator &firstLetter,
-         const StringConverter<Key> &keyConverter,
-         const StringConverter<Value> &valueConverter) {
+ReadPair(int lineNum, const std::string& line,
+         const std::string::const_iterator& firstLetter,
+         const StringConverter<Key>& keyConverter,
+         const StringConverter<Value>& valueConverter) {
     auto seperator = std::find(firstLetter, line.end(), ':');
 
     auto key = ReadKey<Key>(lineNum, line, keyConverter);
@@ -406,7 +409,7 @@ ReadPair(int lineNum, const std::string &line,
 
 template <Vector4 Vec>
 std::expected<StyleInfo<Vec>, YAMLError>
-TryLoadYAML(const std::filesystem::path &styleInfoPath) {
+TryLoadYAML(const std::filesystem::path& styleInfoPath) {
     std::ifstream input(styleInfoPath);
     if (!input.is_open()) {
         return std::unexpected(
@@ -517,13 +520,12 @@ TryLoadYAML(const std::filesystem::path &styleInfoPath) {
 }
 
 template <Vector4 Vec>
-StyleInfo<Vec> LoadYAML(const std::filesystem::path& styleInfoPath)
-{
+StyleInfo<Vec> LoadYAML(const std::filesystem::path& styleInfoPath) {
     auto result = TryLoadYAML<Vec>(styleInfoPath);
     if (!result)
-        throw StyleLoaderException { result.error().Description };
+        throw StyleLoaderException{result.error().Description};
     return *result;
 }
-} // namespace gol::StyleLoader
+} // namespace gol::ConfigLoader
 
 #endif
