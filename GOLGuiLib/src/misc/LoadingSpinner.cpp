@@ -4,6 +4,7 @@
 #include <imgui/imgui_internal.h>
 
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <numbers>
 
@@ -41,7 +42,7 @@ void LoadingSpinner(const char* label, float radius, float thickness,
     for (auto i = 0; i < numSegments; i++) {
         const auto a =
             a_min + (i / static_cast<float>(numSegments)) * (a_max - a_min);
-        window->DrawList->PathLineTo(
+        window->DrawList->PathLineTo(ImVec2
             {centre.x + std::cosf(a + time * 8) * radius,
              centre.y + std::sinf(a + time * 8) * radius});
     }

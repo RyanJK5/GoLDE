@@ -35,6 +35,8 @@ constexpr static int64_t MaxAdvanceOf(int64_t stepSize) {
     return Pow2(power - static_cast<int64_t>(1));
 }
 
+thread_local HashLifeCache HashQuadtree::s_Cache{};
+
 // ============================================================================
 // Base case infrastructure for the 8x8 HashLife leaf computation.
 //

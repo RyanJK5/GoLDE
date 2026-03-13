@@ -447,7 +447,7 @@ class HashQuadtree {
 
   private:
     // The rationale for storing HashLifeCache in static, thread_local storage is provided above.
-    static inline thread_local HashLifeCache s_Cache{};
+    static thread_local HashLifeCache s_Cache;
     // This is the transfer cache used for copying `s_Cache` between threads.
     mutable std::unique_ptr<HashLifeCache> m_TransferCache{};
 

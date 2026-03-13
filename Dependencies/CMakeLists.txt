@@ -26,11 +26,9 @@ endif()
 
 if(WIN32)
     set(PLAT_PATH "windows")
-    set(GLFW_SYSTEM_LIBS "opengl32;ole32;gdi32;user32;kernel32;shell32")
     set(NFD_SYSTEM_LIBS "comctl32")
 elseif(UNIX AND NOT APPLE)
     set(PLAT_PATH "linux")
-    set(GLFW_SYSTEM_LIBS "libGL.so;libGLU.so;libX11.so")
     
     # Find GTK+3 using pkg-config for NFD
     find_package(PkgConfig REQUIRED)
@@ -46,33 +44,36 @@ elseif(APPLE)
     set(PLAT_PATH "macos")
 endif()
 
-set(GLEW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GLEW/glew-2.1.0/lib/Release/${PLAT_PATH}/${ARCH_PATH}/glew32s.lib")
-add_library(glew STATIC IMPORTED GLOBAL)
-    set_target_properties(glew PROPERTIES
-        IMPORTED_LOCATION "${GLEW_LIB_PATH}"
-        IMPORTED_LOCATION_DEBUG "${GLEW_LIB_PATH}"
-        IMPORTED_LOCATION_RELEASE "${GLEW_LIB_PATH}"
-        IMPORTED_LOCATION_MINSIZEREL "${GLEW_LIB_PATH}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${GLEW_LIB_PATH}"
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/GLEW/glew-2.1.0/include"
-        INTERFACE_COMPILE_DEFINITIONS "GLEW_STATIC"
-    )
-    message(STATUS "GLEW configured: ${CMAKE_CURRENT_SOURCE_DIR}/GLEW/glew-2.1.0/include")
+# Fetch GLFW from source
+include(FetchContent)
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 3.3.8
+)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glfw)
+message(STATUS "GLFW configured from source")
 
-
-set(GLFW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GLFW/lib/Release/${PLAT_PATH}/${ARCH_PATH}/glfw3.lib")
-add_library(glfw3_lib STATIC IMPORTED GLOBAL)
-    set_target_properties(glfw3_lib PROPERTIES
-        IMPORTED_LOCATION "${GLFW_LIB_PATH}"
-        IMPORTED_LOCATION_DEBUG "${GLFW_LIB_PATH}"
-        IMPORTED_LOCATION_RELEASE "${GLFW_LIB_PATH}"
-        IMPORTED_LOCATION_MINSIZEREL "${GLFW_LIB_PATH}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${GLFW_LIB_PATH}"
-        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/GLFW/include"
-        INTERFACE_LINK_LIBRARIES "${GLFW_SYSTEM_LIBS}"
-    )
-    add_library(glfw ALIAS glfw3_lib)
-    message(STATUS "GLFW configured: ${CMAKE_CURRENT_SOURCE_DIR}/GLFW/include")
+# Fetch GLEW and build from the single source file
+FetchContent_Declare(
+    glew_fetch
+    URL https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0.zip
+)
+FetchContent_GetProperties(glew_fetch)
+if(NOT glew_fetch_POPULATED)
+    FetchContent_Populate(glew_fetch)
+    add_library(glew STATIC ${glew_fetch_SOURCE_DIR}/src/glew.c)
+    target_include_directories(glew SYSTEM PUBLIC ${glew_fetch_SOURCE_DIR}/include)
+    target_compile_definitions(glew PUBLIC GLEW_STATIC)
+    target_compile_options(glew PRIVATE -Wno-error)
+    if(WIN32)
+        target_link_libraries(glew PUBLIC opengl32)
+    endif()
+endif()
+message(STATUS "GLEW configured from source")
 
 set(NFD_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/NFD/lib/Release/${PLAT_PATH}/${ARCH_PATH}/nfd.lib")
 add_library(nfd STATIC IMPORTED GLOBAL)
@@ -86,13 +87,5 @@ add_library(nfd STATIC IMPORTED GLOBAL)
         INTERFACE_LINK_LIBRARIES "${NFD_SYSTEM_LIBS}"
     )
 message(STATUS "NFD configured: ${CMAKE_CURRENT_SOURCE_DIR}/NFD/include")
-    
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(GLEW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GLEW/glew-2.1.0/lib/linux/libGLEW.a")
-    message(STATUS "GLEW: Using x64 library")
-else()
-    set(GLEW_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GLEW/glew-2.1.0/lib/linux/x86/libGLEW.a")
-    message(STATUS "GLEW: Using x86 library")
-endif()
     
 add_subdirectory(ImGUI)
