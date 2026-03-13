@@ -1,5 +1,0 @@
-if(EXISTS "/mnt/c/Users/Ryan/Documents/repositories/projects/GameOfLife/wsl_build/GOLTest/GOLTest[1]_tests.cmake")
-  include("/mnt/c/Users/Ryan/Documents/repositories/projects/GameOfLife/wsl_build/GOLTest/GOLTest[1]_tests.cmake")
-else()
-  add_test(GOLTest_NOT_BUILT GOLTest_NOT_BUILT)
-endif()
