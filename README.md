@@ -66,3 +66,7 @@ With a multi-config generator, the executable is produced under the selected con
 ```sh
 build/GOLExecutable/Release/GOLExecutable.exe
 ```
+
+## License
+
+This project is licensed under the terms of the [MIT license](LICENSE)
