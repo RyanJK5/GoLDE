@@ -3,6 +3,10 @@
 # Game of Life Designer and Engine (GOLDE)
 
 <div align="center">
+  <img src="https://github.com/RyanJK5/GameOfLife/actions/workflows/build.yml/badge.svg" alt="Build Status">
+</div>
+
+<div align="center">
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![CMake](https://img.shields.io/badge/CMake-3.25+-blue.svg)](https://cmake.org/)
