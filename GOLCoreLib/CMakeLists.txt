@@ -1,9 +1,22 @@
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.hpp")
+set(SOURCES
+    src/EditorModel.cpp
+    src/Game.cpp
+    src/PresetSelection.cpp
+    src/SimulationControl.cpp
+    src/SimulationEditor.cpp
+    src/SimulationWorker.cpp
+)
 
-message(STATUS "GOLCoreLib sources found: ${SOURCES}")
+set(HEADERS
+    include/EditorModel.hpp
+    include/Game.hpp
+    include/PresetSelection.hpp
+    include/SimulationControl.hpp
+    include/SimulationEditor.hpp
+    include/SimulationWorker.hpp
+)
 
-add_library(GOLCoreLib STATIC ${SOURCES} ${HEADERS} "include/SimulationWorker.hpp" "src/SimulationWorker.cpp")
+add_library(GOLCoreLib STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(GOLCoreLib
     PUBLIC
@@ -11,6 +24,8 @@ target_include_directories(GOLCoreLib
 )
 
 target_link_libraries(GOLCoreLib
+    PRIVATE
+        gol_compiler_options
     PUBLIC
         GOLAlgoLib
         GOLGraphicsLib
@@ -20,10 +35,3 @@ target_link_libraries(GOLCoreLib
         glew
         glfw
 )
-
-# Add /FS flag for MSVC to avoid PDB file access issues during parallel builds
-if(MSVC)
-    target_compile_options(GOLCoreLib PRIVATE /FS)
-endif()
-
-message(STATUS "GOLCoreLib (core library) configured successfully")

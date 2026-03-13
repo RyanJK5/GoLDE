@@ -1,7 +1,8 @@
 add_executable(GOLExecutable Application.cpp)
 
 target_link_libraries(GOLExecutable PRIVATE
-    GOLCoreLib  
+    gol_compiler_options
+    GOLCoreLib
     GOLGuiLib
     GOLGraphicsLib
     GOLAlgoLib
@@ -30,9 +31,9 @@ set_target_properties(GOLExecutable PROPERTIES
 if(WIN32)
     # This tells the linker: "Even though I'm a Windows subsystem app, 
     # look for 'main' instead of 'WinMain'."
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_link_options(GOLExecutable PRIVATE 
-            $<$<CONFIG:Release>:-Xlinker;/ENTRY:mainCRTStartup>
+            $<$<CONFIG:Release>:-Xlinker;/subsystem:windows;-Xlinker;/ENTRY:mainCRTStartup>
         )
     else()
         target_link_options(GOLExecutable PRIVATE 

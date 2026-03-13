@@ -1,5 +1,12 @@
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(GOLTest ${SOURCES} "src/ThreadingTest.cpp" "src/EncodeTest.cpp")
+set(SOURCES
+    src/EncodeTest.cpp
+    src/HashQuadtreeTest.cpp
+    src/SparseLifeTest.cpp
+    src/TestMain.cpp
+    src/ThreadingTest.cpp
+)
+
+add_executable(GOLTest ${SOURCES})
 
 # Modern GTest discovery
 include(GoogleTest)
@@ -8,7 +15,8 @@ gtest_discover_tests(GOLTest
 )
 
 target_link_libraries(GOLTest PRIVATE
-    GOLCoreLib  
+    gol_compiler_options
+    GOLCoreLib
     GOLGuiLib
     GOLGraphicsLib
     GOLAlgoLib

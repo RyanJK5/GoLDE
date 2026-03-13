@@ -1,5 +1,5 @@
 # Build directories
-/build/
+/*build*/
 /cmake-build-*/
 
 # In-source CMake and test artifacts
@@ -26,6 +26,7 @@ install_manifest.txt
 *.userprefs
 
 # Compiler and linker outputs
+*.lib
 *.iobj
 *.ilk
 *.ipdb
@@ -34,6 +35,3 @@ install_manifest.txt
 *.obj
 *.pch
 *.pdb
-
-# Keep vendored prebuilt libraries under Dependencies tracked
-!Dependencies/**/lib/**

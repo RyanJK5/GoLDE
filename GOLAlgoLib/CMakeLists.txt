@@ -1,12 +1,16 @@
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.hpp")
+set(SOURCES
+    src/GameGrid.cpp
+    src/HashQuadtree.cpp
+    src/LifeHashSet.cpp
+    src/SparseLife.cpp
+)
 
-message(STATUS "GOLAlgoLib sources found: ${SOURCES}")
-message(STATUS "GOLAlgoLib headers found: ${HEADERS}")
-
-if(NOT SOURCES)
-    message(FATAL_ERROR "No source files found for GOLAlgoLib in ${CMAKE_CURRENT_SOURCE_DIR}/src")
-endif()
+set(HEADERS
+    include/GameGrid.hpp
+    include/HashQuadtree.hpp
+    include/LifeAlgorithm.hpp
+    include/LifeHashSet.hpp
+)
 
 add_library(GOLAlgoLib STATIC ${SOURCES} ${HEADERS})
 
@@ -16,15 +20,10 @@ target_include_directories(GOLAlgoLib
 )
 
 target_link_libraries(GOLAlgoLib
+    PRIVATE
+        gol_compiler_options
     PUBLIC
         unordered_dense
         GOLLoggingLib
         GOLGraphicsLib
 )
-
-# Add /FS flag for MSVC to avoid PDB file access issues during parallel builds
-if(MSVC)
-    target_compile_options(GOLAlgoLib PRIVATE /FS)
-endif()
-
-message(STATUS "GOLAlgoLib configured successfully")

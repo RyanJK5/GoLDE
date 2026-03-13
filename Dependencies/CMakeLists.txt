@@ -52,8 +52,6 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	target_compile_options(gtest_main PRIVATE /WX-)
 endif()
 
-message(STATUS "Dependencies configured")
-
 # Fetch GLFW from source
 include(FetchContent)
 FetchContent_Declare(
@@ -65,7 +63,6 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
-message(STATUS "GLFW configured from source")
 
 # Fetch GLEW and build from the single source file
 FetchContent_Declare(
@@ -75,6 +72,8 @@ FetchContent_Declare(
 FetchContent_GetProperties(glew_fetch)
 if(NOT glew_fetch_POPULATED)
     FetchContent_Populate(glew_fetch)
+    # Treat glew.c as C++ so we don't require the user to configure a C compiler
+    set_source_files_properties(${glew_fetch_SOURCE_DIR}/src/glew.c PROPERTIES LANGUAGE CXX)
     add_library(glew STATIC ${glew_fetch_SOURCE_DIR}/src/glew.c)
     target_include_directories(glew SYSTEM PUBLIC ${glew_fetch_SOURCE_DIR}/include)
     target_compile_definitions(glew PUBLIC GLEW_STATIC)
@@ -101,6 +100,4 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(nfd PRIVATE -Wno-error)
 endif()
 
-message(STATUS "NFD Configured from source")
-    
 add_subdirectory(ImGUI)

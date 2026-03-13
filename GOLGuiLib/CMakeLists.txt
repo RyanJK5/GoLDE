@@ -1,9 +1,55 @@
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.hpp")
+set(SOURCES
+    src/dialogs/ErrorWindow.cpp
+    src/dialogs/FileDialog.cpp
+    src/dialogs/PopupWindow.cpp
+    src/dialogs/WarnWindow.cpp
+    src/misc/LoadingSpinner.cpp
+    src/misc/RLEEncoder.cpp
+    src/widgets/DelayWidget.cpp
+    src/widgets/EditorWidget.cpp
+    src/widgets/ExecutionWidget.cpp
+    src/widgets/FileWidget.cpp
+    src/widgets/NoiseWidget.cpp
+    src/widgets/ResizeWidget.cpp
+    src/widgets/StepWidget.cpp
+    src/GameEnums.cpp
+    src/InputString.cpp
+    src/KeyShortcut.cpp
+    src/SelectionManager.cpp
+    src/VersionManager.cpp
+)
 
-message(STATUS "GOLGuiLib sources found: ${SOURCES}")
+set(HEADERS
+    include/dialogs/ErrorWindow.hpp
+    include/dialogs/FileDialog.hpp
+    include/dialogs/PopupWindow.hpp
+    include/dialogs/WarnWindow.hpp
+    include/misc/ConfigLoader.hpp
+    include/misc/LoadingSpinner.hpp
+    include/misc/RLEEncoder.hpp
+    include/widgets/ActionButton.hpp
+    include/widgets/DelayWidget.hpp
+    include/widgets/EditorWidget.hpp
+    include/widgets/ExecutionWidget.hpp
+    include/widgets/FileWidget.hpp
+    include/widgets/NoiseWidget.hpp
+    include/widgets/ResizeWidget.hpp
+    include/widgets/StepWidget.hpp
+    include/widgets/Widget.hpp
+    include/EditorResult.hpp
+    include/GameEnums.hpp
+    include/InputString.hpp
+    include/KeyShortcut.hpp
+    include/PresetSelectionResult.hpp
+    include/SelectionManager.hpp
+    include/SimulationCommand.hpp
+    include/SimulationControlResult.hpp
+    include/SimulationSettings.hpp
+    include/VersionManager.hpp
+    include/WidgetResult.hpp
+)
 
-add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS} "include/InputString.hpp" "src/InputString.cpp" "include/misc/LoadingSpinner.hpp" "src/misc/LoadingSpinner.cpp" "include/widgets/NoiseWidget.hpp" "src/widgets/NoiseWidget.cpp")
+add_library(GOLGuiLib STATIC ${SOURCES} ${HEADERS})
 
 target_include_directories(GOLGuiLib
     PUBLIC
@@ -14,6 +60,8 @@ target_include_directories(GOLGuiLib
 )
 
 target_link_libraries(GOLGuiLib
+    PRIVATE
+        gol_compiler_options
     PUBLIC
         imgui_lib
         nfd
@@ -22,10 +70,3 @@ target_link_libraries(GOLGuiLib
         GOLGraphicsLib
         GOLLoggingLib
 )
-
-# Add /FS flag for MSVC to avoid PDB file access issues during parallel builds
-if(MSVC)
-    target_compile_options(GOLGuiLib PRIVATE /FS)
-endif()
-
-message(STATUS "GOLGuiLib configured successfully")

@@ -1,7 +1,17 @@
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.hpp")
+set(SOURCES
+    src/Camera.cpp
+    src/GraphicsHandler.cpp
+    src/ShaderManager.cpp
+)
 
-message(STATUS "GOLGraphicsLib sources: ${SOURCES}")
+set(HEADERS
+    include/Camera.hpp
+    include/GLBuffer.hpp
+    include/GLException.hpp
+    include/Graphics2D.hpp
+    include/GraphicsHandler.hpp
+    include/ShaderManager.hpp
+)
 
 add_library(GOLGraphicsLib STATIC ${SOURCES} ${HEADERS} )
 
@@ -11,6 +21,8 @@ target_include_directories(GOLGraphicsLib
 )
 
 target_link_libraries(GOLGraphicsLib
+    PRIVATE
+        gol_compiler_options
     PUBLIC
         glm
         glew
@@ -19,13 +31,7 @@ target_link_libraries(GOLGraphicsLib
         stb_image
         OpenGL::GL
         GOLLoggingLib
-        stb_image
 )
 
 # GLEW needs GLEW_STATIC defined
 target_compile_definitions(GOLGraphicsLib PUBLIC GLEW_STATIC)
-
-# Add /FS flag for MSVC to avoid PDB file access issues during parallel builds
-if(MSVC)
-    target_compile_options(GOLGraphicsLib PRIVATE /FS)
-endif()
