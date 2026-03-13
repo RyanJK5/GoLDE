@@ -1,48 +1,58 @@
-# OpenGL is now found in root CMakeLists.txt
+include(FetchContent)
 
-# Header-only libraries
-add_library(glm INTERFACE)
-target_include_directories(glm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/glm)
-
-add_library(unordered_dense INTERFACE)
-target_include_directories(unordered_dense INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/unordered_dense)
-
+# FontAwesome
 add_library(fontawesome INTERFACE)
 target_include_directories(fontawesome INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/FontAwesome)
 
+# GLM
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(glm)
+
+# unordered_dense
+FetchContent_Declare(
+    unordered_dense
+    GIT_REPOSITORY https://github.com/martinus/unordered_dense.git
+    GIT_TAG v4.4.0
+)
+FetchContent_MakeAvailable(unordered_dense)
+
+# stb_image
+set(STB_IMAGE_DIR ${CMAKE_BINARY_DIR}/_deps/stb_image-src)
+if(NOT EXISTS "${STB_IMAGE_DIR}/stb_image.h")
+    file(DOWNLOAD https://raw.githubusercontent.com/nothings/stb/master/stb_image.h 
+         "${STB_IMAGE_DIR}/stb_image.h"
+         STATUS download_status)
+endif()
 add_library(stb_image INTERFACE)
-target_include_directories(stb_image INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb_image)
+target_include_directories(stb_image INTERFACE ${STB_IMAGE_DIR})
 
-# Add GoogleTest
-add_subdirectory(GoogleTest)
+# GoogleTest
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.16.0.zip
+  SYSTEM
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-message(STATUS "Header-only dependencies configured")
+FetchContent_MakeAvailable(googletest)
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(ARCH_PATH "x64")
-else()
-    set(ARCH_PATH "x86")
+enable_testing()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+	set_target_properties(gtest PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:gtest,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_options(gtest PRIVATE -Wno-character-conversion -Wno-error)
+	target_compile_options(gtest_main PRIVATE -Wno-character-conversion -Wno-error)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	target_compile_options(gtest PRIVATE /WX-)
+	target_compile_options(gtest_main PRIVATE /WX-)
 endif()
 
-if(WIN32)
-    set(PLAT_PATH "windows")
-    set(NFD_SYSTEM_LIBS "comctl32")
-elseif(UNIX AND NOT APPLE)
-    set(PLAT_PATH "linux")
-    
-    # Find GTK+3 using pkg-config for NFD
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-    
-    # Set NFD system libraries to include GTK3
-    set(NFD_SYSTEM_LIBS ${GTK3_LIBRARIES})
-    
-    message(STATUS "GTK3 found: ${GTK3_LIBRARIES}")
-    message(STATUS "GTK3 include dirs: ${GTK3_INCLUDE_DIRS}")
-    message(STATUS "GTK3 library dirs: ${GTK3_LIBRARY_DIRS}")
-elseif(APPLE)
-    set(PLAT_PATH "macos")
-endif()
+message(STATUS "Dependencies configured")
 
 # Fetch GLFW from source
 include(FetchContent)
@@ -68,7 +78,9 @@ if(NOT glew_fetch_POPULATED)
     add_library(glew STATIC ${glew_fetch_SOURCE_DIR}/src/glew.c)
     target_include_directories(glew SYSTEM PUBLIC ${glew_fetch_SOURCE_DIR}/include)
     target_compile_definitions(glew PUBLIC GLEW_STATIC)
-    target_compile_options(glew PRIVATE -Wno-error)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(glew PRIVATE -Wno-error)
+    endif()
     if(WIN32)
         target_link_libraries(glew PUBLIC opengl32)
     endif()

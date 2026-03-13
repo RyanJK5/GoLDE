@@ -8,9 +8,9 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_internal.h>
+#include <nfd.hpp>
 #include <optional>
 #include <utility>
-#include <nfd.hpp>
 
 #include "ConfigLoader.hpp"
 #include "GLException.hpp"

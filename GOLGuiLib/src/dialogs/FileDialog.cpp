@@ -11,14 +11,13 @@ namespace gol {
 std::expected<std::filesystem::path, FileDialogFailure>
 FileDialog::OpenFileDialog(const std::string& filters,
                            const std::string& defaultPath) {
-    const nfdfilteritem_t filterItem[] { { "Game of Life files", filters.c_str() } };
-    
+    const nfdfilteritem_t filterItem[]{{"Game of Life files", filters.c_str()}};
+
     NFD::UniquePathU8 outPath{};
-    const auto result = NFD::OpenDialog(
-        outPath, 
-        filters.empty() ? nullptr : filterItem, 
-        filters.empty() ? 0 : 1, 
-        defaultPath.empty() ? nullptr : defaultPath.c_str());
+    const auto result =
+        NFD::OpenDialog(outPath, filters.empty() ? nullptr : filterItem,
+                        filters.empty() ? 0 : 1,
+                        defaultPath.empty() ? nullptr : defaultPath.c_str());
 
     if (result == NFD_OKAY) {
         auto ret = std::filesystem::path{outPath.get()};
@@ -41,16 +40,13 @@ FileDialog::OpenFileDialog(const std::string& filters,
 std::expected<std::filesystem::path, FileDialogFailure>
 FileDialog::SaveFileDialog(const std::string& filters,
                            const std::string& defaultPath) {
-    const nfdfilteritem_t filterItem[] { { "GOLDE files", filters.c_str() } };
-    
+    const nfdfilteritem_t filterItem[]{{"GOLDE files", filters.c_str()}};
+
     NFD::UniquePathU8 outPath{};
     const auto result = NFD::SaveDialog(
-        outPath, 
-        filters.empty() ? nullptr : filterItem, 
-        filters.empty() ? 0 : 1, 
-        defaultPath.empty() ? nullptr : defaultPath.c_str(), 
-        nullptr
-    );
+        outPath, filters.empty() ? nullptr : filterItem,
+        filters.empty() ? 0 : 1,
+        defaultPath.empty() ? nullptr : defaultPath.c_str(), nullptr);
 
     if (result == NFD_OKAY) {
         auto ret = std::filesystem::path{outPath.get()};
@@ -70,9 +66,10 @@ FileDialog::SaveFileDialog(const std::string& filters,
 
 std::expected<std::filesystem::path, FileDialogFailure>
 FileDialog::SelectFolderDialog(const std::string& defaultPath) {
-    
+
     NFD::UniquePathU8 outPath{};
-    const auto result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
+    const auto result = NFD::PickFolder(
+        outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
 
     if (result == NFD_OKAY) {
         auto ret = std::filesystem::path{outPath.get()};

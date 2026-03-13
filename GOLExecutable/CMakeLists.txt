@@ -13,15 +13,7 @@ target_link_libraries(GOLExecutable PRIVATE
     OpenGL::GL
 )
 
-# Windows system libs
-if(WIN32)
-    target_link_libraries(GOLExecutable PRIVATE
-        User32.lib 
-        Gdi32.lib 
-        Shell32.lib 
-        ole32.lib
-    )
-elseif(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE)
     # Linux: Link required system libraries
     target_link_libraries(GOLExecutable PRIVATE
         ${CMAKE_DL_LIBS}  # for dlopen, dlsym, etc.

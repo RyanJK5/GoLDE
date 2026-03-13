@@ -36,7 +36,7 @@ ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath) {
 
         GL_DEBUG(glLinkProgram(controlBlock.ProgramID));
         GL_DEBUG(glValidateProgram(controlBlock.ProgramID));
-    } catch (GLException e) {
+    } catch (const GLException& e) {
         GL_DEBUG(glDeleteProgram(controlBlock.ProgramID));
         throw e;
     }

@@ -1,5 +1,5 @@
+#include <ankerl/unordered_dense.h>
 #include <cstdint>
-#include <unordered_dense.h>
 
 #include "Graphics2D.hpp"
 #include "LifeHashSet.hpp"

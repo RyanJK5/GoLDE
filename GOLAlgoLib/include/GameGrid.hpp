@@ -6,7 +6,7 @@
 #include <optional>
 #include <set>
 #include <stop_token>
-#include <unordered_dense.h>
+#include <ankerl/unordered_dense.h>
 #include <vector>
 
 #include "Graphics2D.hpp"

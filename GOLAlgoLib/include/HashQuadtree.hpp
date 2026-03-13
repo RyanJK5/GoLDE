@@ -14,7 +14,7 @@
 #include <ranges>
 #include <stack>
 #include <stop_token>
-#include <unordered_dense.h>
+#include <ankerl/unordered_dense.h>
 #include <utility>
 
 #include "Graphics2D.hpp"
@@ -450,6 +450,7 @@ class HashQuadtree {
     static thread_local HashLifeCache s_Cache;
     // This is the transfer cache used for copying `s_Cache` between threads.
     mutable std::unique_ptr<HashLifeCache> m_TransferCache{};
+    mutable const LifeNode* m_TransferRoot = nullptr;
 
     const LifeNode *m_Root = FalseNode;
     Vec2L m_RootOffset;

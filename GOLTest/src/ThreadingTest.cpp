@@ -15,31 +15,33 @@ static void StressTest(const std::filesystem::path& universe,
     ASSERT_TRUE(decodeResult.has_value()) << decodeResult.error();
 
     std::latch startCounter{threadCount};
-    std::latch endCounter{threadCount};
-    std::vector<std::future<GameGrid>> result{};
+    std::vector<std::shared_ptr<GameGrid>> results(threadCount);
+    std::vector<std::jthread> threads{};
+
     for (auto i = 1; i <= threadCount; i++) {
-        result.emplace_back(std::async(
-            std::launch::async, [&startCounter, &endCounter, genCount, i,
-                                 myData = decodeResult->Grid] mutable {
-                startCounter.count_down();
-                startCounter.wait();
+        auto snapshot = std::make_shared<GameGrid>(decodeResult->Grid);
+        results[i - 1] = snapshot;
 
-                for (auto j = 0; j < (genCount % i); j++)
-                    myData.Update(1);
-                for (auto j = 0; j < (genCount / i); j++)
-                    myData.Update(i);
+        threads.emplace_back([&startCounter, genCount, i, snapshot] {
+            startCounter.count_down();
+            startCounter.wait();
 
-                myData.PrepareCopyBetweenThreads();
-                endCounter.count_down();
-                return myData;
-            }));
+            for (auto j = 0; j < (genCount % i); j++)
+                snapshot->Update(1);
+            for (auto j = 0; j < (genCount / i); j++)
+                snapshot->Update(i);
+
+            snapshot->PrepareCopyBetweenThreads();
+        });
     }
 
-    decodeResult->Grid.Update(genCount);
-    endCounter.wait();
+    threads.clear();
 
-    bool allMatch = std::ranges::all_of(result, [&](auto& future) {
-        return future.get().Data() == decodeResult->Grid.Data();
+    decodeResult->Grid.Update(genCount);
+
+    const bool allMatch = std::ranges::all_of(results, [&](auto& shared) {
+        GameGrid local{*shared};
+        return local.Data() == decodeResult->Grid.Data();
     });
 
     EXPECT_TRUE(allMatch);

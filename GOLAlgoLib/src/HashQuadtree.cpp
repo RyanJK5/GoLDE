@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <ankerl/unordered_dense.h>
 #include <array>
 #include <cmath>
 #include <concepts>
@@ -9,7 +10,6 @@
 #include <span>
 #include <stop_token>
 #include <type_traits>
-#include <unordered_dense.h>
 #include <vector>
 
 #include "Graphics2D.hpp"
@@ -319,9 +319,9 @@ void HashQuadtree::Copy(const HashQuadtree& other) {
 
     if (other.m_TransferCache) {
         TransferMap transferMap{};
-        m_Root = BuildCache(transferMap, s_Cache,
-                            other.m_TransferCache->NodeStorage.last());
+        m_Root = BuildCache(transferMap, s_Cache, other.m_TransferRoot);
         other.m_TransferCache = nullptr;
+        other.m_TransferRoot = nullptr;
     } else { // Should ONLY occur if copying/moving in the same thread.
         m_Root = other.m_Root;
     }
@@ -330,7 +330,7 @@ void HashQuadtree::Copy(const HashQuadtree& other) {
 void HashQuadtree::PrepareCopyBetweenThreads() {
     TransferMap transferMap{};
     m_TransferCache = std::make_unique<HashLifeCache>();
-    BuildCache(transferMap, *m_TransferCache, m_Root);
+    m_TransferRoot = BuildCache(transferMap, *m_TransferCache, m_Root);
 }
 
 int32_t HashQuadtree::CalculateDepth() const { return m_Depth; }

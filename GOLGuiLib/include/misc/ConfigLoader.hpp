@@ -46,7 +46,7 @@ class StyleLoaderException : public std::exception {
   public:
     StyleLoaderException(std::string_view error) : m_Error(error) {}
 
-    virtual const char* what() const override final { return m_Error.c_str(); }
+    virtual const char* what() const noexcept override final { return m_Error.c_str(); }
   private:
     std::string m_Error;
 };
