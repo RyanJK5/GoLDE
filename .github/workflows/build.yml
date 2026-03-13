@@ -47,7 +47,10 @@ jobs:
 
     - name: Install Dependencies (macOS)
       if: runner.os == 'macOS'
-      run: brew install ninja
+      run: |
+        brew install ninja llvm@18
+        echo "CXX=$(brew --prefix llvm@18)/bin/clang++" >> $GITHUB_ENV
+        echo "CC=$(brew --prefix llvm@18)/bin/clang" >> $GITHUB_ENV
 
     - name: Install Dependencies (Windows)
       if: runner.os == 'Windows'

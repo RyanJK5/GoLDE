@@ -143,7 +143,7 @@ GameGrid::IterableData() const {
     return std::ref(m_Data);
 }
 
-int64_t GameGrid::Update(int64_t numSteps, const std::stop_token& stopToken) {
+int64_t GameGrid::Update(int64_t numSteps, std::stop_token stopToken) {
     m_CacheInvalidated = true;
 
     switch (m_Algorithm) {
