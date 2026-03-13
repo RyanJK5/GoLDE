@@ -297,6 +297,7 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
             const auto sentinel =
                 m_Model.Selection().SelectionBounds().LowerRight();
             text += std::format(" X ({}, {})", sentinel.X, sentinel.Y);
+            text += std::format(", width: {}, height: {}", std::abs(sentinel.X - pos.X), std::abs(sentinel.Y - pos.Y));
         }
         ImGui::SetCursorPosY(ImGui::GetContentRegionMax().y -
                              ImGui::CalcTextSize(text.c_str()).y);
@@ -324,9 +325,9 @@ std::optional<Vec2> SimulationEditor::ConvertToGridPos(Vec2F screenPos) {
     if (!ViewportBounds().InBounds(screenPos.X, screenPos.Y))
         return std::nullopt;
 
-    glm::vec2 vec =
+    glm::dvec2 vec =
         m_Graphics.Camera.ScreenToWorldPos(screenPos, ViewportBounds());
-    vec /= glm::vec2{DefaultCellWidth, DefaultCellHeight};
+    vec /= glm::dvec2{DefaultCellWidth, DefaultCellHeight};
 
     Vec2 result = {static_cast<int32_t>(std::floor(vec.x)),
                    static_cast<int32_t>(std::floor(vec.y))};
