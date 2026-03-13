@@ -7,54 +7,24 @@
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![CMake](https://img.shields.io/badge/CMake-3.25+-blue.svg)](https://cmake.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform: Windows | Linux | macOS](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-brightgreen.svg)
+![Platform: Windows | Linux | macOS](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-brightgreen.svg)
 
 </div>
 
 ## Overview
 
-GOLDE is a high-performance Conway's Game of Life simulator with an intuitive GUI and advanced algorithms. Features **HashLife** — a revolutionary algorithm that can advance billions of generations in seconds — alongside the classic **SparseLife** algorithm for everyday simulation needs.
+GOLDE is a high-performance Conway's Game of Life simulator with an intuitive GUI and an implementation of HashLife for jumping billions of generations instantly.
 
-Perfect for exploring complex cellular automata patterns, researching emergent behavior, and experiencing the beauty of algorithmic art.
+## Features
 
-## Key Features
-
-- **Dual Algorithms**: Choose between blazing-fast HashLife for massive patterns or standard SparseLife for everyday use
 - **Interactive GUI**: Full-featured ImGui-based interface with intuitive controls
 - **Simulation Control**: Play, pause, step, and adjust speed in real-time
-- **Pattern Editor**: Create and edit patterns with an interactive grid
+- **HashLife Stepping**: Jump any number of generations into the future using HashLife
+- **Pattern Editor**: Create and edit patterns with all the quality of life features of a paint program
 - **Preset Library**: Pre-loaded classic Game of Life patterns
-- **Multi-threaded**: Dedicated worker thread for responsiveness
+- **Multi-threaded**: Separation of concerns for maximum responsiveness
 - **Cross-platform**: Windows, Linux, and macOS support
 - **Production Quality**: Comprehensive test suite with GTest
-
-## Architecture
-
-GOLDE follows a clean layered architecture:
-
-```
-┌─────────────────────────────────────────────────┐
-│           GOLExecutable (App Entry)             │
-└────────────────────┬────────────────────────────┘
-                     │
-┌─────────────────────▼────────────────────────────┐
-│        GOLCoreLib (Game Orchestration)          │
-│  • Simulation Control  • Pattern Management     │
-└──────┬──────────────────┬──────────┬─────────────┘
-       │                  │          │
-   ┌───▼─────┐    ┌──────▼──┐   ┌───▼──────┐
-   │ GOLAlgo │    │ GOLGame │   │ GOLGuiLib│
-   │  Lib    │    │ raphics │   │(ImGui UI)│
-   │• HashLi-│    │ Lib     │   │          │
-   │  fe     │    │         │   └──────────┘
-   │• Sparse │    └─────────┘
-   │  Life   │
-   └────┬────┘       
-        │
-   ┌────▼──────────────────────────────┐
-   │    GOLLoggingLib (Logging)        │
-   └───────────────────────────────────┘
-```
 
 ## Quick Start
 
@@ -122,12 +92,11 @@ GameOfLife/
 ├── GOLTest/             # Unit and integration tests
 ├── Dependencies/        # Third-party libraries (ImGui, FontAwesome)
 ├── cmake/               # CMake utilities and compiler options
-├── docs/                # Documentation and assets
-└── build/               # Build output (generated)
+└── docs/                # Documentation and assets
 ```
 
 ### Dependencies
-- OpenGL 4.5+
+- [OpenGL 4.5+](https://www.opengl.org/)
 - [ImGui](https://github.com/ocornut/imgui)
 - [GLFW](https://www.glfw.org/)
 - [GLEW](https://glew.sourceforge.net/)
@@ -142,7 +111,7 @@ GameOfLife/
 - **Language**: C++23 with modern idioms
 - **Code Format**: Clang-format (run with `cmake --build build --target Format`)
 - **Testing**: Comprehensive GTest suite
-- **Compilation**: All warnings enabled and treated as errors in Release builds
+- **Compilation**: Warnings enabled and treated as errors
 
 ### Running Tests Locally
 
@@ -156,18 +125,6 @@ ctest --test-dir build -R TestName --output-on-failure
 # Run with verbose output
 ctest --test-dir build --verbose
 ```
-
-### Understanding the Algorithms
-
-**HashLife**: Advanced algorithm using quadtree spatial partitioning for massive performance gains. Ideal for:
-- Exploring patterns millions of generations into the future
-- Detecting blinkers and oscillators
-- Pattern analysis and research
-
-**SparseLife**: Hash-set based algorithm optimized for typical patterns. Best for:
-- Interactive simulation and editing
-- Real-time exploration
-- Patterns with limited density
 
 ## Gallery
 
