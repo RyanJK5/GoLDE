@@ -33,6 +33,7 @@ jobs:
 
     - name: Install Dependencies (Windows)
       if: runner.os == 'Windows'
+      run: choco install ninja
 
     - name: Configure CMake (macOS)
       if: runner.os == 'macOS'
