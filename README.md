@@ -5,7 +5,7 @@
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![CMake](https://img.shields.io/badge/CMake-3.25+-blue.svg)](https://cmake.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-![Platform: Windows | Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20-brightgreen.svg)
+![Platform: Windows | Linux | macOS](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20-brightgreen.svg)
 
 ![Build Status](https://github.com/RyanJK5/GameOfLife/actions/workflows/build.yml/badge.svg)
 
@@ -22,7 +22,7 @@ GOLDE is a high-performance Conway's Game of Life simulator with an intuitive GU
 - **Customizable Shortcuts**: Edit keyboard shortcuts in real-time through [shortcuts.yml](GOLExecutable/config/shortcuts.yml)
 - **Preset Library**: Pre-loaded classic Game of Life patterns
 - **Multi-threaded**: Separation of concerns for maximum responsiveness
-- **Cross-platform**: Windows and Linux support
+- **Cross-platform**: Windows, Linux, and macOS support
 - **Production Quality**: Comprehensive test suite with GTest
 
 ## Quick Start
