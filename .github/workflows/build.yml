@@ -57,6 +57,9 @@ jobs:
     - name: Build
       run: cmake --build build --parallel
 
+    - name: Test
+      run: ctest --test-dir build --build-config Release --output-on-failure --parallel
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
