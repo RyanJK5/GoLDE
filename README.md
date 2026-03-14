@@ -100,27 +100,6 @@ GameOfLife/
 - [unordered_dense](https://github.com/martinus/unordered_dense/)
 - [Native File Dialog Extended](https://github.com/btzy/nativefiledialog-extended)
 
-## Development
-
-### Code Standards
-- **Language**: C++23 with modern idioms
-- **Code Format**: Clang-format (run with `cmake --build build --target Format`)
-- **Testing**: Comprehensive GTest suite
-- **Compilation**: Warnings enabled and treated as errors
-
-### Running Tests Locally
-
-```sh
-# Run all tests
-ctest --test-dir build --output-on-failure
-
-# Run specific test
-ctest --test-dir build -R TestName --output-on-failure
-
-# Run with verbose output
-ctest --test-dir build --verbose
-```
-
 ## Gallery
 
 ![](docs/breeder.gif)
