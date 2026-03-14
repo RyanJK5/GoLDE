@@ -318,10 +318,13 @@ void HashQuadtree::Copy(const HashQuadtree& other) {
     }
 
     if (other.m_TransferCache) {
-        TransferMap transferMap{};
-        m_Root = BuildCache(transferMap, s_Cache, other.m_TransferRoot);
-        other.m_TransferCache = nullptr;
-        other.m_TransferRoot = nullptr;
+        // Check if the transfer root is already owned by this thread's cache
+        if (s_Cache.NodeMap.contains(other.m_TransferRoot)) {
+            m_Root = other.m_TransferRoot;
+        } else {
+            TransferMap transferMap{};
+            m_Root = BuildCache(transferMap, s_Cache, other.m_TransferRoot);
+        }
     } else { // Should ONLY occur if copying/moving in the same thread.
         m_Root = other.m_Root;
     }

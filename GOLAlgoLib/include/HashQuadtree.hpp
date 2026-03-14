@@ -453,8 +453,8 @@ class HashQuadtree {
     // is provided above.
     static thread_local HashLifeCache s_Cache;
     // This is the transfer cache used for copying `s_Cache` between threads.
-    mutable std::unique_ptr<HashLifeCache> m_TransferCache{};
-    mutable const LifeNode* m_TransferRoot = nullptr;
+    std::unique_ptr<HashLifeCache> m_TransferCache{};
+    const LifeNode* m_TransferRoot = nullptr;
 
     const LifeNode* m_Root = FalseNode;
     Vec2L m_RootOffset;
