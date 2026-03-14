@@ -2,6 +2,7 @@
 #define SimulationWorker_h_
 
 #include <atomic>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <thread>
@@ -19,7 +20,7 @@ class SimulationWorker {
     void SetStepCount(int64_t stepCount);
     void SetTickDelayMs(int64_t tickDelayMs);
 
-    std::shared_ptr<GameGrid> GetResult() const;
+    const GameGrid* GetResult() const;
     std::chrono::duration<float> GetTimeSinceLastUpdate() const;
 
   private:
@@ -28,7 +29,8 @@ class SimulationWorker {
 
     std::atomic<std::chrono::steady_clock::time_point> m_LastUpdate;
 
-    std::atomic<std::shared_ptr<GameGrid>> m_Snapshot;
+    std::array<GameGrid, 3> m_Buffers{};
+    std::atomic<size_t> m_SnapshotIndex;
 
     std::jthread m_Thread;
 };
