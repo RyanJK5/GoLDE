@@ -11,10 +11,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      
     - name: Install clang-format
       run: |
         sudo apt-get update
         sudo apt-get install -y cmake clang-format
+        
     - name: Run Formatting
       run: |
         cmake -DPROJECT_SOURCE_DIR="${{ github.workspace }}" -P cmake/RunFormat.cmake

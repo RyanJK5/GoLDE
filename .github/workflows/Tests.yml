@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
-      fail-fast: false
+      fail-fast: false  
       matrix:
         include:
           - os: ubuntu-latest
@@ -26,8 +26,10 @@ jobs:
         path: build/
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Fix artifact permissions (Linux/macOS)
       if: runner.os != 'Windows'
       run: chmod -R u+x build/
+
     - name: Test
       run: ctest --test-dir build --build-config Release --output-on-failure --parallel
