@@ -86,6 +86,7 @@ void GameGrid::SetAlgorithm(LifeAlgorithm algorithm) {
 void GameGrid::PrepareCopyBetweenThreads() {
     if (m_HashLifeData) {
         m_HashLifeData->PrepareCopyBetweenThreads();
+        m_CacheInvalidated = true;
     }
 }
 
