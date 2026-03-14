@@ -41,10 +41,7 @@ jobs:
         LLVM_PATH="$(brew --prefix llvm)"
         cmake -B build -G Ninja \
           -D CMAKE_BUILD_TYPE=Release \
-          -D CMAKE_C_COMPILER="$LLVM_PATH/bin/clang" \
-          -D CMAKE_CXX_COMPILER="$LLVM_PATH/bin/clang++" \
-          -D CMAKE_CXX_FLAGS="-stdlib=libc++ -I$LLVM_PATH/include/c++/v1" \
-          -D CMAKE_EXE_LINKER_FLAGS="-L$LLVM_PATH/lib -Wl,-rpath,$LLVM_PATH/lib"
+          -D CMAKE_CXX_FLAGS="-stdlib=libc++" \
 
     - name: Setup MSVC Developer Command Prompt (Windows)
       if: runner.os == 'Windows'
