@@ -21,11 +21,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         $<$<CXX_COMPILER_ID:GNU>:-Wno-nontrivial-memcall>
     )
 
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_SYSTEM_NAME MATCHES "Darwin")
-        target_compile_options(gol_compiler_options INTERFACE -stdlib=libstdc++)
-        target_link_options(gol_compiler_options INTERFACE -stdlib=libstdc++)
-    endif()
-
     target_compile_options(gol_compiler_options INTERFACE
         $<$<CONFIG:Debug>:-g3;-O0;-Wall;-Wextra;-Wpedantic;-fno-omit-frame-pointer>
         $<$<CONFIG:Release>:-O3;-DNDEBUG>
