@@ -1,4 +1,5 @@
 set(SOURCES
+    src/BigUInt.cpp
     src/GameGrid.cpp
     src/HashQuadtree.cpp
     src/LifeHashSet.cpp
