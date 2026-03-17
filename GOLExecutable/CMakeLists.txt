@@ -34,11 +34,7 @@ if(WIN32)
         target_link_options(GOLExecutable PRIVATE 
             $<$<CONFIG:Release>:SHELL:-Xlinker /subsystem:windows -Xlinker /ENTRY:mainCRTStartup>
         )
-    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        target_link_options(GOLExecutable PRIVATE 
-            $<$<CONFIG:Release>:-Xlinker;/subsystem:windows;-Xlinker;/ENTRY:mainCRTStartup>
-        )
-    else()
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         target_link_options(GOLExecutable PRIVATE 
             $<$<CONFIG:Release>:/ENTRY:mainCRTStartup>
         )

@@ -22,11 +22,11 @@ class BigUInt {
 
     BigUInt& operator+=(const BigUInt& rhs);
 
-    BigUInt operator+(const BigUInt& rhs);
+    BigUInt operator+(const BigUInt& rhs) const;
 
     BigUInt& operator<<=(size_t shift);
 
-    BigUInt operator<<(size_t shift);
+    BigUInt operator<<(size_t shift) const;
 
     std::string ToString() const;
 

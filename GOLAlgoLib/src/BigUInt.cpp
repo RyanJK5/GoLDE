@@ -52,7 +52,7 @@ BigUInt& BigUInt::operator+=(const BigUInt& rhs) {
     return *this;
 }
 
-BigUInt BigUInt::operator+(const BigUInt& other) {
+BigUInt BigUInt::operator+(const BigUInt& other) const {
     BigUInt ret{*this};
     ret += other;
     return ret;
@@ -81,7 +81,7 @@ BigUInt& BigUInt::operator<<=(size_t shift) {
     return *this;
 }
 
-BigUInt BigUInt::operator<<(size_t shift) {
+BigUInt BigUInt::operator<<(size_t shift) const {
     BigUInt ret{*this};
     ret <<= shift;
     return ret;
@@ -94,7 +94,7 @@ std::string BigUInt::ToString() const {
 
     const auto divideBy10 = [&] {
         auto remainder = static_cast<uint64_t>(0);
-        for (auto i = static_cast<int32_t>(m_Digits.size()) - 1; i >= 0; i--) {
+        for (auto i = static_cast<int32_t>(copy.size()) - 1; i >= 0; i--) {
             const uint64_t current = (remainder << 32) | copy[i];
             copy[i] = static_cast<uint32_t>(current / 10);
             remainder = current % 10;

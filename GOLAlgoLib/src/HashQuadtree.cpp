@@ -4,6 +4,7 @@
 #include <cmath>
 #include <concepts>
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <ranges>
@@ -309,6 +310,7 @@ static const LifeNode* BuildCache(TransferMap& transferMap,
 }
 
 void HashQuadtree::Copy(const HashQuadtree& other) {
+
     m_Root = FalseNode;
     m_RootOffset = other.m_RootOffset;
     m_Depth = other.m_Depth;
@@ -317,13 +319,20 @@ void HashQuadtree::Copy(const HashQuadtree& other) {
         return;
     }
 
-    if (other.m_TransferCache &&
-        std::this_thread::get_id() != other.m_TransferID) {
+    const bool crossThread = std::this_thread::get_id() != other.m_TransferID;
+    if (!crossThread) {
+        m_Root = other.m_Root;
+        return;
+    }
+
+    if (other.m_TransferCache) {
+        std::cout << std::format("{} -> {}\n", other.m_TransferID,
+                                 std::this_thread::get_id());
         TransferMap transferMap{};
         m_Root = BuildCache(transferMap, s_Cache, other.m_TransferRoot);
-    } else {
-        m_Root = other.m_Root;
+        return;
     }
+    assert(false && "Must prepare a transfer cache across threads");
 }
 
 void HashQuadtree::PrepareCopyBetweenThreads() {
