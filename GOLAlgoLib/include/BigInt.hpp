@@ -7,24 +7,24 @@
 #include "Graphics2D.hpp"
 
 namespace gol {
-    using BigInt = boost::multiprecision::cpp_int;
+using BigInt = boost::multiprecision::cpp_int;
 
-    const inline BigInt BigZero{};
-    const inline BigInt BigOne{1};
+const inline BigInt BigZero{};
+const inline BigInt BigOne{1};
 
-    inline std::strong_ordering operator<=>(const BigInt& lhs, const BigInt& rhs) {
-        const auto cmp = lhs.compare(rhs);
-        if (cmp < 0) {
-            return std::strong_ordering::less;
-        }
-        if (cmp > 0) {
-            return std::strong_ordering::greater;
-        }
-        return std::strong_ordering::equal;
+inline std::strong_ordering operator<=>(const BigInt& lhs, const BigInt& rhs) {
+    const auto cmp = lhs.compare(rhs);
+    if (cmp < 0) {
+        return std::strong_ordering::less;
     }
-
-    using BigVec2 = GenericVec<BigInt>;
+    if (cmp > 0) {
+        return std::strong_ordering::greater;
+    }
+    return std::strong_ordering::equal;
 }
+
+using BigVec2 = GenericVec<BigInt>;
+} // namespace gol
 
 namespace std {
 template <> struct formatter<gol::BigInt> {
@@ -35,10 +35,13 @@ template <> struct formatter<gol::BigInt> {
     auto format(const gol::BigInt& num, auto& context) const {
         const auto s = num.str();
         const bool negative = !s.empty() && s[0] == '-';
-        const auto digits = negative ? std::string_view{s}.substr(1) : std::string_view{s};
-        return std::format_to(context.out(), "{}{}", negative ? "-" : "", AddCommas(digits));
+        const auto digits =
+            negative ? std::string_view{s}.substr(1) : std::string_view{s};
+        return std::format_to(context.out(), "{}{}", negative ? "-" : "",
+                              AddCommas(digits));
     }
-private:
+
+  private:
     static std::string AddCommas(std::string_view str) {
         std::string result{};
         result.reserve(str.size() + (str.size() - 1UZ) / 3UZ);
@@ -51,6 +54,6 @@ private:
         return result;
     }
 };
-}
+} // namespace std
 
 #endif

@@ -43,10 +43,10 @@ struct LifeNode {
     const LifeNode* SouthWest;
     const LifeNode* SouthEast;
 
-    uint64_t Hash{};      // Pre-computed hash
+    uint64_t Hash{}; // Pre-computed hash
 
-    constexpr LifeNode(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw,
-             const LifeNode* se)
+    constexpr LifeNode(const LifeNode* nw, const LifeNode* ne,
+                       const LifeNode* sw, const LifeNode* se)
         : NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se) {
 
         if consteval {
@@ -197,7 +197,9 @@ struct HashLifeCache {
                                  LifeNodeEqual>
         NodeMap{};
 
-    ankerl::unordered_dense::map<const LifeNode*, BigInt, LifeNodeHash, LifeNodeEqual> PopulationCache{};
+    ankerl::unordered_dense::map<const LifeNode*, BigInt, LifeNodeHash,
+                                 LifeNodeEqual>
+        PopulationCache{};
 
     // The cache for the HashLife algorithm when the step size is bounded.
     ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
@@ -392,7 +394,7 @@ class HashQuadtree {
 
     // This is the primary interface for interaction with HashLife's cache.
     static const LifeNode* FindOrCreate(const LifeNode* nw, const LifeNode* ne,
-                                 const LifeNode* sw, const LifeNode* se);
+                                        const LifeNode* sw, const LifeNode* se);
 
     // Helper function for converting a LifeHashSet into a quadtree.
     const LifeNode* BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
@@ -519,7 +521,8 @@ template <typename T> void HashQuadtree::IteratorImpl<T>::AdvanceToNext() {
         }
         m_Stack.top().quadrant = frame.quadrant;
 
-        if (child != HashQuadtree::EmptyTree(std::countr_zero(static_cast<uint64_t>(halfSize))) &&
+        if (child != HashQuadtree::EmptyTree(
+                         std::countr_zero(static_cast<uint64_t>(halfSize))) &&
             IntersectsBounds(childPos, halfSize)) {
             m_Stack.push({child, childPos, halfSize, 0});
         }

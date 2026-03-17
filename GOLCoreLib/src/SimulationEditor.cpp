@@ -282,13 +282,11 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
         snapshot ? snapshot->Generation() : m_Model.Grid().Generation();
     const auto population =
         snapshot ? snapshot->Population() : m_Model.Grid().Population();
-    ImGui::Text(
-        "%s",
-        std::format("Generation: {}", generation).c_str());
+    ImGui::Text("%s", std::format("Generation: {}", generation).c_str());
 
-    const auto totalPopulation = BigInt{population + m_Model.Selection().SelectedPopulation()};
-    ImGui::Text(
-        "%s", std::format("Population: {}", totalPopulation).c_str());
+    const auto totalPopulation =
+        BigInt{population + m_Model.Selection().SelectedPopulation()};
+    ImGui::Text("%s", std::format("Population: {}", totalPopulation).c_str());
 
     if (m_Model.Selection().CanDrawSelection()) {
         const auto pos = m_Model.Selection().SelectionBounds().UpperLeft();

@@ -4,9 +4,9 @@
 #include <cmath>
 #include <concepts>
 #include <cstdint>
-#include <iostream>
 #include <limits>
 #include <memory>
+#include <println>
 #include <ranges>
 #include <span>
 #include <stop_token>
@@ -169,7 +169,9 @@ static uint16_t EncodeQuadrantSE(const LifeNode* q) {
 
 // Encodes a level-2 node (4x4 grid of leaf cells) as a 16-bit value.
 static uint16_t EncodeLevel2(const LifeNode* node) {
-    if (node == FalseNode || (node->NorthEast == FalseNode && node->NorthWest == FalseNode && node->SouthEast == FalseNode && node->SouthWest == FalseNode))
+    if (node == FalseNode ||
+        (node->NorthEast == FalseNode && node->NorthWest == FalseNode &&
+         node->SouthEast == FalseNode && node->SouthWest == FalseNode))
         return 0;
     return EncodeQuadrantNW(node->NorthWest) |
            EncodeQuadrantNE(node->NorthEast) |
@@ -365,9 +367,7 @@ int64_t HashQuadtree::CalculateTreeSize() const {
     return Pow2(m_Depth);
 }
 
-bool HashQuadtree::empty() const {
-    return m_Root == EmptyTree(m_Depth);
-}
+bool HashQuadtree::empty() const { return m_Root == EmptyTree(m_Depth); }
 
 BigInt HashQuadtree::PopulationOf(const LifeNode* node) const {
     if (node == FalseNode) {
@@ -377,21 +377,19 @@ BigInt HashQuadtree::PopulationOf(const LifeNode* node) const {
         return BigOne;
     }
 
-    if (auto it = s_Cache.PopulationCache.find(node); it != s_Cache.PopulationCache.end()) {
+    if (auto it = s_Cache.PopulationCache.find(node);
+        it != s_Cache.PopulationCache.end()) {
+        std::println("Reading cache");
         return it->second;
     }
 
     // 4. Insert and return a copy
-    return s_Cache.PopulationCache[node] = 
-        PopulationOf(node->NorthWest) + 
-        PopulationOf(node->NorthEast) + 
-        PopulationOf(node->SouthWest) + 
-        PopulationOf(node->SouthEast);
+    return s_Cache.PopulationCache[node] =
+               PopulationOf(node->NorthWest) + PopulationOf(node->NorthEast) +
+               PopulationOf(node->SouthWest) + PopulationOf(node->SouthEast);
 }
 
-BigInt HashQuadtree::Population() const {
-    return PopulationOf(m_Root);
-}
+BigInt HashQuadtree::Population() const { return PopulationOf(m_Root); }
 
 HashQuadtree::Iterator HashQuadtree::begin() {
     if (m_Root == FalseNode) {
@@ -612,7 +610,7 @@ const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) const {
         AssembleQuadrants(secondGenNW, secondGenNE, secondGenSW, secondGenSE);
 
     const auto findOrCreate = [](const LifeNode* nw, const LifeNode* ne,
-                                     const LifeNode* sw, const LifeNode* se) {
+                                 const LifeNode* sw, const LifeNode* se) {
         return FindOrCreate(nw, ne, sw, se);
     };
     return DecodeLevel2(resultBits, findOrCreate);
@@ -626,7 +624,7 @@ const LifeNode* HashQuadtree::AdvanceBaseOneGen(const LifeNode* node) const {
     const auto resultBits = AssembleCentered6x6(gen1);
 
     const auto findOrCreate = [](const LifeNode* nw, const LifeNode* ne,
-                                     const LifeNode* sw, const LifeNode* se) {
+                                 const LifeNode* sw, const LifeNode* se) {
         return FindOrCreate(nw, ne, sw, se);
     };
     return DecodeLevel2(resultBits, findOrCreate);
