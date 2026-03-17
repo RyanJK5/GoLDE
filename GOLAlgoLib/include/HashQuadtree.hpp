@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "BigUInt.hpp"
+#include "BigInt.hpp"
 #include "Graphics2D.hpp"
 #include "LifeHashSet.hpp"
 
@@ -44,16 +44,10 @@ struct LifeNode {
     const LifeNode* SouthEast;
 
     uint64_t Hash{};      // Pre-computed hash
-    BigUInt Population{}; // Recursive population of all subnodes combined
 
-    bool IsEmpty() const { return Population.IsZero(); }
-
-    LifeNode(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw,
+    constexpr LifeNode(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw,
              const LifeNode* se)
         : NorthWest(nw), NorthEast(ne), SouthWest(sw), SouthEast(se) {
-
-        Population = (NodePopulation(nw) + NodePopulation(ne)) +
-                     (NodePopulation(sw) + NodePopulation(se));
 
         if consteval {
         } else {
@@ -77,11 +71,6 @@ struct LifeNode {
         h = (h ^ (h >> 27)) * 0x94D049BB133111EBULL;
         h = h ^ (h >> 31);
         return h;
-    }
-
-  private:
-    static BigUInt NodePopulation(const LifeNode* n) {
-        return n ? n->Population : BigUInt{};
     }
 };
 
@@ -143,19 +132,10 @@ struct LifeNodeHash {
 };
 
 // Underlying node for TrueNode.
-inline LifeNode StaticTrueNode = [] {
-    LifeNode ret{
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-    };
-    ret.Population = BigUInt{1};
-    return ret;
-}();
+constexpr inline LifeNode StaticTrueNode{nullptr, nullptr, nullptr, nullptr};
 
-inline const LifeNode* TrueNode = &StaticTrueNode;
-inline const LifeNode* FalseNode = nullptr;
+constexpr inline const LifeNode* TrueNode = &StaticTrueNode;
+constexpr inline const LifeNode* FalseNode = nullptr;
 } // namespace gol
 
 namespace gol {
@@ -216,6 +196,8 @@ struct HashLifeCache {
     ankerl::unordered_dense::map<const LifeNode*, const LifeNode*, LifeNodeHash,
                                  LifeNodeEqual>
         NodeMap{};
+
+    ankerl::unordered_dense::map<const LifeNode*, BigInt, LifeNodeHash, LifeNodeEqual> PopulationCache{};
 
     // The cache for the HashLife algorithm when the step size is bounded.
     ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
@@ -364,7 +346,7 @@ class HashQuadtree {
     // interaction and display of a small subsection of the universe.
     ConstIterator begin(Rect bounds) const;
 
-    const BigUInt& Population() const;
+    BigInt Population() const;
 
     // Advances the simulation. Passing `maxAdvance = 0` indicates that hyper
     // speed should be used. If the stop token is called during advance, the
@@ -390,6 +372,8 @@ class HashQuadtree {
     bool operator!=(const HashQuadtree& other) const;
 
   private:
+    BigInt PopulationOf(const LifeNode* node) const;
+
     // Implementation for copy constructor / copy assignment
     void Copy(const HashQuadtree& other);
 
@@ -407,15 +391,15 @@ class HashQuadtree {
                                int32_t level, int64_t maxAdvance) const;
 
     // This is the primary interface for interaction with HashLife's cache.
-    const LifeNode* FindOrCreate(const LifeNode* nw, const LifeNode* ne,
-                                 const LifeNode* sw, const LifeNode* se) const;
+    static const LifeNode* FindOrCreate(const LifeNode* nw, const LifeNode* ne,
+                                 const LifeNode* sw, const LifeNode* se);
 
     // Helper function for converting a LifeHashSet into a quadtree.
     const LifeNode* BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
                                     int32_t level);
 
     // Returns an empty tree at the given level (size 2^level).
-    const LifeNode* EmptyTree(int32_t level) const;
+    static const LifeNode* EmptyTree(int32_t level);
 
     const LifeNode* BuildTree(const LifeHashSet& data);
 
@@ -535,7 +519,7 @@ template <typename T> void HashQuadtree::IteratorImpl<T>::AdvanceToNext() {
         }
         m_Stack.top().quadrant = frame.quadrant;
 
-        if (child != FalseNode && !child->IsEmpty() &&
+        if (child != HashQuadtree::EmptyTree(std::countr_zero(static_cast<uint64_t>(halfSize))) &&
             IntersectsBounds(childPos, halfSize)) {
             m_Stack.push({child, childPos, halfSize, 0});
         }

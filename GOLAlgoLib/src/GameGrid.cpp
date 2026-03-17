@@ -36,7 +36,7 @@ GameGrid GameGrid::GenerateNoise(Rect bounds, float density) {
                 ret.m_Data.insert({x, y});
             }
         }
-        ret.m_Population = BigUInt{ret.m_Data.size()};
+        ret.m_Population = BigInt{ret.m_Data.size()};
         return ret;
     }
 
@@ -58,7 +58,7 @@ GameGrid GameGrid::GenerateNoise(Rect bounds, float density) {
         std::inserter(ret.m_Data, ret.m_Data.end()), finalCount,
         [&] { return Vec2{distX(generator), distY(generator)}; });
 
-    ret.m_Population = BigUInt{ret.m_Data.size()};
+    ret.m_Population = BigInt{ret.m_Data.size()};
     return ret;
 }
 
@@ -157,7 +157,7 @@ int64_t GameGrid::Update(int64_t numSteps, std::stop_token stopToken) {
             m_Generation++;
         }
         if (m_Data.size() != m_Population) {
-            m_Population = BigUInt{m_Data.size()};
+            m_Population = BigInt{m_Data.size()};
         }
         return numSteps;
     case LifeAlgorithm::HashLife:

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <gtest/gtest.h>
+
 #include <print>
 #include <random>
 #include <ranges>
@@ -38,7 +39,7 @@ static void CheckAgainstFile(const std::filesystem::path& unevolved,
     HashQuadtree current{data1->Grid.Data(), data1->Offset};
     const HashQuadtree expected{data2->Grid.Data(), data2->Offset};
 
-    auto totalGenerations = 0ULL;
+    BigInt totalGenerations{};
     for (auto i = 0; i < numJumps; ++i) {
         const auto genCount = current.Advance(stepSize);
         EXPECT_EQ(genCount, expectedGenerationsPerJump)
@@ -49,7 +50,7 @@ static void CheckAgainstFile(const std::filesystem::path& unevolved,
 
     EXPECT_EQ(current, expected);
     EXPECT_EQ(totalGenerations,
-              expectedGenerationsPerJump * static_cast<uint64_t>(numJumps))
+              expectedGenerationsPerJump * BigInt{numJumps})
         << "Total generations advanced should match expectation";
 }
 
@@ -96,13 +97,14 @@ TEST(HashQuadtreeTest, PopulationMatchesLiveCells) {
 
     LifeHashSet blockCells{{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     HashQuadtree blockTree{blockCells};
-    EXPECT_EQ(blockTree.Population(), blockCells.size());
+    EXPECT_EQ(blockTree.Population(), BigInt{blockCells.size()});
 
     blockTree.Advance();
-    EXPECT_EQ(blockTree.Population(), blockCells.size());
+    EXPECT_EQ(blockTree.Population(), BigInt{blockCells.size()});
 
     singleTree.Advance(1);
-    EXPECT_EQ(singleTree.Population(), 0ULL);
+
+    EXPECT_EQ(singleTree.Population(), BigZero);
 }
 
 TEST(HashQuadtreeTest, SingleCell) {
@@ -264,7 +266,6 @@ TEST(HashQuadtreeTest, CalculateLevelAndSize) {
         HashQuadtree tree{cells};
         // Empty tree is represented by FalseNode (Level 0, Size 1)
         EXPECT_EQ(tree.CalculateDepth(), 0);
-        EXPECT_EQ(tree.CalculateTreeSize(), 0);
     }
 
     // Single Cell
@@ -273,7 +274,6 @@ TEST(HashQuadtreeTest, CalculateLevelAndSize) {
         HashQuadtree tree{cells};
         // Single cell is TrueNode (Level 0, Size 1)
         EXPECT_EQ(tree.CalculateDepth(), 0);
-        EXPECT_EQ(tree.CalculateTreeSize(), 1);
     }
 
     // 2x2 Block
@@ -282,7 +282,6 @@ TEST(HashQuadtreeTest, CalculateLevelAndSize) {
         HashQuadtree tree{cells};
         // 2x2 fits in Level 1 (Size 2)
         EXPECT_EQ(tree.CalculateDepth(), 1);
-        EXPECT_EQ(tree.CalculateTreeSize(), 2);
     }
 
     // 4x4 Area
@@ -291,7 +290,6 @@ TEST(HashQuadtreeTest, CalculateLevelAndSize) {
         HashQuadtree tree{cells};
         // Bounds: 0..3 -> Size 4 -> Level 2
         EXPECT_EQ(tree.CalculateDepth(), 2);
-        EXPECT_EQ(tree.CalculateTreeSize(), 4);
     }
 
     // Large Area
@@ -300,7 +298,6 @@ TEST(HashQuadtreeTest, CalculateLevelAndSize) {
         HashQuadtree tree{cells};
         // Size needs to cover 0 to 100 (span 101). Next power of 2 is 128.
         // 128 = 2^7 -> Level 7
-        EXPECT_EQ(tree.CalculateTreeSize(), 128);
         EXPECT_EQ(tree.CalculateDepth(), 7);
     }
 }

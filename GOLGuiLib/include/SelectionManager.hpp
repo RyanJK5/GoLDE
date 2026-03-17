@@ -63,7 +63,7 @@ class SelectionManager {
 
     bool GridAlive() const;
     const LifeHashSet& GridData() const;
-    const BigUInt& SelectedPopulation() const;
+    const BigInt& SelectedPopulation() const;
 
     bool CanDrawSelection() const;
     bool CanDrawLargeSelection() const;

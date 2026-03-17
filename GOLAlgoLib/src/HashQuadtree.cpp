@@ -169,7 +169,7 @@ static uint16_t EncodeQuadrantSE(const LifeNode* q) {
 
 // Encodes a level-2 node (4x4 grid of leaf cells) as a 16-bit value.
 static uint16_t EncodeLevel2(const LifeNode* node) {
-    if (node == FalseNode || node->IsEmpty())
+    if (node == FalseNode || (node->NorthEast == FalseNode && node->NorthWest == FalseNode && node->SouthEast == FalseNode && node->SouthWest == FalseNode))
         return 0;
     return EncodeQuadrantNW(node->NorthWest) |
            EncodeQuadrantNE(node->NorthEast) |
@@ -326,8 +326,6 @@ void HashQuadtree::Copy(const HashQuadtree& other) {
     }
 
     if (other.m_TransferCache) {
-        std::cout << std::format("{} -> {}\n", other.m_TransferID,
-                                 std::this_thread::get_id());
         TransferMap transferMap{};
         m_Root = BuildCache(transferMap, s_Cache, other.m_TransferRoot);
         return;
@@ -368,11 +366,31 @@ int64_t HashQuadtree::CalculateTreeSize() const {
 }
 
 bool HashQuadtree::empty() const {
-    return m_Root == FalseNode || m_Root->IsEmpty();
+    return m_Root == EmptyTree(m_Depth);
 }
 
-const BigUInt& HashQuadtree::Population() const {
-    return m_Root ? m_Root->Population : BigUInt::Zero;
+BigInt HashQuadtree::PopulationOf(const LifeNode* node) const {
+    if (node == FalseNode) {
+        return BigZero;
+    }
+    if (node == TrueNode) {
+        return BigOne;
+    }
+
+    if (auto it = s_Cache.PopulationCache.find(node); it != s_Cache.PopulationCache.end()) {
+        return it->second;
+    }
+
+    // 4. Insert and return a copy
+    return s_Cache.PopulationCache[node] = 
+        PopulationOf(node->NorthWest) + 
+        PopulationOf(node->NorthEast) + 
+        PopulationOf(node->SouthWest) + 
+        PopulationOf(node->SouthEast);
+}
+
+BigInt HashQuadtree::Population() const {
+    return PopulationOf(m_Root);
 }
 
 HashQuadtree::Iterator HashQuadtree::begin() {
@@ -419,7 +437,7 @@ HashQuadtree::ConstIterator HashQuadtree::end() const {
 const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw,
                                            const LifeNode* ne,
                                            const LifeNode* sw,
-                                           const LifeNode* se) const {
+                                           const LifeNode* se) {
     // Defer to more generic function
     return FindOrCreateFromCache(s_Cache, nw, ne, sw, se);
 }
@@ -593,7 +611,7 @@ const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) const {
     const auto resultBits =
         AssembleQuadrants(secondGenNW, secondGenNE, secondGenSW, secondGenSE);
 
-    const auto findOrCreate = [this](const LifeNode* nw, const LifeNode* ne,
+    const auto findOrCreate = [](const LifeNode* nw, const LifeNode* ne,
                                      const LifeNode* sw, const LifeNode* se) {
         return FindOrCreate(nw, ne, sw, se);
     };
@@ -607,7 +625,7 @@ const LifeNode* HashQuadtree::AdvanceBaseOneGen(const LifeNode* node) const {
     const auto gen1 = ComputeFirstGeneration(quadrants);
     const auto resultBits = AssembleCentered6x6(gen1);
 
-    const auto findOrCreate = [this](const LifeNode* nw, const LifeNode* ne,
+    const auto findOrCreate = [](const LifeNode* nw, const LifeNode* ne,
                                      const LifeNode* sw, const LifeNode* se) {
         return FindOrCreate(nw, ne, sw, se);
     };
@@ -808,64 +826,67 @@ bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const {
     if (level <= 3)
         return true;
 
-    constexpr static auto notEmpty = [](const LifeNode* n) {
-        return n != FalseNode && !n->IsEmpty();
+    const auto notEmpty = [&](const LifeNode* n, int32_t nodeLevel) {
+        return n != FalseNode && n != EmptyTree(nodeLevel);
     };
 
     // We simply want to consider if the outer rim of cells is completely empty,
     // and if the next level down is completely empty. This may sometimes cause
     // unnecessary expansion, but it is a fairly low-overhead procedure that may
     // actually result in better performance when hyper speed is enabled.
+    const auto l1 = level - 1;
+    const auto l2 = level - 2;
+    const auto l3 = level - 3;
 
     const auto* nw = node->NorthWest;
-    if (notEmpty(nw)) {
-        if (notEmpty(nw->NorthWest) || notEmpty(nw->NorthEast) ||
-            notEmpty(nw->SouthWest))
+    if (notEmpty(nw, l1)) {
+        if (notEmpty(nw->NorthWest, l2) || notEmpty(nw->NorthEast, l2) ||
+            notEmpty(nw->SouthWest, l2))
             return true;
 
         const auto* nwSe = nw->SouthEast;
-        if (notEmpty(nwSe) &&
-            (notEmpty(nwSe->NorthWest) || notEmpty(nwSe->NorthEast) ||
-             notEmpty(nwSe->SouthWest)))
+        if (notEmpty(nwSe, l2) &&
+            (notEmpty(nwSe->NorthWest, l3) || notEmpty(nwSe->NorthEast, l3) ||
+             notEmpty(nwSe->SouthWest, l3)))
             return true;
     }
 
     const auto* ne = node->NorthEast;
-    if (notEmpty(ne)) {
-        if (notEmpty(ne->NorthWest) || notEmpty(ne->NorthEast) ||
-            notEmpty(ne->SouthEast))
+    if (notEmpty(ne, l1)) {
+        if (notEmpty(ne->NorthWest, l2) || notEmpty(ne->NorthEast, l2) ||
+            notEmpty(ne->SouthEast, l2))
             return true;
 
         const auto* ne_sw = ne->SouthWest;
-        if (notEmpty(ne_sw) &&
-            (notEmpty(ne_sw->NorthWest) || notEmpty(ne_sw->NorthEast) ||
-             notEmpty(ne_sw->SouthEast)))
+        if (notEmpty(ne_sw, l2) &&
+            (notEmpty(ne_sw->NorthWest, l3) || notEmpty(ne_sw->NorthEast, l3) ||
+             notEmpty(ne_sw->SouthEast, l3)))
             return true;
     }
 
     const auto* sw = node->SouthWest;
-    if (notEmpty(sw)) {
-        if (notEmpty(sw->NorthWest) || notEmpty(sw->SouthWest) ||
-            notEmpty(sw->SouthEast))
+    if (notEmpty(sw, l1)) {
+        if (notEmpty(sw->NorthWest, l2) || notEmpty(sw->SouthWest, l2) ||
+            notEmpty(sw->SouthEast, l2))
             return true;
 
         const auto* sw_ne = sw->NorthEast;
-        if (notEmpty(sw_ne) &&
-            (notEmpty(sw_ne->NorthWest) || notEmpty(sw_ne->SouthWest) ||
-             notEmpty(sw_ne->SouthEast)))
+        if (notEmpty(sw_ne, l2) &&
+            (notEmpty(sw_ne->NorthWest, l3) || notEmpty(sw_ne->SouthWest, l3) ||
+             notEmpty(sw_ne->SouthEast, l3)))
             return true;
     }
 
     const auto* se = node->SouthEast;
-    if (notEmpty(se)) {
-        if (notEmpty(se->NorthEast) || notEmpty(se->SouthWest) ||
-            notEmpty(se->SouthEast))
+    if (notEmpty(se, l1)) {
+        if (notEmpty(se->NorthEast, l2) || notEmpty(se->SouthWest, l2) ||
+            notEmpty(se->SouthEast, l2))
             return true;
 
         const auto* se_nw = se->NorthWest;
-        if (notEmpty(se_nw) &&
-            (notEmpty(se_nw->NorthEast) || notEmpty(se_nw->SouthWest) ||
-             notEmpty(se_nw->SouthEast)))
+        if (notEmpty(se_nw, l2) &&
+            (notEmpty(se_nw->NorthEast, l3) || notEmpty(se_nw->SouthWest, l3) ||
+             notEmpty(se_nw->SouthEast, l3)))
             return true;
     }
 
@@ -931,7 +952,7 @@ int64_t HashQuadtree::Advance(int64_t maxAdvance, std::stop_token stopToken) {
     return advanced.Generations;
 }
 
-const LifeNode* HashQuadtree::EmptyTree(int32_t level) const {
+const LifeNode* HashQuadtree::EmptyTree(int32_t level) {
     if (level <= 0)
         return FalseNode;
 

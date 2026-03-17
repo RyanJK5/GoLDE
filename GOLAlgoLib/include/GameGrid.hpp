@@ -58,8 +58,8 @@ class GameGrid {
         return !Bounded() || Rect{0, 0, m_Width, m_Height}.InBounds(pos);
     }
 
-    int64_t Generation() const { return m_Generation; }
-    const BigUInt& Population() const { return m_Population; }
+    const BigInt& Generation() const { return m_Generation; }
+    const BigInt& Population() const { return m_Population; }
 
     // Indicates if the universe contains any live cells
     bool Dead() const;
@@ -138,8 +138,8 @@ class GameGrid {
     int32_t m_Width;
     int32_t m_Height;
 
-    BigUInt m_Population{};
-    int64_t m_Generation = 0;
+    BigInt m_Population{};
+    BigInt m_Generation{};
 };
 } // namespace gol
 

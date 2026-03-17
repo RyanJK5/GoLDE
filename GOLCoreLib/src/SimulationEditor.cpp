@@ -284,11 +284,11 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
         snapshot ? snapshot->Population() : m_Model.Grid().Population();
     ImGui::Text(
         "%s",
-        std::format(std::locale(""), "Generation: {:L}", generation).c_str());
+        std::format("Generation: {}", generation).c_str());
+
+    const auto totalPopulation = BigInt{population + m_Model.Selection().SelectedPopulation()};
     ImGui::Text(
-        "%s", std::format("Population: {}",
-                          population + m_Model.Selection().SelectedPopulation())
-                  .c_str());
+        "%s", std::format("Population: {}", totalPopulation).c_str());
 
     if (m_Model.Selection().CanDrawSelection()) {
         const auto pos = m_Model.Selection().SelectionBounds().UpperLeft();
@@ -382,7 +382,7 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                 return m_Model.HandleRedo();
             },
             [this](const SaveCommand& cmd) {
-                const static BigUInt threshold{10'000'000U};
+                const static BigInt threshold{10'000'000U};
                 if (m_Model.Grid().Population() > threshold) {
                     m_SaveWarning.SetCallback(
                         [this, path = cmd.FilePath](PopupWindowState state) {
@@ -403,7 +403,7 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                 return m_Model.State();
             },
             [this](const SaveAsNewCommand& cmd) {
-                const static BigUInt threshold{10'000'000U};
+                const static BigInt threshold{10'000'000U};
                 if (m_Model.Grid().Population() > threshold) {
                     m_SaveWarning.SetCallback(
                         [this, path = cmd.FilePath](PopupWindowState state) {

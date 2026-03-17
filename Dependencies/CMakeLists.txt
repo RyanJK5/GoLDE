@@ -1,5 +1,19 @@
 include(FetchContent)
 
+# Boost.Multiprecision
+FetchContent_Declare(
+    boost_multiprecision
+    GIT_REPOSITORY https://github.com/boostorg/multiprecision.git
+    GIT_TAG master
+)
+FetchContent_Declare(
+    boost_config
+    GIT_REPOSITORY https://github.com/boostorg/config.git
+    GIT_TAG master
+)
+
+FetchContent_MakeAvailable(boost_multiprecision boost_config)
+
 # FontAwesome
 add_library(fontawesome INTERFACE)
 target_include_directories(fontawesome INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/FontAwesome)

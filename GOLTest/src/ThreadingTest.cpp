@@ -61,9 +61,6 @@ TEST(ThreadingTest, CopyTest) {
         counter.count_down();
         counter.wait();
 
-        const auto id = std::this_thread::get_id();
-        std::cout << std::format("ABC: {}\n", id);
-
         grid1.Update(200);
         grid1.PrepareCopyBetweenThreads();
     });
@@ -71,16 +68,12 @@ TEST(ThreadingTest, CopyTest) {
         counter.count_down();
         counter.wait();
 
-        const auto id = std::this_thread::get_id();
-        std::cout << std::format("DEF: {}\n", id);
-
         grid2.Update(100);
         grid2.Update(100);
         grid2.PrepareCopyBetweenThreads();
     });
     result1.join();
     result2.join();
-    std::cout << "Brother\n";
 
     EXPECT_EQ(GameGrid{grid1}.Data(), GameGrid{grid2}.Data());
 }

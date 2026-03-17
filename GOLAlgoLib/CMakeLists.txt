@@ -1,25 +1,22 @@
 set(SOURCES
-    src/BigUInt.cpp
     src/GameGrid.cpp
     src/HashQuadtree.cpp
     src/LifeHashSet.cpp
     src/SparseLife.cpp
 )
-
 set(HEADERS
     include/GameGrid.hpp
     include/HashQuadtree.hpp
     include/LifeAlgorithm.hpp
     include/LifeHashSet.hpp
 )
-
 add_library(GOLAlgoLib STATIC ${SOURCES} ${HEADERS})
-
 target_include_directories(GOLAlgoLib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${boost_config_SOURCE_DIR}/include
+        ${boost_multiprecision_SOURCE_DIR}/include
 )
-
 target_link_libraries(GOLAlgoLib
     PRIVATE
         gol_compiler_options
