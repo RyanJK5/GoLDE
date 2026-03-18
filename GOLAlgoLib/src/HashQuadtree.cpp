@@ -30,9 +30,10 @@ constexpr static int32_t Log2MaxAdvanceOf(int64_t stepSize) {
     if (stepSize == 0)
         return 0;
 
-    auto power = 0LL;
-    while (Pow2(power) <= stepSize)
+    auto power = 0;
+    while (Pow2(power) <= stepSize) {
         power++;
+    }
     return power - 1;
 }
 
