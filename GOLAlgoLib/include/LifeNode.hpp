@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace gol {
 // Represents one node of the quadtree structure.
