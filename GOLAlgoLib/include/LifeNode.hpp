@@ -1,6 +1,11 @@
+#ifndef LifeNode_h_
+#define LifeNode_h_
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "Graphics2D.hpp"
 
 namespace gol {
 // Represents one node of the quadtree structure.
@@ -47,6 +52,12 @@ struct LifeNodeKey {
     LifeNodeKey(const LifeNode* nw, const LifeNode* ne, const LifeNode* sw,
                 const LifeNode* se);
 };
+
+bool IsWithinBounds(Rect bounds, Vec2L pos);
+
+// Checks if a `size * size` square with its upper-left corner at `pos`
+// intersects with the bounds of this iterator
+bool IntersectsBounds(Rect bounds, Vec2L pos, int32_t level);
 
 struct LifeNodeEqual {
     using is_transparent = void; // Flag for ankerl::unordered_dense
@@ -118,4 +129,11 @@ LifeNode* LifeNodeArena::emplace(Args&&... args) {
     return node;
 }
 
+template <std::integral T>
+constexpr int64_t Pow2(T exponent) {
+    return int64_t{1} << exponent;
+}
+
 } // namespace gol
+
+#endif

@@ -122,38 +122,6 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
                                                *controlArgs.Command))};
 }
 
-void SimulationEditor::DrawHashLifeData(const HashQuadtree& quadtree,
-                                        const GraphicsHandlerArgs& args) {
-    const auto viewBounds = args.ViewportBounds;
-    const auto topLeftWorld = m_Graphics.Camera.ScreenToWorldPos(
-        Vec2F{static_cast<float>(viewBounds.X),
-              static_cast<float>(viewBounds.Y)},
-        viewBounds);
-    const auto bottomRightWorld = m_Graphics.Camera.ScreenToWorldPos(
-        Vec2F{static_cast<float>(viewBounds.X + viewBounds.Width),
-              static_cast<float>(viewBounds.Y + viewBounds.Height)},
-        viewBounds);
-    const auto [minWorldX, maxWorldX] =
-        std::minmax(topLeftWorld.x, bottomRightWorld.x);
-    const auto [minWorldY, maxWorldY] =
-        std::minmax(topLeftWorld.y, bottomRightWorld.y);
-    const auto minCellX =
-        static_cast<int32_t>(std::floor(minWorldX / args.CellSize.Width));
-    const auto minCellY =
-        static_cast<int32_t>(std::floor(minWorldY / args.CellSize.Height));
-    const auto maxCellX =
-        static_cast<int32_t>(std::ceil(maxWorldX / args.CellSize.Width));
-    const auto maxCellY =
-        static_cast<int32_t>(std::ceil(maxWorldY / args.CellSize.Height));
-    const auto visibleBounds =
-        Rect{minCellX, minCellY, std::max(0, maxCellX - minCellX),
-             std::max(0, maxCellY - minCellY)};
-
-    const auto visibleRange =
-        std::ranges::subrange(quadtree.begin(visibleBounds), quadtree.end());
-    m_Graphics.DrawGrid({0, 0}, visibleRange, args);
-}
-
 SimulationState
 SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args) {
     const auto snapshot = m_Model.Worker().GetResult();
@@ -165,7 +133,8 @@ SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args) {
             std::get<std::reference_wrapper<const LifeHashSet>>(data).get(),
             args);
     else
-        DrawHashLifeData(
+        m_Graphics.DrawGrid(
+            {0, 0},
             std::get<std::reference_wrapper<const HashQuadtree>>(data).get(),
             args);
     return SimulationState::Simulation;
@@ -208,7 +177,8 @@ SimulationState SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& args) {
             std::get<std::reference_wrapper<const LifeHashSet>>(data).get(),
             args);
     else
-        DrawHashLifeData(
+        m_Graphics.DrawGrid(
+            {0, 0},
             std::get<std::reference_wrapper<const HashQuadtree>>(data).get(),
             args);
 

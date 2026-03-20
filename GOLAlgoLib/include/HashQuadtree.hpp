@@ -84,12 +84,6 @@ class HashQuadtree {
                                   // Useful for knowing where to look next.
         };
 
-        bool IsWithinBounds(Vec2L pos) const;
-
-        // Checks if a `size * size` square with its upper-left corner at `pos`
-        // intersects with the bounds of this iterator
-        bool IntersectsBounds(Vec2L pos, int32_t level) const;
-
       public:
         using iterator_category = std::input_iterator_tag;
         using difference_type = std::ptrdiff_t;
@@ -156,6 +150,11 @@ class HashQuadtree {
     // unspecified state (likely part-way through iteration).
     int32_t Advance(int32_t advanceDepth = -1, std::stop_token stopToken = {});
 
+    // Applies func to all cells within the given bounds. More efficient than
+    // iterators because recursion can be used.
+    template <std::invocable<Vec2> Func>
+    void ForEachCell(const Func& func, Rect bounds) const;
+
     // Returns the number of levels in the current tree.
     int32_t CalculateDepth() const;
     // Returns the length/width of the tree's root node.
@@ -174,6 +173,10 @@ class HashQuadtree {
     bool operator!=(const HashQuadtree& other) const;
 
   private:
+    template <std::invocable<Vec2> Func>
+    static void ForEachImpl(const Func& func, const LifeNode* node, Vec2L pos,
+                            int32_t level, Rect bounds);
+
     static BigInt PopulationOf(const LifeNode* node);
 
     // Implementation for copy constructor / copy assignment
@@ -259,11 +262,6 @@ class HashQuadtree {
     int32_t m_Depth = 0;
 };
 
-template <std::integral T>
-constexpr int64_t Pow2(T exponent) {
-    return int64_t{1} << exponent;
-}
-
 template <int32_t Size>
 constexpr int32_t Index2D(int32_t x, int32_t y) {
     return y * Size + x;
@@ -289,6 +287,45 @@ const LifeNode* HashQuadtree::Combine2x2(const T& nodes, int32_t topLeftX,
                             nodes[Index2D<Size>(topLeftX, topLeftY + 1)],
                             nodes[Index2D<Size>(topLeftX + 1, topLeftY + 1)]);
     }
+}
+
+template <std::invocable<Vec2> Func>
+void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
+                               Vec2L pos, int32_t level, Rect bounds) {
+    if (node == FalseNode || node->IsEmpty ||
+        !IntersectsBounds(bounds, pos, level)) {
+        return;
+    }
+
+    if (level == 0) {
+        if (node == TrueNode && IsWithinBounds(bounds, pos)) {
+            func(
+                Vec2{static_cast<int32_t>(pos.X), static_cast<int32_t>(pos.Y)});
+        }
+        return;
+    }
+
+    const auto childLevel = level - 1;
+    const auto halfSize = Pow2(childLevel);
+
+    ForEachImpl(func, node->NorthWest, pos, childLevel, bounds);
+    ForEachImpl(func, node->NorthEast, {pos.X + halfSize, pos.Y}, childLevel,
+                bounds);
+    ForEachImpl(func, node->SouthWest, {pos.X, pos.Y + halfSize}, childLevel,
+                bounds);
+    ForEachImpl(func, node->SouthEast, {pos.X + halfSize, pos.Y + halfSize},
+                childLevel, bounds);
+}
+
+template <std::invocable<Vec2> Func>
+void HashQuadtree::ForEachCell(const Func& func, Rect bounds) const {
+    if (m_Root == FalseNode) {
+        return;
+    }
+
+    const auto [node, offset] = GetCenteredNode(32);
+    return ForEachImpl(std::forward<Func>(func), node, offset,
+                       std::min(m_Depth, 32), bounds);
 }
 } // namespace gol
 

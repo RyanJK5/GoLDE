@@ -8,14 +8,14 @@ set(HEADERS
     include/Camera.hpp
     include/GLBuffer.hpp
     include/GLException.hpp
-    include/Graphics2D.hpp
     include/GraphicsHandler.hpp
     include/ShaderManager.hpp
 )
 
+
 add_library(GOLGraphicsLib STATIC ${SOURCES} ${HEADERS} )
 
-target_include_directories(GOLGraphicsLib
+target_include_directories(GOLAlgoLib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -30,6 +30,7 @@ target_link_libraries(GOLGraphicsLib
         imgui_lib
         stb_image
         OpenGL::GL
+        GOLAlgoLib
         GOLLoggingLib
 )
 

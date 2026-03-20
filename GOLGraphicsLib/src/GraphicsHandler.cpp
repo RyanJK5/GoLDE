@@ -292,4 +292,31 @@ void GraphicsHandler::CenterCamera(const GraphicsHandlerArgs& args) {
     Camera.Center = {args.GridSize.Width / 2.0 * args.CellSize.Width,
                      args.GridSize.Height / 2.0 * args.CellSize.Height};
 }
+
+Rect GraphicsHandler::VisibleBounds(const GraphicsHandlerArgs& args) {
+    const auto viewBounds = args.ViewportBounds;
+    const auto topLeftWorld =
+        Camera.ScreenToWorldPos(Vec2F{static_cast<float>(viewBounds.X),
+                                      static_cast<float>(viewBounds.Y)},
+                                viewBounds);
+    const auto bottomRightWorld = Camera.ScreenToWorldPos(
+        Vec2F{static_cast<float>(viewBounds.X + viewBounds.Width),
+              static_cast<float>(viewBounds.Y + viewBounds.Height)},
+        viewBounds);
+    const auto [minWorldX, maxWorldX] =
+        std::minmax(topLeftWorld.x, bottomRightWorld.x);
+    const auto [minWorldY, maxWorldY] =
+        std::minmax(topLeftWorld.y, bottomRightWorld.y);
+    const auto minCellX =
+        static_cast<int32_t>(std::floor(minWorldX / args.CellSize.Width));
+    const auto minCellY =
+        static_cast<int32_t>(std::floor(minWorldY / args.CellSize.Height));
+    const auto maxCellX =
+        static_cast<int32_t>(std::ceil(maxWorldX / args.CellSize.Width));
+    const auto maxCellY =
+        static_cast<int32_t>(std::ceil(maxWorldY / args.CellSize.Height));
+
+    return Rect{minCellX, minCellY, std::max(0, maxCellX - minCellX),
+                std::max(0, maxCellY - minCellY)};
+}
 } // namespace gol

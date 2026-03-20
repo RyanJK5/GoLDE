@@ -8,6 +8,7 @@ set(SOURCES
 )
 set(HEADERS
     include/GameGrid.hpp
+    include/Graphics2D.hpp
     include/HashQuadtree.hpp
     include/LifeAlgorithm.hpp
     include/LifeHashSet.hpp

@@ -13,6 +13,7 @@
 #include "Camera.hpp"
 #include "GLBuffer.hpp"
 #include "Graphics2D.hpp"
+#include "HashQuadtree.hpp"
 #include "Logging.hpp"
 #include "ShaderManager.hpp"
 
@@ -53,7 +54,7 @@ class GraphicsHandler {
 
     void RescaleFrameBuffer(Rect windowBounds, Rect viewportBounds);
 
-    void DrawGrid(Vec2 offset, std::ranges::input_range auto&& grid,
+    void DrawGrid(Vec2 offset, const std::ranges::input_range auto& grid,
                   const GraphicsHandlerArgs& args);
     void DrawSelection(Rect region, const GraphicsHandlerArgs& info);
     void ClearBackground(const GraphicsHandlerArgs& args);
@@ -63,11 +64,13 @@ class GraphicsHandler {
     uint32_t TextureID() const { return m_Texture.ID(); }
 
   private:
+    Rect VisibleBounds(const GraphicsHandlerArgs& args);
+
     void InitGridBuffer();
 
-    std::vector<float> GenerateGLBuffer(Vec2 offset,
-                                        std::ranges::input_range auto&& grid,
-                                        const GraphicsHandlerArgs& args) const;
+    std::vector<float>
+    GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid,
+                     const GraphicsHandlerArgs& args, Rect bounds = {}) const;
 
     RectF GridToScreenBounds(Rect region,
                              const GraphicsHandlerArgs& args) const;
@@ -107,10 +110,9 @@ class GraphicsHandler {
 template <typename T>
 concept HasSize = requires(T a) { a.size(); };
 
-std::vector<float>
-GraphicsHandler::GenerateGLBuffer(Vec2 offset,
-                                  std::ranges::input_range auto&& grid,
-                                  const GraphicsHandlerArgs& args) const {
+std::vector<float> GraphicsHandler::GenerateGLBuffer(
+    Vec2 offset, const std::ranges::input_range auto& grid,
+    const GraphicsHandlerArgs& args, Rect bounds) const {
     std::vector<float> result{};
 
     const auto gridInfo = CalculateGridLineInfo(offset, args);
@@ -130,22 +132,30 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset,
         result.reserve(reserveCount * 2);
     }
 
-    for (const auto vec : grid) {
+    const auto pushToBuffer = [&](Vec2 vec) {
         const double x = static_cast<double>(vec.X + offset.X);
         const double y = static_cast<double>(vec.Y + offset.Y);
         if (x < minCellX || x > maxCellX || y < minCellY || y > maxCellY)
-            continue;
+            return;
         result.push_back(
             static_cast<float>(x - Camera.Center.x / args.CellSize.Width));
         result.push_back(
             static_cast<float>(y - Camera.Center.y / args.CellSize.Height));
+    };
+
+    if constexpr (std::is_same_v<decltype(grid), HashQuadtree>) {
+        grid.ForEachCell(pushToBuffer, bounds);
+    } else {
+        for (const auto vec : grid) {
+            pushToBuffer(vec);
+        }
     }
 
     return result;
 }
 
 void GraphicsHandler::DrawGrid(Vec2 offset,
-                               std::ranges::input_range auto&& grid,
+                               const std::ranges::input_range auto& grid,
                                const GraphicsHandlerArgs& args) {
     FrameBufferBinder binder{m_FrameBuffer};
 
@@ -165,7 +175,12 @@ void GraphicsHandler::DrawGrid(Vec2 offset,
     m_GridShader.AttachUniformMatrix4("u_MVP", matrix);
     m_GridShader.AttachUniformVec4("u_Color", {1.f, 1.f, 1.f, 1.f});
 
-    const auto positions = GenerateGLBuffer(offset, grid, args);
+    const auto positions = [&] {
+        if constexpr (std::is_same_v<decltype(grid), HashQuadtree>) {
+            return GenerateGLBuffer(offset, grid, args, VisibleBounds(args));
+        }
+        return GenerateGLBuffer(offset, grid, args);
+    }();
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
 

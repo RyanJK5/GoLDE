@@ -52,9 +52,6 @@ class SimulationEditor {
     SimulationState PaintUpdate(const GraphicsHandlerArgs& args);
     SimulationState PauseUpdate(const GraphicsHandlerArgs& args);
 
-    void DrawHashLifeData(const HashQuadtree& quadtree,
-                          const GraphicsHandlerArgs& args);
-
     DisplayResult DisplaySimulation(bool grabFocus);
 
     SimulationState UpdateState(const SimulationControlResult& action);

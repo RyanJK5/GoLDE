@@ -3,6 +3,27 @@
 #include <functional>
 
 namespace gol {
+bool IsWithinBounds(Rect bounds, Vec2L pos) {
+    const auto left = static_cast<int64_t>(bounds.X);
+    const auto top = static_cast<int64_t>(bounds.Y);
+    const auto right = left + bounds.Width;
+    const auto bottom = top + bounds.Height;
+    return pos.X >= left && pos.X < right && pos.Y >= top && pos.Y < bottom;
+}
+
+bool IntersectsBounds(Rect bounds, Vec2L pos, int32_t level) {
+    const auto regionRight = pos.X + Pow2(level);
+    const auto regionBottom = pos.Y + Pow2(level);
+
+    const auto left = static_cast<int64_t>(bounds.X);
+    const auto top = static_cast<int64_t>(bounds.Y);
+    const auto right = left + bounds.Width;
+    const auto bottom = top + bounds.Height;
+
+    return !(regionRight <= left || pos.X >= right || regionBottom <= top ||
+             pos.Y >= bottom);
+}
+
 uint64_t LifeNode::ComputeHash(const LifeNode* nw, const LifeNode* ne,
                                const LifeNode* sw, const LifeNode* se) {
     // Shift pointers right by 4 to discard alignment zeros, then mix.

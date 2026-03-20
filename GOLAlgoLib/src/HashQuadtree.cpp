@@ -39,6 +39,7 @@ HashLifeCache::HashLifeCache() {
 
 thread_local HashLifeCache HashQuadtree::s_Cache{};
 
+namespace {
 // ============================================================================
 // Base case infrastructure for the 8x8 HashLife leaf computation.
 //
@@ -56,16 +57,16 @@ thread_local HashLifeCache HashQuadtree::s_Cache{};
 // ============================================================================
 
 // Total number of possible 4x4 cell configurations.
-constexpr static uint32_t NumLeafPatterns = 65536;
+constexpr uint32_t NumLeafPatterns = 65536;
 
 // Bitmasks for extracting 2x2 quadrants from a 16-bit 4x4 grid.
-constexpr static uint16_t MaskNW = 0xCC00;
-constexpr static uint16_t MaskNE = 0x3300;
-constexpr static uint16_t MaskSW = 0x00CC;
-constexpr static uint16_t MaskSE = 0x0033;
+constexpr uint16_t MaskNW = 0xCC00;
+constexpr uint16_t MaskNE = 0x3300;
+constexpr uint16_t MaskSW = 0x00CC;
+constexpr uint16_t MaskSE = 0x0033;
 
 // Returns the bit position (0-15) for a cell at (col, row) in a 4x4 grid.
-constexpr static int BitPosition(int col, int row) {
+constexpr int BitPosition(int col, int row) {
     return (3 - row) * 4 + (3 - col);
 }
 
@@ -74,7 +75,7 @@ constexpr static int BitPosition(int col, int row) {
 // encoded in bits {5, 4, 1, 0} (the SE quadrant positions). This encoding
 // allows the results of 9 overlapping lookups to be efficiently assembled
 // via shifts into a full 4x4 result.
-static auto BuildRuleTable() {
+auto BuildRuleTable() {
     // The four center cells of a 4x4 grid whose next state we compute.
     constexpr std::array centerCol{1, 2, 1, 2};
     constexpr std::array centerRow{1, 1, 2, 2};
@@ -107,11 +108,11 @@ static auto BuildRuleTable() {
     return table;
 }
 
-static const auto RuleTable = BuildRuleTable();
+const auto RuleTable = BuildRuleTable();
 
 // Directly encodes a level-1 quadrant's cells into the known bit positions
 // for each 2x2 sub-quadrant of the 4x4 grid.
-static uint16_t EncodeQuadrantNW(const LifeNode* q) {
+uint16_t EncodeQuadrantNW(const LifeNode* q) {
     if (q == FalseNode)
         return 0;
     uint16_t bits = 0;
@@ -125,7 +126,7 @@ static uint16_t EncodeQuadrantNW(const LifeNode* q) {
         bits |= (1 << 10);
     return bits;
 }
-static uint16_t EncodeQuadrantNE(const LifeNode* q) {
+uint16_t EncodeQuadrantNE(const LifeNode* q) {
     if (q == FalseNode)
         return 0;
     uint16_t bits = 0;
@@ -139,7 +140,7 @@ static uint16_t EncodeQuadrantNE(const LifeNode* q) {
         bits |= (1 << 8);
     return bits;
 }
-static uint16_t EncodeQuadrantSW(const LifeNode* q) {
+uint16_t EncodeQuadrantSW(const LifeNode* q) {
     if (q == FalseNode)
         return 0;
     uint16_t bits = 0;
@@ -153,7 +154,7 @@ static uint16_t EncodeQuadrantSW(const LifeNode* q) {
         bits |= (1 << 2);
     return bits;
 }
-static uint16_t EncodeQuadrantSE(const LifeNode* q) {
+uint16_t EncodeQuadrantSE(const LifeNode* q) {
     if (q == FalseNode)
         return 0;
     uint16_t bits = 0;
@@ -169,7 +170,7 @@ static uint16_t EncodeQuadrantSE(const LifeNode* q) {
 }
 
 // Encodes a level-2 node (4x4 grid of leaf cells) as a 16-bit value.
-static uint16_t EncodeLevel2(const LifeNode* node) {
+uint16_t EncodeLevel2(const LifeNode* node) {
     if (node == FalseNode ||
         (node->NorthEast == FalseNode && node->NorthWest == FalseNode &&
          node->SouthEast == FalseNode && node->SouthWest == FalseNode))
@@ -181,7 +182,7 @@ static uint16_t EncodeLevel2(const LifeNode* node) {
 }
 
 // Converts a single bit to a leaf cell pointer.
-static const LifeNode* BitToCell(uint16_t bits, int position) {
+const LifeNode* BitToCell(uint16_t bits, int position) {
     return ((bits >> position) & 1) != 0 ? TrueNode : FalseNode;
 }
 
@@ -189,8 +190,7 @@ static const LifeNode* BitToCell(uint16_t bits, int position) {
 // The result is a node with four level-1 quadrant children, each
 // containing four leaf cells.
 template <typename FindOrCreateFn>
-static const LifeNode* DecodeLevel2(uint16_t bits,
-                                    FindOrCreateFn&& findOrCreate) {
+const LifeNode* DecodeLevel2(uint16_t bits, FindOrCreateFn&& findOrCreate) {
     const auto* quadrantNW =
         findOrCreate(BitToCell(bits, 15), BitToCell(bits, 14),
                      BitToCell(bits, 11), BitToCell(bits, 10));
@@ -205,6 +205,7 @@ static const LifeNode* DecodeLevel2(uint16_t bits,
                      BitToCell(bits, 0));
     return findOrCreate(quadrantNW, quadrantNE, quadrantSW, quadrantSE);
 }
+} // namespace
 
 // Free function form of calling HashQuadtree::Advance, with the added bonus of
 // supporting an exact `stepCount` rather than just a `maxAdvance`.
@@ -851,10 +852,10 @@ bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const {
             notEmpty(ne->SouthEast))
             return true;
 
-        const auto* ne_sw = ne->SouthWest;
-        if (notEmpty(ne_sw) &&
-            (notEmpty(ne_sw->NorthWest) || notEmpty(ne_sw->NorthEast) ||
-             notEmpty(ne_sw->SouthEast)))
+        const auto* neSw = ne->SouthWest;
+        if (notEmpty(neSw) &&
+            (notEmpty(neSw->NorthWest) || notEmpty(neSw->NorthEast) ||
+             notEmpty(neSw->SouthEast)))
             return true;
     }
 
@@ -864,10 +865,10 @@ bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const {
             notEmpty(sw->SouthEast))
             return true;
 
-        const auto* sw_ne = sw->NorthEast;
-        if (notEmpty(sw_ne) &&
-            (notEmpty(sw_ne->NorthWest) || notEmpty(sw_ne->SouthWest) ||
-             notEmpty(sw_ne->SouthEast)))
+        const auto* swNe = sw->NorthEast;
+        if (notEmpty(swNe) &&
+            (notEmpty(swNe->NorthWest) || notEmpty(swNe->SouthWest) ||
+             notEmpty(swNe->SouthEast)))
             return true;
     }
 
@@ -877,10 +878,10 @@ bool HashQuadtree::NeedsExpansion(const LifeNode* node, int32_t level) const {
             notEmpty(se->SouthEast))
             return true;
 
-        const auto* se_nw = se->NorthWest;
-        if (notEmpty(se_nw) &&
-            (notEmpty(se_nw->NorthEast) || notEmpty(se_nw->SouthWest) ||
-             notEmpty(se_nw->SouthEast)))
+        const auto* seNw = se->NorthWest;
+        if (notEmpty(seNw) &&
+            (notEmpty(seNw->NorthEast) || notEmpty(seNw->SouthWest) ||
+             notEmpty(seNw->SouthEast)))
             return true;
     }
 

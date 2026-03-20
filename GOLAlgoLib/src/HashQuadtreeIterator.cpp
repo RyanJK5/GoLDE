@@ -1,48 +1,13 @@
 #include "HashQuadtree.hpp"
+#include "LifeNode.hpp"
 
 namespace gol {
-bool HashQuadtree::Iterator::IsWithinBounds(Vec2L pos) const {
-    if (!m_UseBounds) {
-        return true;
-    }
-
-    const auto left = static_cast<int64_t>(m_Bounds.X);
-    const auto top = static_cast<int64_t>(m_Bounds.Y);
-    const auto right = left + m_Bounds.Width;
-    const auto bottom = top + m_Bounds.Height;
-    return pos.X >= left && pos.X < right && pos.Y >= top && pos.Y < bottom;
-}
-
-bool HashQuadtree::Iterator::IntersectsBounds(Vec2L pos, int32_t level) const {
-    constexpr static auto minBound = std::numeric_limits<int32_t>::min();
-    constexpr static auto maxBound = std::numeric_limits<int32_t>::max();
-
-    if (pos.X < minBound || pos.X > maxBound || pos.Y < minBound ||
-        pos.Y > maxBound) {
-        return false;
-    }
-    if (!m_UseBounds) {
-        return true;
-    }
-
-    const auto regionRight = pos.X + Pow2(level);
-    const auto regionBottom = pos.Y + Pow2(level);
-
-    const auto left = static_cast<int64_t>(m_Bounds.X);
-    const auto top = static_cast<int64_t>(m_Bounds.Y);
-    const auto right = left + m_Bounds.Width;
-    const auto bottom = top + m_Bounds.Height;
-
-    return !(regionRight <= left || pos.X >= right || regionBottom <= top ||
-             pos.Y >= bottom);
-}
-
 HashQuadtree::Iterator::Iterator(const LifeNode* root, Vec2L offset,
                                  int32_t level, bool isEnd, const Rect* bounds)
     : m_Bounds(bounds ? *bounds : Rect{}), m_Current(), m_IsEnd(isEnd),
       m_UseBounds(bounds != nullptr) {
     if (!isEnd && root != FalseNode) {
-        if (!m_UseBounds || IntersectsBounds(offset, level)) {
+        if (!m_UseBounds || IntersectsBounds(m_Bounds, offset, level)) {
             m_Stack.push({root, offset, level, 0});
             AdvanceToNext();
         } else {
@@ -58,7 +23,7 @@ void HashQuadtree::Iterator::AdvanceToNext() {
         // If we're at a leaf (size == 1)
         if (frame.Level == 0) {
             if (frame.Node == TrueNode) {
-                if (IsWithinBounds(frame.Position)) {
+                if (!m_UseBounds || IsWithinBounds(m_Bounds, frame.Position)) {
                     m_Current = Vec2{static_cast<int32_t>(frame.Position.X),
                                      static_cast<int32_t>(frame.Position.Y)};
                     m_Stack.pop();
@@ -101,7 +66,8 @@ void HashQuadtree::Iterator::AdvanceToNext() {
         m_Stack.top().Quadrant = frame.Quadrant;
 
         if (child != FalseNode && !child->IsEmpty &&
-            IntersectsBounds(childPos, childLevel)) {
+            (!m_UseBounds ||
+             IntersectsBounds(m_Bounds, childPos, childLevel))) {
             m_Stack.push({child, childPos, childLevel, 0});
         }
     }
