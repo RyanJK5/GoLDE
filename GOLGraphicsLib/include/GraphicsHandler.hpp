@@ -70,7 +70,7 @@ class GraphicsHandler {
 
     std::vector<float>
     GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid,
-                     const GraphicsHandlerArgs& args, Rect bounds = {}) const;
+                     const GraphicsHandlerArgs& args) const;
 
     RectF GridToScreenBounds(Rect region,
                              const GraphicsHandlerArgs& args) const;
@@ -107,12 +107,10 @@ class GraphicsHandler {
     GLRenderBuffer m_renderBuffer;
 };
 
-template <typename T>
-concept HasSize = requires(T a) { a.size(); };
-
-std::vector<float> GraphicsHandler::GenerateGLBuffer(
-    Vec2 offset, const std::ranges::input_range auto& grid,
-    const GraphicsHandlerArgs& args, Rect bounds) const {
+std::vector<float>
+GraphicsHandler::GenerateGLBuffer(Vec2 offset,
+                                  const std::ranges::input_range auto& grid,
+                                  const GraphicsHandlerArgs& args) const {
     std::vector<float> result{};
 
     const auto gridInfo = CalculateGridLineInfo(offset, args);
@@ -123,7 +121,7 @@ std::vector<float> GraphicsHandler::GenerateGLBuffer(
     const auto maxCellY =
         std::ceil(gridInfo.LowerRight.Y / args.CellSize.Height) - 1.f;
 
-    if constexpr (HasSize<decltype(grid)>) {
+    if constexpr (std::ranges::sized_range<decltype(grid)>) {
         const auto visibleCapacity =
             static_cast<size_t>(std::max<int32_t>(gridInfo.GridSize.Width, 0) *
                                 std::max<int32_t>(gridInfo.GridSize.Height, 0));
@@ -144,7 +142,7 @@ std::vector<float> GraphicsHandler::GenerateGLBuffer(
     };
 
     if constexpr (std::is_same_v<decltype(grid), HashQuadtree>) {
-        grid.ForEachCell(pushToBuffer, bounds);
+        grid.ForEachCell(pushToBuffer, VisibleBounds());
     } else {
         for (const auto vec : grid) {
             pushToBuffer(vec);
@@ -175,12 +173,7 @@ void GraphicsHandler::DrawGrid(Vec2 offset,
     m_GridShader.AttachUniformMatrix4("u_MVP", matrix);
     m_GridShader.AttachUniformVec4("u_Color", {1.f, 1.f, 1.f, 1.f});
 
-    const auto positions = [&] {
-        if constexpr (std::is_same_v<decltype(grid), HashQuadtree>) {
-            return GenerateGLBuffer(offset, grid, args, VisibleBounds(args));
-        }
-        return GenerateGLBuffer(offset, grid, args);
-    }();
+    const auto positions = GenerateGLBuffer(offset, grid, args);
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
 
