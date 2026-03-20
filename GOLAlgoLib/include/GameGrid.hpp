@@ -1,5 +1,5 @@
-#ifndef GameGrid_h_
-#define GameGrid_h_
+#ifndef GameGrid_hpp_
+#define GameGrid_hpp_
 
 #include <ankerl/unordered_dense.h>
 #include <cstdint>

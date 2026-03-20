@@ -1,5 +1,5 @@
-#ifndef LoadingSpinner_h_
-#define LoadingSpinner_h_
+#ifndef LoadingSpinner_hpp_
+#define LoadingSpinner_hpp_
 
 #include <imgui.h>
 

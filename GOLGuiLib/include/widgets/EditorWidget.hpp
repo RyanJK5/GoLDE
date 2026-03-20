@@ -1,5 +1,5 @@
-#ifndef __EditorWidget_h__
-#define __EditorWidget_h__
+#ifndef __EditorWidget_hpp__
+#define __EditorWidget_hpp__
 
 #include <imgui.h>
 #include <span>

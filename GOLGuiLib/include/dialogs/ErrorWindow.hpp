@@ -1,5 +1,5 @@
-#ifndef ErrorWindow_h_
-#define ErrorWindow_h_
+#ifndef ErrorWindow_hpp_
+#define ErrorWindow_hpp_
 
 #include <optional>
 #include <string_view>

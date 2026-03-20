@@ -1,5 +1,5 @@
-#ifndef GLException_h_
-#define GLException_h_
+#ifndef GLException_hpp_
+#define GLException_hpp_
 
 #include <exception>
 #include <string_view>

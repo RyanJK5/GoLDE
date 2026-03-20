@@ -1,5 +1,5 @@
-#ifndef ExecutionWidget_h_
-#define ExecutionWidget_h_
+#ifndef ExecutionWidget_hpp_
+#define ExecutionWidget_hpp_
 
 #include <imgui.h>
 #include <span>

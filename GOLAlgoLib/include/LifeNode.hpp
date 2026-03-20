@@ -1,5 +1,5 @@
-#ifndef LifeNode_h_
-#define LifeNode_h_
+#ifndef LifeNode_hpp_
+#define LifeNode_hpp_
 
 #include <cstdint>
 #include <memory>

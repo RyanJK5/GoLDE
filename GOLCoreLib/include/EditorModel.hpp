@@ -1,5 +1,5 @@
-#ifndef EditorModel_h_
-#define EditorModel_h_
+#ifndef EditorModel_hpp_
+#define EditorModel_hpp_
 
 #include <cstdint>
 #include <filesystem>

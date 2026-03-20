@@ -1,5 +1,5 @@
-#ifndef SimulationEditor_h_
-#define SimulationEditor_h_
+#ifndef SimulationEditor_hpp_
+#define SimulationEditor_hpp_
 
 #include <cstdint>
 #include <glm/glm.hpp>

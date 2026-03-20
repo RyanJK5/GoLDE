@@ -1,5 +1,5 @@
-#ifndef KeyShortcut_h_
-#define KeyShortcut_h_
+#ifndef KeyShortcut_hpp_
+#define KeyShortcut_hpp_
 
 #include <imgui.h>
 #include <ranges>

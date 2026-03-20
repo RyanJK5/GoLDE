@@ -1,5 +1,5 @@
-#ifndef GLBuffer_h_
-#define GLBuffer_h_
+#ifndef GLBuffer_hpp_
+#define GLBuffer_hpp_
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

@@ -1,5 +1,5 @@
-#ifndef Logger_h_
-#define Logger_h_
+#ifndef Logger_hpp_
+#define Logger_hpp_
 
 #include <format>
 #include <print>

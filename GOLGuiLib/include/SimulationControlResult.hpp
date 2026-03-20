@@ -1,5 +1,5 @@
-#ifndef SimulationControlResult_h_
-#define SimulationControlResult_h_
+#ifndef SimulationControlResult_hpp_
+#define SimulationControlResult_hpp_
 
 #include <optional>
 

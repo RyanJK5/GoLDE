@@ -1,5 +1,5 @@
-#ifndef DelayWidget_h_
-#define DelayWidget_h_
+#ifndef DelayWidget_hpp_
+#define DelayWidget_hpp_
 
 #include <cstdint>
 #include <imgui.h>

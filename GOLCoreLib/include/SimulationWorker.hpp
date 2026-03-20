@@ -1,5 +1,5 @@
-#ifndef SimulationWorker_h_
-#define SimulationWorker_h_
+#ifndef SimulationWorker_hpp_
+#define SimulationWorker_hpp_
 
 #include <array>
 #include <atomic>

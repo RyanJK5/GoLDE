@@ -293,7 +293,7 @@ void GraphicsHandler::CenterCamera(const GraphicsHandlerArgs& args) {
                      args.GridSize.Height / 2.0 * args.CellSize.Height};
 }
 
-Rect GraphicsHandler::VisibleBounds(const GraphicsHandlerArgs& args) {
+Rect GraphicsHandler::VisibleBounds(const GraphicsHandlerArgs& args) const {
     const auto viewBounds = args.ViewportBounds;
     const auto topLeftWorld =
         Camera.ScreenToWorldPos(Vec2F{static_cast<float>(viewBounds.X),

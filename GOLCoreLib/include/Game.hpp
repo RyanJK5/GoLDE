@@ -1,5 +1,5 @@
-#ifndef Game_h_
-#define Game_h_
+#ifndef Game_hpp_
+#define Game_hpp_
 
 #include <cstdint>
 #include <filesystem>

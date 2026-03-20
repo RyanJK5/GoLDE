@@ -1,5 +1,5 @@
-#ifndef SimulationSettings_h_
-#define SimulationSettings_h_
+#ifndef SimulationSettings_hpp_
+#define SimulationSettings_hpp_
 
 #include <cstdint>
 

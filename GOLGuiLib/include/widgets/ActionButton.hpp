@@ -1,5 +1,5 @@
-#ifndef GameActionButton_h_
-#define GameActionButton_h_
+#ifndef GameActionButton_hpp_
+#define GameActionButton_hpp_
 
 #include <cstdint>
 #include <imgui.h>

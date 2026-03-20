@@ -1,5 +1,5 @@
-#ifndef EditorResult_h_
-#define EditorResult_h_
+#ifndef EditorResult_hpp_
+#define EditorResult_hpp_
 
 #include <filesystem>
 

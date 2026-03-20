@@ -1,5 +1,5 @@
-#ifndef BigInt_h_
-#define BigInt_h_
+#ifndef BigInt_hpp_
+#define BigInt_hpp_
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <compare>

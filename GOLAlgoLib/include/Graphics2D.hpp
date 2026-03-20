@@ -1,5 +1,5 @@
-#ifndef Graphics2D_h_
-#define Graphics2D_h_
+#ifndef Graphics2D_hpp_
+#define Graphics2D_hpp_
 
 #include <cmath>
 #include <concepts>

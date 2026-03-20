@@ -1,5 +1,5 @@
-#ifndef LifeHashSet_h_
-#define LifeHashSet_h_
+#ifndef LifeHashSet_hpp_
+#define LifeHashSet_hpp_
 
 #include <ankerl/unordered_dense.h>
 

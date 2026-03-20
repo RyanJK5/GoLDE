@@ -1,5 +1,5 @@
-#ifndef WarnWindow_h_
-#define WarnWindow_h_
+#ifndef WarnWindow_hpp_
+#define WarnWindow_hpp_
 
 #include <optional>
 #include <string>

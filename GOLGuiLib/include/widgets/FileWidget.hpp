@@ -1,5 +1,5 @@
-#ifndef FileWidget_h_
-#define FileWidget_h_
+#ifndef FileWidget_hpp_
+#define FileWidget_hpp_
 
 #include <filesystem>
 #include <imgui.h>

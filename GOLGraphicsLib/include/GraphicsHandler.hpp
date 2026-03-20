@@ -1,5 +1,5 @@
-#ifndef DrawManager_h_
-#define DrawManager_h_
+#ifndef DrawManager_hpp_
+#define DrawManager_hpp_
 
 #include <algorithm>
 #include <cmath>
@@ -64,7 +64,7 @@ class GraphicsHandler {
     uint32_t TextureID() const { return m_Texture.ID(); }
 
   private:
-    Rect VisibleBounds(const GraphicsHandlerArgs& args);
+    Rect VisibleBounds(const GraphicsHandlerArgs& args) const;
 
     void InitGridBuffer();
 
@@ -142,7 +142,7 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset,
     };
 
     if constexpr (std::is_same_v<decltype(grid), HashQuadtree>) {
-        grid.ForEachCell(pushToBuffer, VisibleBounds());
+        grid.ForEachCell(pushToBuffer, VisibleBounds(args));
     } else {
         for (const auto vec : grid) {
             pushToBuffer(vec);

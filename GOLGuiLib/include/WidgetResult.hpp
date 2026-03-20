@@ -1,5 +1,5 @@
-#ifndef WidgetResult_h_
-#define WidgetResult_h_
+#ifndef WidgetResult_hpp_
+#define WidgetResult_hpp_
 
 #include <optional>
 

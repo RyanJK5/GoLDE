@@ -1,5 +1,5 @@
-#ifndef SelectionManager_h_
-#define SelectionManager_h_
+#ifndef SelectionManager_hpp_
+#define SelectionManager_hpp_
 
 #include <cstdint>
 #include <expected>

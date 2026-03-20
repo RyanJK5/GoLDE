@@ -1,5 +1,5 @@
-#ifndef ShaderManager_h_
-#define ShaderManager_h_
+#ifndef ShaderManager_hpp_
+#define ShaderManager_hpp_
 
 #include <cstdint>
 #include <filesystem>

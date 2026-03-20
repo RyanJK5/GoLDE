@@ -1,5 +1,5 @@
-#ifndef SimulationCommand_h_
-#define SimulationCommand_h_
+#ifndef SimulationCommand_hpp_
+#define SimulationCommand_hpp_
 
 #include <cstdint>
 #include <filesystem>

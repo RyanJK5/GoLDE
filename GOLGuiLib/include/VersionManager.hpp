@@ -1,5 +1,5 @@
-#ifndef VersionManager_h_
-#define VersionManager_h_
+#ifndef VersionManager_hpp_
+#define VersionManager_hpp_
 
 #include <optional>
 #include <stack>

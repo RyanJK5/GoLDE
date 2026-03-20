@@ -1,5 +1,5 @@
-#ifndef HashQuadtree_h_
-#define HashQuadtree_h_
+#ifndef HashQuadtree_hpp_
+#define HashQuadtree_hpp_
 
 #include <ankerl/unordered_dense.h>
 #include <array>

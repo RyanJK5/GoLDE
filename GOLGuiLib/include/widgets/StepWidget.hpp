@@ -1,5 +1,5 @@
-#ifndef StepWidget_h_
-#define StepWidget_h_
+#ifndef StepWidget_hpp_
+#define StepWidget_hpp_
 
 #include <cstdint>
 #include <imgui.h>

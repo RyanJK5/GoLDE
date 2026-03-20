@@ -1,5 +1,5 @@
-#ifndef PresetSelectionResult_h_
-#define PresetSelectionResult_h_
+#ifndef PresetSelectionResult_hpp_
+#define PresetSelectionResult_hpp_
 
 namespace gol {
 struct PresetSelectionResult {

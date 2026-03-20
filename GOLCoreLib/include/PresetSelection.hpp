@@ -1,5 +1,5 @@
-#ifndef PresetComponent_h_
-#define PresetComponent_h_
+#ifndef PresetComponent_hpp_
+#define PresetComponent_hpp_
 
 #include <cstdint>
 #include <filesystem>
