@@ -252,11 +252,15 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
         snapshot ? snapshot->Generation() : m_Model.Grid().Generation();
     const auto population =
         snapshot ? snapshot->Population() : m_Model.Grid().Population();
-    ImGui::Text("%s", std::format(std::locale{""}, "Generation: {:L}", generation).c_str());
+    ImGui::Text(
+        "%s",
+        std::format(std::locale{""}, "Generation: {:L}", generation).c_str());
 
     const auto totalPopulation =
         BigInt{population + m_Model.Selection().SelectedPopulation()};
-    ImGui::Text("%s", std::format(std::locale{""}, "Population: {:L}", totalPopulation).c_str());
+    ImGui::Text(
+        "%s", std::format(std::locale{""}, "Population: {:L}", totalPopulation)
+                  .c_str());
 
     if (m_Model.Selection().CanDrawSelection()) {
         const auto pos = m_Model.Selection().SelectionBounds().UpperLeft();
@@ -359,7 +363,8 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                             SaveWithErrorHandling(path, true);
                         });
                     m_SaveWarning.Activate();
-                    m_SaveWarning.Message = std::format(std::locale{""},
+                    m_SaveWarning.Message = std::format(
+                        std::locale{""},
                         "This file has {:L} total cells. The saved file will "
                         "be\n"
                         "large and may take a long time to save. Are you sure\n"
@@ -380,7 +385,8 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                             SaveWithErrorHandling(path, false);
                         });
                     m_SaveWarning.Activate();
-                    m_SaveWarning.Message = std::format(std::locale{""},
+                    m_SaveWarning.Message = std::format(
+                        std::locale{""},
                         "This file has {:L} total cells. The saved file will "
                         "be\n"
                         "large and may take a long time to save. Are you sure\n"

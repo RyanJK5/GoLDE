@@ -25,8 +25,8 @@ void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
         while (true) {
             m_LastUpdate.store(std::chrono::steady_clock::now(),
                                std::memory_order_relaxed);
-            
-            BigInt stepCount = [&] { 
+
+            BigInt stepCount = [&] {
                 std::scoped_lock locK{m_StepCountMutex};
                 return m_StepCount;
             }();

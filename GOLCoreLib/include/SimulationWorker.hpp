@@ -28,7 +28,7 @@ class SimulationWorker {
   private:
     std::mutex m_StepCountMutex;
     BigInt m_StepCount = 1;
-    
+
     std::atomic<int64_t> m_TickDelayMs = 0;
 
     std::atomic<std::chrono::steady_clock::time_point> m_LastUpdate;

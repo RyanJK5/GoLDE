@@ -34,8 +34,7 @@ class StepWidget : public Widget {
 
   public:
     StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
-        : m_InputText("1"),
-          m_Button(shortcuts) {}
+        : m_InputText("1"), m_Button(shortcuts) {}
 
     friend Widget;
 

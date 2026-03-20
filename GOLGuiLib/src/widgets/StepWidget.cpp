@@ -38,7 +38,7 @@ void StepWidget::ShowInputText() {
             constexpr static auto validChar = [](char c) {
                 return std::isdigit(c) || std::isspace(c);
             };
-            
+
             std::string_view str{m_InputText};
 
             using std::ranges::all_of;
@@ -47,21 +47,22 @@ void StepWidget::ShowInputText() {
                 const auto baseStr = str.substr(0, index);
                 const auto expStr = str.substr(index + 1);
 
-                if (!all_of(baseStr, validChar) ||
-                    !all_of(expStr, validChar)) {
-                        throw std::invalid_argument{""};
-                    }
+                if (!all_of(baseStr, validChar) || !all_of(expStr, validChar)) {
+                    throw std::invalid_argument{""};
+                }
 
                 int64_t base{};
-                const auto [baseEnd, baseError] = std::from_chars(baseStr.data(), baseStr.data() + baseStr.size(), base);
+                const auto [baseEnd, baseError] = std::from_chars(
+                    baseStr.data(), baseStr.data() + baseStr.size(), base);
 
                 int32_t exponent{};
-                [[maybe_unused]] const auto [expEnd, expError] = std::from_chars(expStr.data(), expStr.data() + expStr.size(), exponent);
-                
+                [[maybe_unused]] const auto [expEnd, expError] =
+                    std::from_chars(expStr.data(),
+                                    expStr.data() + expStr.size(), exponent);
+
                 if (baseError != std::errc{} || expError != std::errc{}) {
                     SetStepCount(stepCountBefore);
-                }
-                else {
+                } else {
                     const BigInt input{boost::multiprecision::pow(
                         BigInt{base}, static_cast<unsigned int>(exponent))};
                     m_StepCount = std::max(BigOne, input);
@@ -72,8 +73,14 @@ void StepWidget::ShowInputText() {
                     throw std::invalid_argument{""};
                 }
 
-                const static auto isSpace = [](char c) { return std::isspace(c); };
-                m_StepCount.assign(std::string{std::ranges::find_if_not(str, isSpace), std::ranges::find_if_not(std::ranges::reverse_view(str), isSpace).base()});
+                const static auto isSpace = [](char c) {
+                    return std::isspace(c);
+                };
+                m_StepCount.assign(
+                    std::string{std::ranges::find_if_not(str, isSpace),
+                                std::ranges::find_if_not(
+                                    std::ranges::reverse_view(str), isSpace)
+                                    .base()});
             }
 
             m_InputText = std::format("{}", m_StepCount);
