@@ -29,8 +29,6 @@ using BigVec2 = GenericVec<BigInt>;
 namespace std {
 template <>
 struct formatter<gol::BigInt> {
-    bool UseLocale = false;
-
     constexpr auto parse(std::format_parse_context& ctx) {
         auto it = ctx.begin();
         if (it != ctx.end() && *it == 'L') {
@@ -49,6 +47,26 @@ struct formatter<gol::BigInt> {
             sv.remove_prefix(1);
         }
 
+        if (sv.size() <= 10UZ) {
+            return FormatSmall(sv, negative, ctx);
+        } 
+        return FormatBig(sv, ctx);
+    }
+
+  private:
+    bool UseLocale = false;
+
+    auto FormatBig(std::string_view str, auto& ctx) const {
+        const auto exponent = str.size() - 1UZ;
+        
+        const auto mantissaLength = std::min(str.size() - 1, 2UZ);
+        const std::string_view mantissa{str.begin() + 1,
+                                  str.begin() + 1 + mantissaLength};
+        
+        return std::format_to(ctx.out(), "{}.{}e+{}", str[0], mantissa, exponent);
+    }
+
+    auto FormatSmall(std::string_view str, bool negative, auto& ctx) const {
         const auto& loc = ctx.locale();
         const auto& punct = std::use_facet<std::numpunct<char>>(loc);
         const std::string grouping = punct.grouping();
@@ -60,20 +78,20 @@ struct formatter<gol::BigInt> {
         }
 
         if (!UseLocale || grouping.empty()) {
-            return std::copy(sv.begin(), sv.end(), out);
+            return std::copy(str.begin(), str.end(), out);
         }
 
-        auto digitsToSeperator = sv.size() % 3UZ;
+        auto digitsToSeperator = str.size() % 3UZ;
         if (digitsToSeperator == 0) {
             digitsToSeperator = 3;
         }
 
-        for (auto i = 0UZ; i < sv.size(); i++) {
+        for (auto i = 0UZ; i < str.size(); i++) {
             if (i > 0UZ && digitsToSeperator == 0UZ) {
                 *out++ = seperator;
                 digitsToSeperator = 3UZ;
             }
-            *out++ = sv[i];
+            *out++ = str[i];
             digitsToSeperator--;
         }
 
