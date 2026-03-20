@@ -5,8 +5,10 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <thread>
 
+#include "BigInt.hpp"
 #include "GameGrid.hpp"
 #include "HashQuadtree.hpp"
 
@@ -17,14 +19,16 @@ class SimulationWorker {
                const std::function<void()>& onStop = {});
     GameGrid Stop();
 
-    void SetStepCount(int64_t stepCount);
+    void SetStepCount(const BigInt& stepCount);
     void SetTickDelayMs(int64_t tickDelayMs);
 
     const GameGrid* GetResult() const;
     std::chrono::duration<float> GetTimeSinceLastUpdate() const;
 
   private:
-    std::atomic<int64_t> m_StepCount = 1;
+    std::mutex m_StepCountMutex;
+    BigInt m_StepCount = 1;
+    
     std::atomic<int64_t> m_TickDelayMs = 0;
 
     std::atomic<std::chrono::steady_clock::time_point> m_LastUpdate;

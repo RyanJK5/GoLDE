@@ -29,30 +29,55 @@ using BigVec2 = GenericVec<BigInt>;
 namespace std {
 template <>
 struct formatter<gol::BigInt> {
-    constexpr auto parse(std::format_parse_context& context) {
-        return context.begin();
-    }
+    bool UseLocale = false;
 
-    auto format(const gol::BigInt& num, auto& context) const {
-        const auto s = num.str();
-        const bool negative = !s.empty() && s[0] == '-';
-        const auto digits =
-            negative ? std::string_view{s}.substr(1) : std::string_view{s};
-        return std::format_to(context.out(), "{}{}", negative ? "-" : "",
-                              AddCommas(digits));
-    }
-
-  private:
-    static std::string AddCommas(std::string_view str) {
-        std::string result{};
-        result.reserve(str.size() + (str.size() - 1UZ) / 3UZ);
-        for (auto i = 0UZ; i < str.size(); i++) {
-            if (i > 0UZ && (str.size() - i) % 3UZ == 0UZ) {
-                result += ',';
-            }
-            result += str[i];
+    constexpr auto parse(std::format_parse_context& ctx) {
+        auto it = ctx.begin();
+        if (it != ctx.end() && *it == 'L') {
+            UseLocale = true;
+            ++it;
         }
-        return result;
+        return it;
+    }
+
+    auto format(const gol::BigInt& num, auto& ctx) const {
+        const std::string str{num.str()};
+        std::string_view sv{str};
+
+        const bool negative = !sv.empty() && sv[0] == '-';
+        if (negative) {
+            sv.remove_prefix(1);
+        }
+
+        const auto& loc = ctx.locale();
+        const auto& punct = std::use_facet<std::numpunct<char>>(loc);
+        const std::string grouping = punct.grouping();
+        const auto seperator = punct.thousands_sep();
+
+        auto out = ctx.out();
+        if (negative) {
+            *out++ = '-';
+        }
+
+        if (!UseLocale || grouping.empty()) {
+            return std::copy(sv.begin(), sv.end(), out);
+        }
+
+        auto digitsToSeperator = sv.size() % 3UZ;
+        if (digitsToSeperator == 0) {
+            digitsToSeperator = 3;
+        }
+
+        for (auto i = 0UZ; i < sv.size(); i++) {
+            if (i > 0UZ && digitsToSeperator == 0UZ) {
+                *out++ = seperator;
+                digitsToSeperator = 3UZ;
+            }
+            *out++ = sv[i];
+            digitsToSeperator--;
+        }
+
+        return out;
     }
 };
 } // namespace std

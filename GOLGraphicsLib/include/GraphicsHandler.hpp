@@ -141,7 +141,7 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset,
             static_cast<float>(y - Camera.Center.y / args.CellSize.Height));
     };
 
-    if constexpr (std::is_same_v<decltype(grid), HashQuadtree>) {
+    if constexpr (std::is_same_v<std::decay_t<decltype(grid)>, HashQuadtree>) {
         grid.ForEachCell(pushToBuffer, VisibleBounds(args));
     } else {
         for (const auto vec : grid) {

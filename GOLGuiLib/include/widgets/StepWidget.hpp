@@ -7,6 +7,7 @@
 #include <string>
 
 #include "ActionButton.hpp"
+#include "BigInt.hpp"
 #include "EditorResult.hpp"
 #include "GameEnums.hpp"
 #include "Graphics2D.hpp"
@@ -33,9 +34,7 @@ class StepWidget : public Widget {
 
   public:
     StepWidget(std::span<const ImGuiKeyChord> shortcuts = {})
-        : m_InputText(
-              "1",
-              std::to_string(std::numeric_limits<uint64_t>::max()).length()),
+        : m_InputText("1"),
           m_Button(shortcuts) {}
 
     friend Widget;
@@ -45,24 +44,24 @@ class StepWidget : public Widget {
 
     void SetShortcutsImpl(const ShortcutMap&) {}
 
-    void SetStepCount(int64_t stepCount);
+    void SetStepCount(const BigInt& stepCount);
 
     void ShowInputText();
 
   public:
-    int64_t EffectiveStepCount() const {
+    BigInt EffectiveStepCount() const {
         return (m_HyperSpeed && m_Algorithm == LifeAlgorithm::HashLife)
-                   ? 0
+                   ? BigZero
                    : m_StepCount;
     }
     LifeAlgorithm CurrentAlgorithm() const { return m_Algorithm; }
     bool IsHyperSpeed() const { return m_HyperSpeed; }
 
   private:
-    InputString m_InputText;
+    std::string m_InputText;
 
     LifeAlgorithm m_Algorithm = LifeAlgorithm::HashLife;
-    int64_t m_StepCount = 1;
+    BigInt m_StepCount = 1;
     bool m_HyperSpeed = false;
 
     StepButton m_Button;

@@ -8,7 +8,7 @@
 namespace gol {
 
 struct SimulationSettings {
-    int64_t StepCount = 1;
+    BigInt StepCount = BigOne;
     LifeAlgorithm Algorithm = LifeAlgorithm::HashLife;
     int32_t TickDelayMs = 1;
     bool HyperSpeed = false;

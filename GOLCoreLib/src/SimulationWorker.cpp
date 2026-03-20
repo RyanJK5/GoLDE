@@ -25,8 +25,12 @@ void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
         while (true) {
             m_LastUpdate.store(std::chrono::steady_clock::now(),
                                std::memory_order_relaxed);
-            m_Buffers[workerIndex].Update(
-                m_StepCount.load(std::memory_order_relaxed), stopToken);
+            
+            BigInt stepCount = [&] { 
+                std::scoped_lock locK{m_StepCountMutex};
+                return m_StepCount;
+            }();
+            m_Buffers[workerIndex].Update(stepCount, stopToken);
 
             if (stopToken.stop_requested())
                 break;
@@ -66,8 +70,9 @@ GameGrid SimulationWorker::Stop() {
     return m_Buffers[m_SnapshotIndex.load(std::memory_order_relaxed)];
 }
 
-void SimulationWorker::SetStepCount(int64_t stepCount) {
-    m_StepCount.store(stepCount, std::memory_order_relaxed);
+void SimulationWorker::SetStepCount(const BigInt& stepCount) {
+    std::scoped_lock lock{m_StepCountMutex};
+    m_StepCount = stepCount;
 }
 
 void SimulationWorker::SetTickDelayMs(int64_t tickDelayMs) {

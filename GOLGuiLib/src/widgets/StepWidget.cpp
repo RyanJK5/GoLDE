@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <font-awesome/IconsFontAwesome7.h>
 #include <imgui.h>
+#include <imgui_stdlib.h>
 #include <string>
 #include <utility>
 
@@ -23,63 +24,59 @@ bool StepButton::Enabled(const EditorResult& state) const {
            state.Simulation.State == SimulationState::Paused;
 }
 
-template <std::integral T>
-constexpr static T IntPow(T base, T exponent) {
-    T res = 1;
-    while (exponent > 0) {
-        if (exponent % 2 == 1)
-            res *= base;
-        base *= base;
-        exponent /= 2;
-    }
-    return res;
-}
-
-void StepWidget::SetStepCount(int64_t stepCount) {
-    m_StepCount = std::max(static_cast<int64_t>(1), stepCount);
-    auto [end, error] = std::to_chars(m_InputText.Data,
-                                      m_InputText.Data + m_InputText.Length + 1,
-                                      static_cast<int64_t>(m_StepCount));
-    assert(error == std::errc{});
-    *end = '\0';
+void StepWidget::SetStepCount(const BigInt& stepCount) {
+    m_StepCount = std::max(BigOne, stepCount);
+    m_InputText = std::format("{}", stepCount);
 }
 
 void StepWidget::ShowInputText() {
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2.f + 5);
 
-    if (ImGui::InputText("##expr", m_InputText.Data, m_InputText.Length + 1)) {
+    if (ImGui::InputText("##expr", &m_InputText)) {
         const auto stepCountBefore = m_StepCount;
         try {
-            using std::ranges::all_of;
             constexpr static auto validChar = [](char c) {
                 return std::isdigit(c) || std::isspace(c);
             };
+            
+            std::string_view str{m_InputText};
 
-            std::string str{m_InputText.Data};
+            using std::ranges::all_of;
             str = str.substr(str.find_first_not_of(' '));
             if (const auto index = str.find('^'); index != std::string::npos) {
                 const auto baseStr = str.substr(0, index);
-                const auto exponentStr = str.substr(index + 1);
+                const auto expStr = str.substr(index + 1);
 
                 if (!all_of(baseStr, validChar) ||
-                    !all_of(exponentStr, validChar))
-                    throw std::invalid_argument{""};
+                    !all_of(expStr, validChar)) {
+                        throw std::invalid_argument{""};
+                    }
 
-                const auto base = std::stoll(baseStr);
-                const auto exponent = std::stoll(exponentStr);
+                int64_t base{};
+                const auto [baseEnd, baseError] = std::from_chars(baseStr.data(), baseStr.data() + baseStr.size(), base);
 
-                m_StepCount = std::max(1LL, IntPow(base, exponent));
+                int32_t exponent{};
+                [[maybe_unused]] const auto [expEnd, expError] = std::from_chars(expStr.data(), expStr.data() + expStr.size(), exponent);
+                
+                if (baseError != std::errc{} || expError != std::errc{}) {
+                    SetStepCount(stepCountBefore);
+                }
+                else {
+                    const BigInt input{boost::multiprecision::pow(
+                        BigInt{base}, static_cast<unsigned int>(exponent))};
+                    m_StepCount = std::max(BigOne, input);
+                }
+
             } else {
-                if (!all_of(str, validChar))
+                if (!all_of(str, validChar)) {
                     throw std::invalid_argument{""};
-                m_StepCount = std::max(1LL, std::stoll(str));
+                }
+
+                const static auto isSpace = [](char c) { return std::isspace(c); };
+                m_StepCount.assign(std::string{std::ranges::find_if_not(str, isSpace), std::ranges::find_if_not(std::ranges::reverse_view(str), isSpace).base()});
             }
 
-            auto [end, error] = std::to_chars(
-                m_InputText.Data, m_InputText.Data + m_InputText.Length + 1,
-                static_cast<int64_t>(m_StepCount));
-            assert(error == std::errc{});
-            *end = '\0';
+            m_InputText = std::format("{}", m_StepCount);
         } catch (const std::exception&) {
             SetStepCount(stepCountBefore);
         }

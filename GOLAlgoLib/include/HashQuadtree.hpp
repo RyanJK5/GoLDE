@@ -324,7 +324,7 @@ void HashQuadtree::ForEachCell(const Func& func, Rect bounds) const {
     }
 
     const auto [node, offset] = GetCenteredNode(32);
-    return ForEachImpl(std::forward<Func>(func), node, offset,
+    return ForEachImpl(func, node, offset,
                        std::min(m_Depth, 32), bounds);
 }
 } // namespace gol

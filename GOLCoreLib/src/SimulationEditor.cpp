@@ -252,11 +252,11 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
         snapshot ? snapshot->Generation() : m_Model.Grid().Generation();
     const auto population =
         snapshot ? snapshot->Population() : m_Model.Grid().Population();
-    ImGui::Text("%s", std::format("Generation: {}", generation).c_str());
+    ImGui::Text("%s", std::format(std::locale{""}, "Generation: {:L}", generation).c_str());
 
     const auto totalPopulation =
         BigInt{population + m_Model.Selection().SelectedPopulation()};
-    ImGui::Text("%s", std::format("Population: {}", totalPopulation).c_str());
+    ImGui::Text("%s", std::format(std::locale{""}, "Population: {:L}", totalPopulation).c_str());
 
     if (m_Model.Selection().CanDrawSelection()) {
         const auto pos = m_Model.Selection().SelectionBounds().UpperLeft();
@@ -359,8 +359,8 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                             SaveWithErrorHandling(path, true);
                         });
                     m_SaveWarning.Activate();
-                    m_SaveWarning.Message = std::format(
-                        "This file has {} total cells. The saved file will "
+                    m_SaveWarning.Message = std::format(std::locale{""},
+                        "This file has {:L} total cells. The saved file will "
                         "be\n"
                         "large and may take a long time to save. Are you sure\n"
                         "you want to continue?",
@@ -380,8 +380,8 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                             SaveWithErrorHandling(path, false);
                         });
                     m_SaveWarning.Activate();
-                    m_SaveWarning.Message = std::format(
-                        "This file has {} total cells. The saved file will "
+                    m_SaveWarning.Message = std::format(std::locale{""},
+                        "This file has {:L} total cells. The saved file will "
                         "be\n"
                         "large and may take a long time to save. Are you sure\n"
                         "you want to continue?",
@@ -427,7 +427,7 @@ void SimulationEditor::HandlePasteResult(const PasteResult& result) {
     if (result.Value == PasteResult::Status::TooLarge) {
         m_PasteWarning.Activate();
         m_PasteWarning.Message =
-            std::format(std::locale(""),
+            std::format(std::locale{""},
                         "Your selection ({:L} cells) is too large\n"
                         "to paste without potential performance issues.\n"
                         "Are you sure you want to continue?",
