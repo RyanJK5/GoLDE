@@ -32,7 +32,7 @@ struct formatter<gol::BigInt> {
     constexpr auto parse(std::format_parse_context& ctx) {
         auto it = ctx.begin();
         if (it != ctx.end() && *it == 'L') {
-            UseLocale = true;
+            m_UseLocale = true;
             ++it;
         }
         return it;
@@ -54,7 +54,7 @@ struct formatter<gol::BigInt> {
     }
 
   private:
-    bool UseLocale = false;
+    bool m_UseLocale = false;
 
     auto FormatBig(std::string_view str, auto& ctx) const {
         const auto exponent = str.size() - 1UZ;
@@ -77,7 +77,7 @@ struct formatter<gol::BigInt> {
             *out++ = '-';
         }
 
-        if (!UseLocale || grouping.empty()) {
+        if (!m_UseLocale || grouping.empty()) {
             return std::copy(str.begin(), str.end(), out);
         }
 

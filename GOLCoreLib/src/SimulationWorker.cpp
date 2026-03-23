@@ -32,16 +32,18 @@ void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
             }();
             m_Buffers[workerIndex].Update(stepCount, stopToken);
 
-            if (stopToken.stop_requested())
+            if (stopToken.stop_requested()) {
                 break;
+            }
 
             // Publish workerIndex as the new snapshot, get back the old one
             backIndex = m_SnapshotIndex.exchange(workerIndex,
                                                  std::memory_order_acq_rel);
             workerIndex = backIndex;
 
-            if (oneStep)
+            if (oneStep) {
                 break;
+            }
 
             const auto tickDelayMs =
                 m_TickDelayMs.load(std::memory_order_relaxed);
@@ -50,8 +52,9 @@ void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
                 std::unique_lock lock{sleepMutex};
                 bool stopRequested = sleepCondition.wait_until(
                     lock, stopToken, nextFrame, [] { return false; });
-                if (stopRequested)
+                if (stopRequested) {
                     break;
+                }
             }
         }
 

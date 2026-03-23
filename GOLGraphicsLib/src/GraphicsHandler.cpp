@@ -58,20 +58,20 @@ GraphicsHandler::GraphicsHandler(const std::filesystem::path& shaderDirectory,
 void GraphicsHandler::InitGridBuffer() {
     GL_DEBUG(glBindVertexArray(m_GridVAO.ID()));
 
-    float quadVertices[] = {0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f, 0.f};
+    constexpr static std::array quadVertices {0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f, 0.f};
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_CellBuffer.ID()));
-    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices,
+    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices.data(),
                           GL_STATIC_DRAW));
     GL_DEBUG(glEnableVertexAttribArray(0));
     GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2,
                                    nullptr));
 
-    uint16_t quadIndices[] = {0, 1, 2, 2, 3, 0};
+    constexpr static std::array<uint16_t, 6> quadIndices {0, 1, 2, 2, 3, 0};
 
     GL_DEBUG(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_CellIndexBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices),
-                          quadIndices, GL_STATIC_DRAW));
+                          quadIndices.data(), GL_STATIC_DRAW));
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
@@ -265,16 +265,16 @@ void GraphicsHandler::DrawSelection(Rect region,
     m_SelectionShader.AttachUniformVec4("u_Color", {1.f, 1.f, 1.f, 1.f});
     m_SelectionShader.AttachUniformMatrix4("u_MVP", matrix);
 
-    auto rect = GridToScreenBounds(region, args);
-    float positions[] = {rect.UpperLeft().X,  rect.UpperLeft().Y,
+    const auto rect = GridToScreenBounds(region, args);
+    std::array positions {rect.UpperLeft().X,  rect.UpperLeft().Y,
                          rect.LowerLeft().X,  rect.LowerLeft().Y,
                          rect.LowerRight().X, rect.LowerRight().Y,
                          rect.UpperRight().X, rect.UpperRight().Y};
 
-    uint8_t indices[] = {0, 1, 1, 2, 2, 3, 3, 0};
+    constexpr static std::array<uint8_t, 8> indices {0, 1, 1, 2, 2, 3, 3, 0};
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_SelectionBuffer.ID()));
-    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(float), positions,
+    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(float), positions.data(),
                           GL_DYNAMIC_DRAW));
     GL_DEBUG(glEnableVertexAttribArray(0));
     GL_DEBUG(
@@ -283,7 +283,7 @@ void GraphicsHandler::DrawSelection(Rect region,
     GL_DEBUG(
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SelectionIndexBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 4 * sizeof(uint8_t),
-                          indices, GL_DYNAMIC_DRAW));
+                          indices.data(), GL_DYNAMIC_DRAW));
 
     GL_DEBUG(glDrawElements(GL_LINES, 8, GL_UNSIGNED_BYTE, nullptr));
 }
