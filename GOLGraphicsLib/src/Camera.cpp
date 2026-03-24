@@ -9,10 +9,8 @@
 namespace gol {
 void GraphicsCamera::ZoomBy(Vec2F screenPos, RectF viewBounds, float zoom) {
     Zoom *= 1.f + zoom;
-    if (Zoom < MaxZoom)
-        Center += (ScreenToWorldPos(screenPos, viewBounds) - Center) *
-                  static_cast<double>(zoom);
-    Zoom = std::clamp(Zoom, MinZoom, MaxZoom);
+    Center += (ScreenToWorldPos(screenPos, viewBounds) - Center) *
+                static_cast<double>(zoom);
 }
 
 void GraphicsCamera::Translate(glm::dvec2 delta) {
