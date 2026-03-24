@@ -288,34 +288,64 @@ static const LifeNode* FindOrCreateFromCache(HashLifeCache& cache,
     return node;
 }
 
-// Simple container for using some dynamic programming when preparing
-// quadtree copies.
-using TransferMap =
-    ankerl::unordered_dense::map<const LifeNode*, const LifeNode*>;
-static const LifeNode* BuildCache(TransferMap& transferMap,
-                                  HashLifeCache& cache,
+static const LifeNode* BuildCache(HashLifeCache& cache,
                                   const LifeNode* original) {
-    // Base cases: leaf nodes
-    if (original == FalseNode)
-        return FalseNode;
-    if (original == TrueNode)
-        return TrueNode;
+    std::stack<const LifeNode*, std::vector<const LifeNode*>> stack{};
 
-    if (const auto it = transferMap.find(original); it != transferMap.end())
-        return it->second;
+    const auto resolved = [&](const LifeNode* node) {
+        return node == FalseNode || node == TrueNode ||
+               cache.TransferCopyCache.contains(node);
+    };
+    const auto get = [&](const LifeNode* node) {
+        if (node == FalseNode) {
+            return FalseNode;
+        }
+        if (node == TrueNode) {
+            return TrueNode;
+        }
+        return cache.TransferCopyCache[node];
+    };
 
-    const auto* nw = BuildCache(transferMap, cache, original->NorthWest);
-    const auto* ne = BuildCache(transferMap, cache, original->NorthEast);
-    const auto* sw = BuildCache(transferMap, cache, original->SouthWest);
-    const auto* se = BuildCache(transferMap, cache, original->SouthEast);
+    stack.push(original);
 
-    const auto* ret = FindOrCreateFromCache(cache, nw, ne, sw, se);
-    transferMap[original] = ret;
-    return ret;
+    while (!stack.empty()) {
+        const LifeNode* node = stack.top();
+
+        if (resolved(node)) {
+            stack.pop();
+            continue;
+        }
+
+        if (!resolved(node->NorthWest)) {
+            stack.push(node->NorthWest);
+            continue;
+        }
+        if (!resolved(node->NorthEast)) {
+            stack.push(node->NorthEast);
+            continue;
+        }
+        if (!resolved(node->SouthWest)) {
+            stack.push(node->SouthWest);
+            continue;
+        }
+        if (!resolved(node->SouthEast)) {
+            stack.push(node->SouthEast);
+            continue;
+        }
+
+        // All children ready → build node
+        const auto* ret = FindOrCreateFromCache(
+            cache, get(node->NorthWest), get(node->NorthEast),
+            get(node->SouthWest), get(node->SouthEast));
+
+        cache.TransferCopyCache[node] = ret;
+        stack.pop();
+    }
+
+    return cache.TransferCopyCache[original];
 }
 
 void HashQuadtree::Copy(const HashQuadtree& other) {
-
     m_Root = FalseNode;
     m_SeedOffset = other.m_SeedOffset;
     m_Depth = other.m_Depth;
@@ -331,18 +361,22 @@ void HashQuadtree::Copy(const HashQuadtree& other) {
     }
 
     if (other.m_TransferCache) {
-        TransferMap transferMap{};
-        m_Root = BuildCache(transferMap, s_Cache, other.m_TransferRoot);
+        m_Root = BuildCache(s_Cache, other.m_TransferRoot);
         return;
     }
     assert(false && "Must prepare a transfer cache across threads");
 }
 
 void HashQuadtree::PrepareCopyBetweenThreads() {
-    TransferMap transferMap{};
     m_TransferCache = std::make_unique<HashLifeCache>();
-    m_TransferRoot = BuildCache(transferMap, *m_TransferCache, m_Root);
+    m_TransferRoot = BuildCache(*m_TransferCache, m_Root);
 
+    m_TransferID = std::this_thread::get_id();
+}
+
+void HashQuadtree::ClearTransferCache() {
+    m_TransferCache.reset();
+    m_TransferRoot = nullptr;
     m_TransferID = std::this_thread::get_id();
 }
 
@@ -672,6 +706,10 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
     if (level <= 3) {
         const auto* result =
             (advanceLevel >= 1) ? AdvanceBase(node) : AdvanceBaseOneGen(node);
+
+        if (stopToken.stop_requested()) {
+            return {node, 0};
+        }
         // Store under the requested maxAdvance so the same request hits.
         s_Cache.SlowCache[{node, advanceLevel}] = result;
         // Also store under the actual generations for cross-request reuse.
@@ -744,6 +782,10 @@ NodeUpdateInfo HashQuadtree::AdvanceSlow(std::stop_token stopToken,
     const auto* combined = FindOrCreate(result00.Node, result01.Node,
                                         result10.Node, result11.Node);
 
+    if (stopToken.stop_requested()) {
+        return {node, 0};
+    }
+
     // Store under the requested maxAdvance so the same request hits next time.
     s_Cache.SlowCache[{node, advanceLevel}] = combined;
     return {combined, newAdvanceLevel};
@@ -814,6 +856,11 @@ NodeUpdateInfo HashQuadtree::AdvanceFast(std::stop_token stopToken,
 
     const auto* result = FindOrCreate(topLeft.Node, topRight.Node,
                                       bottomLeft.Node, bottomRight.Node);
+
+    if (stopToken.stop_requested()) {
+        return {node, 0};
+    }
+
     s_Cache.NodeMap[node] = result;
     return {result, level - 2};
 }

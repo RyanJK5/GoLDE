@@ -3,9 +3,11 @@
 
 #include <array>
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <semaphore>
 #include <thread>
 
 #include "BigInt.hpp"
@@ -15,8 +17,13 @@
 namespace gol {
 class SimulationWorker {
   public:
+    SimulationWorker();
+    ~SimulationWorker();
+
     void Start(GameGrid& initialGrid, bool oneStep = false,
                const std::function<void()>& onStop = {});
+    void Resume(bool oneStep = false, const std::function<void()>& onStop = {});
+
     GameGrid Stop();
 
     void SetStepCount(const BigInt& stepCount);
@@ -26,6 +33,11 @@ class SimulationWorker {
     std::chrono::duration<float> GetTimeSinceLastUpdate() const;
 
   private:
+    void ThreadLoop(std::stop_token threadStopToken);
+
+    size_t SimulationLoop(std::stop_token runStopToken);
+
+  private:
     std::mutex m_StepCountMutex;
     BigInt m_StepCount = 1;
 
@@ -33,8 +45,20 @@ class SimulationWorker {
 
     std::atomic<std::chrono::steady_clock::time_point> m_LastUpdate;
 
-    std::array<GameGrid, 3> m_Buffers{};
+    std::array<GameGrid, 3> m_Buffers{}; // Triple buffer pattern
     std::atomic<size_t> m_SnapshotIndex;
+
+    std::function<void()> m_OnStop;
+    bool m_OneStep = false;
+
+    std::stop_source m_RunStopSource;
+
+    bool m_ResumeReady = false;
+    std::mutex m_ResumeMutex;
+    std::condition_variable_any m_ResumeCondition;
+
+    std::atomic<bool> m_IsRunning{};
+    std::binary_semaphore m_PauseSemaphore{0};
 
     std::jthread m_Thread;
 };

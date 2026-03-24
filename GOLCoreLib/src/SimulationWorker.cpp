@@ -5,70 +5,132 @@
 #include <print>
 
 namespace gol {
-void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
-                             const std::function<void()>& onStop) {
-    initialGrid.PrepareCopyBetweenThreads();
-    m_Buffers[0] = initialGrid;
-    m_Buffers[1] = initialGrid;
-    m_Buffers[2] = initialGrid;
 
-    m_SnapshotIndex.store(0, std::memory_order_release);
+SimulationWorker::SimulationWorker()
+    : m_Thread(std::bind_front(&SimulationWorker::ThreadLoop, this)) {}
 
-    m_Thread = std::jthread{[this, oneStep, onStop](std::stop_token stopToken) {
-        auto workerIndex = 1UZ;
-        auto backIndex = 2UZ;
+SimulationWorker::~SimulationWorker() { m_RunStopSource.request_stop(); }
 
-        std::condition_variable_any sleepCondition{};
-        std::mutex sleepMutex{};
-        auto nextFrame = std::chrono::steady_clock::now();
+void SimulationWorker::ThreadLoop(std::stop_token threadStopToken) {
+    while (true) {
+        {
+            std::unique_lock lock{m_ResumeMutex};
+            m_ResumeCondition.wait(lock, threadStopToken,
+                                   [&] { return m_ResumeReady; });
 
-        while (true) {
-            m_LastUpdate.store(std::chrono::steady_clock::now(),
-                               std::memory_order_relaxed);
-
-            BigInt stepCount = [&] {
-                std::scoped_lock locK{m_StepCountMutex};
-                return m_StepCount;
-            }();
-            m_Buffers[workerIndex].Update(stepCount, stopToken);
-
-            if (stopToken.stop_requested()) {
-                break;
+            if (threadStopToken.stop_requested()) {
+                return;
             }
-
-            // Publish workerIndex as the new snapshot, get back the old one
-            backIndex = m_SnapshotIndex.exchange(workerIndex,
-                                                 std::memory_order_acq_rel);
-            workerIndex = backIndex;
-
-            if (oneStep) {
-                break;
-            }
-
-            const auto tickDelayMs =
-                m_TickDelayMs.load(std::memory_order_relaxed);
-            if (tickDelayMs > 0) {
-                nextFrame += std::chrono::milliseconds{tickDelayMs};
-                std::unique_lock lock{sleepMutex};
-                bool stopRequested = sleepCondition.wait_until(
-                    lock, stopToken, nextFrame, [] { return false; });
-                if (stopRequested) {
-                    break;
-                }
-            }
+            m_ResumeReady = false;
         }
+
+        auto runStopToken = m_RunStopSource.get_token();
+        SimulationLoop(runStopToken);
 
         m_Buffers[m_SnapshotIndex.load(std::memory_order_acquire)]
             .PrepareCopyBetweenThreads();
-        if (oneStep && !stopToken.stop_requested())
-            onStop();
-    }};
+
+        if (m_OneStep && !runStopToken.stop_requested()) {
+            m_OnStop();
+        }
+
+        m_PauseSemaphore.release();
+    }
+}
+
+size_t SimulationWorker::SimulationLoop(std::stop_token runStopToken) {
+    auto workerIndex = 1UZ;
+    auto backIndex = 2UZ;
+
+    std::condition_variable_any sleepCondition{};
+    std::mutex sleepMutex{};
+    auto nextFrame = std::chrono::steady_clock::now();
+
+    while (!runStopToken.stop_requested()) {
+        m_LastUpdate.store(std::chrono::steady_clock::now(),
+                           std::memory_order_relaxed);
+
+        auto stepCount = [&] {
+            std::scoped_lock locK{m_StepCountMutex};
+            return m_StepCount;
+        }();
+
+        m_Buffers[workerIndex].Update(stepCount, runStopToken);
+
+        if (runStopToken.stop_requested()) {
+            break;
+        }
+
+        // Publish workerIndex as the new snapshot, get back the old one
+        backIndex =
+            m_SnapshotIndex.exchange(workerIndex, std::memory_order_acq_rel);
+        workerIndex = backIndex;
+
+        if (m_OneStep) {
+            break;
+        }
+
+        const auto tickDelayMs = m_TickDelayMs.load(std::memory_order_relaxed);
+        if (tickDelayMs > 0) {
+            nextFrame += std::chrono::milliseconds{tickDelayMs};
+
+            std::unique_lock lock{sleepMutex};
+            sleepCondition.wait_until(lock, runStopToken, nextFrame,
+                                      [] { return false; });
+        }
+    }
+
+    return workerIndex;
+}
+
+void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
+                             const std::function<void()>& onStop) {
+    if (m_IsRunning.exchange(true, std::memory_order_acq_rel)) {
+        m_RunStopSource.request_stop();
+        m_PauseSemaphore.acquire();
+    }
+    m_RunStopSource = {};
+
+    m_Buffers[0] = initialGrid;
+    m_Buffers[1] = initialGrid;
+    m_Buffers[2] = initialGrid;
+    m_SnapshotIndex.store(0UZ, std::memory_order_release);
+
+    {
+        std::scoped_lock lock{m_ResumeMutex};
+        m_OneStep = oneStep;
+        m_OnStop = onStop;
+        m_ResumeReady = true;
+    }
+    m_ResumeCondition.notify_one();
+}
+
+void SimulationWorker::Resume(bool oneStep,
+                              const std::function<void()>& onStop) {
+    const auto validIndex = m_SnapshotIndex.load(std::memory_order_acquire);
+    m_Buffers[validIndex].ClearHashLifeTransferCache();
+
+    for (auto i = 0UZ; i < m_Buffers.size(); i++) {
+        if (i != validIndex) {
+            m_Buffers[i] = m_Buffers[validIndex];
+        }
+    }
+
+    m_IsRunning.store(true, std::memory_order_release);
+    m_RunStopSource = {};
+    {
+        std::scoped_lock lock{m_ResumeMutex};
+        m_OneStep = oneStep;
+        m_OnStop = onStop;
+        m_ResumeReady = true;
+    }
+    m_ResumeCondition.notify_one();
 }
 
 GameGrid SimulationWorker::Stop() {
-    if (m_Thread.joinable()) {
-        m_Thread.request_stop();
-        m_Thread.join();
+    if (m_IsRunning.exchange(false, std::memory_order_acq_rel)) {
+        m_RunStopSource.request_stop();
+        m_PauseSemaphore.acquire();
     }
     return m_Buffers[m_SnapshotIndex.load(std::memory_order_relaxed)];
 }
@@ -83,7 +145,7 @@ void SimulationWorker::SetTickDelayMs(int64_t tickDelayMs) {
 }
 
 const GameGrid* SimulationWorker::GetResult() const {
-    if (!m_Thread.joinable()) {
+    if (!m_IsRunning.load(std::memory_order_acquire)) {
         return nullptr;
     }
     return &m_Buffers[m_SnapshotIndex.load(std::memory_order_acquire)];

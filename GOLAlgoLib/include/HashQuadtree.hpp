@@ -60,6 +60,11 @@ struct HashLifeCache {
     ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
         SlowCache{};
 
+    // Simple container for using some dynamic programming when preparing
+    // quadtree copies.
+    ankerl::unordered_dense::map<const LifeNode*, const LifeNode*>
+        TransferCopyCache{};
+
     // Level-indexed cache for empty nodes. Index i holds the empty node for
     // size 2^i. At most 64 entries needed (levels 0..63).
     std::vector<const LifeNode*> EmptyNodeCache{};
@@ -168,6 +173,8 @@ class HashQuadtree {
     // static storage to a member variable, and then when it is copied in a new
     // thread, its cache can be copied once more into thread local storage.
     void PrepareCopyBetweenThreads();
+
+    void ClearTransferCache();
 
     bool operator==(const HashQuadtree& other) const;
     bool operator!=(const HashQuadtree& other) const;

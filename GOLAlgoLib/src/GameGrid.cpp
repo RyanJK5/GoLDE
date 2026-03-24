@@ -90,6 +90,12 @@ void GameGrid::PrepareCopyBetweenThreads() {
     }
 }
 
+void GameGrid::ClearHashLifeTransferCache() {
+    if (m_HashLifeData) {
+        m_HashLifeData->ClearTransferCache();
+    }
+}
+
 bool GameGrid::Dead() const { return m_Data.empty(); }
 
 Rect GameGrid::BoundingBox() const {
