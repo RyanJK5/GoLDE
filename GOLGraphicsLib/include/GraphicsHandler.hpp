@@ -144,9 +144,11 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset, int32_t minLevel,
             std::clamp(static_cast<float>(population / maxPop), 0.f, 1.f);
         const auto cellScale = std::powf(2.f, static_cast<float>(minLevel));
         result.push_back(
-            static_cast<float>(x - Camera.Center.x / args.CellSize.Width) / cellScale);
+            static_cast<float>(x - Camera.Center.x / args.CellSize.Width) /
+            cellScale);
         result.push_back(
-            static_cast<float>(y - Camera.Center.y / args.CellSize.Height) / cellScale);
+            static_cast<float>(y - Camera.Center.y / args.CellSize.Height) /
+            cellScale);
         result.push_back(opacity);
     };
 
