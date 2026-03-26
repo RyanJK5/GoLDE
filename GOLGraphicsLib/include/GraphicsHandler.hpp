@@ -142,11 +142,11 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset, int32_t minLevel,
 
         const auto opacity =
             std::clamp(static_cast<float>(population / maxPop), 0.f, 1.f);
-
+        const auto cellScale = std::powf(2.f, static_cast<float>(minLevel));
         result.push_back(
-            static_cast<float>(x - Camera.Center.x / args.CellSize.Width));
+            static_cast<float>(x - Camera.Center.x / args.CellSize.Width) / cellScale);
         result.push_back(
-            static_cast<float>(y - Camera.Center.y / args.CellSize.Height));
+            static_cast<float>(y - Camera.Center.y / args.CellSize.Height) / cellScale);
         result.push_back(opacity);
     };
 
@@ -194,7 +194,7 @@ void GraphicsHandler::DrawGrid(Vec2 offset,
     }();
 
     m_GridShader.AttachUniformFloat(
-        "u_CellScale", std::powf(1.f, static_cast<float>(minLevel)));
+        "u_CellScale", std::powf(2.f, static_cast<float>(minLevel)));
 
     const auto positions = GenerateGLBuffer(offset, minLevel, grid, args);
 
