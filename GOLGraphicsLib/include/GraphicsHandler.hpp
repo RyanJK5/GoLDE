@@ -69,7 +69,8 @@ class GraphicsHandler {
     void InitGridBuffer();
 
     std::vector<float>
-    GenerateGLBuffer(Vec2 offset, int32_t minLevel, const std::ranges::input_range auto& grid,
+    GenerateGLBuffer(Vec2 offset, int32_t minLevel,
+                     const std::ranges::input_range auto& grid,
                      const GraphicsHandlerArgs& args) const;
 
     RectF GridToScreenBounds(Rect region,
@@ -139,7 +140,8 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset, int32_t minLevel,
             return;
         }
 
-        const auto opacity = std::clamp(static_cast<float>(population / maxPop), 0.f, 1.f);
+        const auto opacity =
+            std::clamp(static_cast<float>(population / maxPop), 0.f, 1.f);
 
         result.push_back(
             static_cast<float>(x - Camera.Center.x / args.CellSize.Width));
@@ -179,17 +181,18 @@ void GraphicsHandler::DrawGrid(Vec2 offset,
                                    {args.CellSize.Width, args.CellSize.Height});
     m_GridShader.AttachUniformMatrix4("u_MVP", matrix);
     m_GridShader.AttachUniformVec4("u_Color", {1.f, 1.f, 1.f, 1.f});
-    
+
     const auto minLevel = [&] {
         if constexpr (std::is_same_v<std::decay_t<decltype(grid)>,
                                      HashQuadtree>) {
             const auto scale = 1.f / (args.CellSize.Width * Camera.Zoom);
-            return std::max(0, static_cast<int32_t>(std::floor(std::log2(scale))));
+            return std::max(0,
+                            static_cast<int32_t>(std::floor(std::log2(scale))));
         } else {
             return 0;
         }
     }();
-    
+
     m_GridShader.AttachUniformFloat(
         "u_CellScale", std::powf(1.f, static_cast<float>(minLevel)));
 

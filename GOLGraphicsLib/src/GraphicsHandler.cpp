@@ -81,8 +81,9 @@ void GraphicsHandler::InitGridBuffer() {
     GL_DEBUG(glEnableVertexAttribArray(1));
     GL_DEBUG(glVertexAttribDivisor(1, 1));
 
-    GL_DEBUG(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
-                                   reinterpret_cast<const void*>(sizeof(float) * 2)));
+    GL_DEBUG(glVertexAttribPointer(
+        2, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
+        reinterpret_cast<const void*>(sizeof(float) * 2)));
     GL_DEBUG(glEnableVertexAttribArray(2));
     GL_DEBUG(glVertexAttribDivisor(2, 1));
 

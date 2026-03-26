@@ -9,6 +9,7 @@ namespace gol {
 class GraphicsCamera {
   public:
     static constexpr float MinZoom = 0.0001f;
+
   public:
     float Zoom = 1.f;
     glm::dvec2 Center = {};

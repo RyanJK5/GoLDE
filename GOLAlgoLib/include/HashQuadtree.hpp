@@ -56,7 +56,9 @@ struct HashLifeCache {
                                  LifeNodeEqual>
         PopulationCache{};
 
-    ankerl::unordered_dense::map<const LifeNode*, int64_t, LifeNodeHash, LifeNodeEqual> SmallPopulationCache{};
+    ankerl::unordered_dense::map<const LifeNode*, int64_t, LifeNodeHash,
+                                 LifeNodeEqual>
+        SmallPopulationCache{};
 
     // The cache for the HashLife algorithm when the step size is bounded.
     ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
@@ -301,7 +303,8 @@ const LifeNode* HashQuadtree::Combine2x2(const T& nodes, int32_t topLeftX,
 
 template <std::invocable<Vec2, int64_t> Func>
 void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
-                               Vec2L pos, int32_t level, int32_t minLevel, Rect bounds) {
+                               Vec2L pos, int32_t level, int32_t minLevel,
+                               Rect bounds) {
     if (node == FalseNode || node->IsEmpty ||
         !IntersectsBounds(bounds, pos, level)) {
         return;
@@ -310,7 +313,8 @@ void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
     if (level == minLevel) {
         bool containsCells = node != FalseNode && !node->IsEmpty;
         if (containsCells && IsWithinBounds(bounds, pos)) {
-            Vec2 intPos{static_cast<int32_t>(pos.X), static_cast<int32_t>(pos.Y)};
+            Vec2 intPos{static_cast<int32_t>(pos.X),
+                        static_cast<int32_t>(pos.Y)};
             func(intPos, PopulationOf(node, true));
         }
         return;
@@ -320,22 +324,24 @@ void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
     const auto halfSize = Pow2(childLevel);
 
     ForEachImpl(func, node->NorthWest, pos, childLevel, minLevel, bounds);
-    ForEachImpl(func, node->NorthEast, {pos.X + halfSize, pos.Y}, childLevel, minLevel, 
-                bounds);
-    ForEachImpl(func, node->SouthWest, {pos.X, pos.Y + halfSize}, childLevel, minLevel, 
-                bounds);
+    ForEachImpl(func, node->NorthEast, {pos.X + halfSize, pos.Y}, childLevel,
+                minLevel, bounds);
+    ForEachImpl(func, node->SouthWest, {pos.X, pos.Y + halfSize}, childLevel,
+                minLevel, bounds);
     ForEachImpl(func, node->SouthEast, {pos.X + halfSize, pos.Y + halfSize},
                 childLevel, minLevel, bounds);
 }
 
 template <std::invocable<Vec2, int64_t> Func>
-void HashQuadtree::ForEachCell(const Func& func, Rect bounds, int32_t minLevel) const {
+void HashQuadtree::ForEachCell(const Func& func, Rect bounds,
+                               int32_t minLevel) const {
     if (m_Root == FalseNode) {
         return;
     }
 
     const auto [node, offset] = GetCenteredNode(32);
-    return ForEachImpl(func, node, offset, std::min(m_Depth, 32), minLevel, bounds);
+    return ForEachImpl(func, node, offset, std::min(m_Depth, 32), minLevel,
+                       bounds);
 }
 } // namespace gol
 

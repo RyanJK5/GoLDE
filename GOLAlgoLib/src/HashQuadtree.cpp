@@ -441,8 +441,10 @@ int64_t HashQuadtree::PopulationOf(const LifeNode* node, bool) {
 
     // 4. Insert and return a copy
     return s_Cache.SmallPopulationCache[node] =
-               PopulationOf(node->NorthWest, false) + PopulationOf(node->NorthEast, false) +
-               PopulationOf(node->SouthWest, false) + PopulationOf(node->SouthEast, false);
+               PopulationOf(node->NorthWest, false) +
+               PopulationOf(node->NorthEast, false) +
+               PopulationOf(node->SouthWest, false) +
+               PopulationOf(node->SouthEast, false);
 }
 
 HashQuadtree::CenteredNodeResult

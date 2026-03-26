@@ -15,8 +15,7 @@
 
 namespace gol {
 ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath) {
-    if (const auto it =
-            s_Shaders.find(shaderFilePath); it != s_Shaders.end()) {
+    if (const auto it = s_Shaders.find(shaderFilePath); it != s_Shaders.end()) {
         it->second.RefCount++;
         m_ControlBlock = &it->second;
         return;
@@ -178,9 +177,9 @@ void ShaderManager::AttachUniformFloat(std::string_view label, float value) {
     GL_DEBUG(glUniform1f(UniformLocation(label), value));
 }
 
-
 int32_t ShaderManager::UniformLocation(std::string_view label) {
-    if (const auto it = m_ControlBlock->Uniforms.find(label); it != m_ControlBlock->Uniforms.end())
+    if (const auto it = m_ControlBlock->Uniforms.find(label);
+        it != m_ControlBlock->Uniforms.end())
         return it->second;
 
     GL_DEBUG(auto location = glGetUniformLocation(Program(), label.data()));
