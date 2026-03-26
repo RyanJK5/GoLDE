@@ -15,10 +15,10 @@
 
 namespace gol {
 ShaderManager::ShaderManager(const std::filesystem::path& shaderFilePath) {
-    auto itr = s_Shaders.find(shaderFilePath);
-    if (itr != s_Shaders.end()) {
-        itr->second.RefCount++;
-        m_ControlBlock = &itr->second;
+    if (const auto it =
+            s_Shaders.find(shaderFilePath); it != s_Shaders.end()) {
+        it->second.RefCount++;
+        m_ControlBlock = &it->second;
         return;
     }
 
@@ -160,14 +160,12 @@ ShaderManager::ParseShader(const std::filesystem::path& shaderFilePath) const {
 }
 
 void ShaderManager::AttachUniformVec2(std::string_view label, glm::vec2 vec) {
-    auto loc = UniformLocation(label);
-    GL_DEBUG(glUniform2f(loc, vec.x, vec.y));
+    GL_DEBUG(glUniform2f(UniformLocation(label), vec.x, vec.y));
 }
 
 void ShaderManager::AttachUniformVec4(std::string_view label,
                                       const glm::vec4& vec) {
-    auto loc = UniformLocation(label);
-    GL_DEBUG(glUniform4f(loc, vec.x, vec.y, vec.z, vec.w));
+    GL_DEBUG(glUniform4f(UniformLocation(label), vec.x, vec.y, vec.z, vec.w));
 }
 
 void ShaderManager::AttachUniformMatrix4(std::string_view label,
@@ -176,14 +174,19 @@ void ShaderManager::AttachUniformMatrix4(std::string_view label,
         glUniformMatrix4fv(UniformLocation(label), 1, GL_FALSE, &matrix[0][0]));
 }
 
-int32_t ShaderManager::UniformLocation(std::string_view label) {
-    if (m_ControlBlock->Uniforms.find(label) != m_ControlBlock->Uniforms.end())
-        return m_ControlBlock->Uniforms[label];
+void ShaderManager::AttachUniformFloat(std::string_view label, float value) {
+    GL_DEBUG(glUniform1f(UniformLocation(label), value));
+}
 
-    GL_DEBUG(int location = glGetUniformLocation(Program(), label.data()));
+
+int32_t ShaderManager::UniformLocation(std::string_view label) {
+    if (const auto it = m_ControlBlock->Uniforms.find(label); it != m_ControlBlock->Uniforms.end())
+        return it->second;
+
+    GL_DEBUG(auto location = glGetUniformLocation(Program(), label.data()));
     if (location == -1)
-        throw GLException(
-            std::format("Could not locate uniform '{}' in shader file", label));
+        throw GLException{
+            std::format("Could not locate uniform '{}' in shader file", label)};
 
     m_ControlBlock->Uniforms[label] = location;
     return location;

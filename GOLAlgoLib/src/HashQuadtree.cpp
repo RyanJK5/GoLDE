@@ -426,6 +426,25 @@ BigInt HashQuadtree::PopulationOf(const LifeNode* node) {
                PopulationOf(node->SouthWest) + PopulationOf(node->SouthEast);
 }
 
+int64_t HashQuadtree::PopulationOf(const LifeNode* node, bool) {
+    if (node == FalseNode) {
+        return int64_t{0};
+    }
+    if (node == TrueNode) {
+        return int64_t{1};
+    }
+
+    if (auto it = s_Cache.SmallPopulationCache.find(node);
+        it != s_Cache.SmallPopulationCache.end()) {
+        return it->second;
+    }
+
+    // 4. Insert and return a copy
+    return s_Cache.SmallPopulationCache[node] =
+               PopulationOf(node->NorthWest, false) + PopulationOf(node->NorthEast, false) +
+               PopulationOf(node->SouthWest, false) + PopulationOf(node->SouthEast, false);
+}
+
 HashQuadtree::CenteredNodeResult
 HashQuadtree::GetCenteredNode(int32_t level) const {
     if (m_Depth <= level) {

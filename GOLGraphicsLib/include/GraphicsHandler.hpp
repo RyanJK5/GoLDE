@@ -69,7 +69,7 @@ class GraphicsHandler {
     void InitGridBuffer();
 
     std::vector<float>
-    GenerateGLBuffer(Vec2 offset, const std::ranges::input_range auto& grid,
+    GenerateGLBuffer(Vec2 offset, int32_t minLevel, const std::ranges::input_range auto& grid,
                      const GraphicsHandlerArgs& args) const;
 
     RectF GridToScreenBounds(Rect region,
@@ -104,11 +104,11 @@ class GraphicsHandler {
 
     GLFrameBuffer m_FrameBuffer;
     GLTexture m_Texture;
-    GLRenderBuffer m_renderBuffer;
+    GLRenderBuffer m_RenderBuffer;
 };
 
 std::vector<float>
-GraphicsHandler::GenerateGLBuffer(Vec2 offset,
+GraphicsHandler::GenerateGLBuffer(Vec2 offset, int32_t minLevel,
                                   const std::ranges::input_range auto& grid,
                                   const GraphicsHandlerArgs& args) const {
     std::vector<float> result{};
@@ -127,25 +127,32 @@ GraphicsHandler::GenerateGLBuffer(Vec2 offset,
                                 std::max<int32_t>(gridInfo.GridSize.Height, 0));
         const auto reserveCount =
             std::min(static_cast<size_t>(grid.size()), visibleCapacity);
-        result.reserve(reserveCount * 2);
+        result.reserve(reserveCount * 3);
     }
 
-    const auto pushToBuffer = [&](Vec2 vec) {
-        const double x = static_cast<double>(vec.X + offset.X);
-        const double y = static_cast<double>(vec.Y + offset.Y);
-        if (x < minCellX || x > maxCellX || y < minCellY || y > maxCellY)
+    const auto maxPop = static_cast<double>(int64_t{1} << (2 * minLevel));
+
+    const auto pushToBuffer = [&](Vec2 vec, int64_t population) {
+        const auto x = static_cast<double>(vec.X + offset.X);
+        const auto y = static_cast<double>(vec.Y + offset.Y);
+        if (x < minCellX || x > maxCellX || y < minCellY || y > maxCellY) {
             return;
+        }
+
+        const auto opacity = std::clamp(static_cast<float>(population / maxPop), 0.f, 1.f);
+
         result.push_back(
             static_cast<float>(x - Camera.Center.x / args.CellSize.Width));
         result.push_back(
             static_cast<float>(y - Camera.Center.y / args.CellSize.Height));
+        result.push_back(opacity);
     };
 
     if constexpr (std::is_same_v<std::decay_t<decltype(grid)>, HashQuadtree>) {
-        grid.ForEachCell(pushToBuffer, VisibleBounds(args));
+        grid.ForEachCell(pushToBuffer, VisibleBounds(args), minLevel);
     } else {
         for (const auto vec : grid) {
-            pushToBuffer(vec);
+            pushToBuffer(vec, minLevel);
         }
     }
 
@@ -172,8 +179,21 @@ void GraphicsHandler::DrawGrid(Vec2 offset,
                                    {args.CellSize.Width, args.CellSize.Height});
     m_GridShader.AttachUniformMatrix4("u_MVP", matrix);
     m_GridShader.AttachUniformVec4("u_Color", {1.f, 1.f, 1.f, 1.f});
+    
+    const auto minLevel = [&] {
+        if constexpr (std::is_same_v<std::decay_t<decltype(grid)>,
+                                     HashQuadtree>) {
+            const auto scale = 1.f / (args.CellSize.Width * Camera.Zoom);
+            return std::max(0, static_cast<int32_t>(std::floor(std::log2(scale))));
+        } else {
+            return 0;
+        }
+    }();
+    
+    m_GridShader.AttachUniformFloat(
+        "u_CellScale", std::powf(1.f, static_cast<float>(minLevel)));
 
-    const auto positions = GenerateGLBuffer(offset, grid, args);
+    const auto positions = GenerateGLBuffer(offset, minLevel, grid, args);
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
 
@@ -185,7 +205,7 @@ void GraphicsHandler::DrawGrid(Vec2 offset,
 
     GL_DEBUG(
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr,
-                                static_cast<GLsizei>(positions.size() / 2)));
+                                static_cast<GLsizei>(positions.size() / 3)));
 
     GL_DEBUG(glBindVertexArray(0));
 }

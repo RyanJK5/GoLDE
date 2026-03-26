@@ -38,12 +38,12 @@ GraphicsHandler::GraphicsHandler(const std::filesystem::path& shaderDirectory,
     GL_DEBUG(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_TEXTURE_2D, m_Texture.ID(), 0));
 
-    GL_DEBUG(glBindRenderbuffer(GL_RENDERBUFFER, m_renderBuffer.ID()));
+    GL_DEBUG(glBindRenderbuffer(GL_RENDERBUFFER, m_RenderBuffer.ID()));
     GL_DEBUG(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
                                    windowWidth, windowHeight));
     GL_DEBUG(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                                        GL_DEPTH_STENCIL_ATTACHMENT,
-                                       GL_RENDERBUFFER, m_renderBuffer.ID()));
+                                       GL_RENDERBUFFER, m_RenderBuffer.ID()));
 
     GL_DEBUG(if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
                  GL_FRAMEBUFFER_COMPLETE) throw GLException("Framebuffer not "
@@ -76,10 +76,15 @@ void GraphicsHandler::InitGridBuffer() {
 
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    GL_DEBUG(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2,
+    GL_DEBUG(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
                                    nullptr));
     GL_DEBUG(glEnableVertexAttribArray(1));
     GL_DEBUG(glVertexAttribDivisor(1, 1));
+
+    GL_DEBUG(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
+                                   reinterpret_cast<const void*>(sizeof(float) * 2)));
+    GL_DEBUG(glEnableVertexAttribArray(2));
+    GL_DEBUG(glVertexAttribDivisor(2, 1));
 
     GL_DEBUG(glBindVertexArray(0));
 }
@@ -100,12 +105,12 @@ void GraphicsHandler::RescaleFrameBuffer(Rect windowBounds,
                viewportBounds.Height);
     GL_DEBUG(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_TEXTURE_2D, m_Texture.ID(), 0));
-    GL_DEBUG(glBindRenderbuffer(GL_RENDERBUFFER, m_renderBuffer.ID()));
+    GL_DEBUG(glBindRenderbuffer(GL_RENDERBUFFER, m_RenderBuffer.ID()));
     GL_DEBUG(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
                                    windowBounds.Width, windowBounds.Height));
     GL_DEBUG(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                                        GL_DEPTH_STENCIL_ATTACHMENT,
-                                       GL_RENDERBUFFER, m_renderBuffer.ID()));
+                                       GL_RENDERBUFFER, m_RenderBuffer.ID()));
 }
 
 void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) {
