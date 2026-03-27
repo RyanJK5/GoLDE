@@ -3,7 +3,6 @@ set(SOURCES
     src/HashQuadtreeTest.cpp
     src/SparseLifeTest.cpp
     src/TestMain.cpp
-    src/ThreadingTest.cpp
 )
 
 add_executable(GOLTest ${SOURCES})

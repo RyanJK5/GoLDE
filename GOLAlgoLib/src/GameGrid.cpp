@@ -3,6 +3,7 @@
 #include <ankerl/unordered_dense.h>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <optional>
@@ -123,6 +124,7 @@ const std::set<Vec2>& GameGrid::SortedData() const {
 const LifeHashSet& GameGrid::Data() const {
     if (m_CacheInvalidated && m_HashLifeData) {
         ValidateCache(false);
+        std::cerr << "Doing this\n";
     }
     m_CacheInvalidated = false;
     return m_Data;
