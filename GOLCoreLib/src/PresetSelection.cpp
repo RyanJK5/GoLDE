@@ -70,14 +70,14 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
         RectF{Vec2F{cursorPos},
               Size2F{static_cast<float>(TemplateDimensions.Width),
                      static_cast<float>(TemplateDimensions.Height)}};
-    const auto cellSize =
+    const auto smallestCellSize =
         std::min(windowBounds.Width / m_MaxGridDimensions.Width,
                  windowBounds.Height / m_MaxGridDimensions.Height);
     const auto spacing = ImGui::GetStyle().ItemSpacing;
     const auto numPerRow =
         std::max(1, static_cast<int32_t>(std::floor(
                         ImGui::GetContentRegionMax().x /
-                        (cellSize * m_MaxGridDimensions.Width + spacing.x))));
+                        (smallestCellSize * m_MaxGridDimensions.Width + spacing.x))));
 
     if (!enabled) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -88,8 +88,11 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
         if (!m_Library[i].FileName.contains(m_SearchText))
             continue;
 
-        auto graphicsArgs =
-            GraphicsHandlerArgs{.ViewportBounds = windowBounds,
+        const auto cellSize = std::min({10.f,
+            windowBounds.Width / m_Library[i].Grid.Width(),
+                windowBounds.Height / m_Library[i].Grid.Height()});
+        
+        GraphicsHandlerArgs graphicsArgs{.ViewportBounds = windowBounds,
                                 .GridSize = m_Library[i].Grid.Size(),
                                 .CellSize = {cellSize, cellSize},
                                 .ShowGridLines = false};
