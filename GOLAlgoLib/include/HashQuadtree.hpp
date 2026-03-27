@@ -169,17 +169,6 @@ class HashQuadtree {
     // Returns the length/width of the tree's root node.
     int64_t CalculateTreeSize() const;
 
-    // IMPORTANT: This function must ALWAYS be called before a HashQuadtree is
-    // potentially copied between threads. HashQuadtree exploits performance
-    // gains from using static storage for its cache. To ensure thread-safety
-    // when running multiple simulations, this storage is also THREAD LOCAL.
-    // This function makes it possible for HashQuadtree to move its data from
-    // static storage to a member variable, and then when it is copied in a new
-    // thread, its cache can be copied once more into thread local storage.
-    void PrepareCopyBetweenThreads();
-
-    void ClearTransferCache();
-
     bool operator==(const HashQuadtree& other) const;
     bool operator!=(const HashQuadtree& other) const;
 
@@ -261,10 +250,6 @@ class HashQuadtree {
     // The rationale for storing HashLifeCache in static, thread_local storage
     // is provided above.
     static thread_local HashLifeCache s_Cache;
-    // This is the transfer cache used for copying `s_Cache` between threads.
-    mutable std::unique_ptr<HashLifeCache> m_TransferCache{};
-    const LifeNode* m_TransferRoot = nullptr;
-    std::thread::id m_TransferID{std::this_thread::get_id()};
 
     const LifeNode* m_Root = FalseNode;
 

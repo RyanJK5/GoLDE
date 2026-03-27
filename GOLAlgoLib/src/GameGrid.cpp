@@ -83,19 +83,6 @@ void GameGrid::SetAlgorithm(LifeAlgorithm algorithm) {
     m_Algorithm = algorithm;
 }
 
-void GameGrid::PrepareCopyBetweenThreads() {
-    if (m_HashLifeData) {
-        m_HashLifeData->PrepareCopyBetweenThreads();
-        m_CacheInvalidated = true;
-    }
-}
-
-void GameGrid::ClearHashLifeTransferCache() {
-    if (m_HashLifeData) {
-        m_HashLifeData->ClearTransferCache();
-    }
-}
-
 bool GameGrid::Dead() const { return m_Data.empty(); }
 
 Rect GameGrid::BoundingBox() const {

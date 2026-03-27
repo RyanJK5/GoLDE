@@ -95,15 +95,14 @@ SimulationState EditorModel::HandlePause() {
 
 SimulationState EditorModel::HandleResume() {
     m_SelectionManager.Deselect(m_Grid);
-    m_Worker->Resume();
-    return SimulationState::Simulation;
+    return StartSimulation();
 }
 
 SimulationState EditorModel::HandleStep() {
     m_SelectionManager.Deselect(m_Grid);
     if (m_State == SimulationState::Paint)
         m_InitialGrid = m_Grid;
-    m_Worker->Resume(true, [this] { m_StopStepCommand = true; });
+    m_Worker->Start(m_Grid, true, [this] { m_StopStepCommand = true; });
     return SimulationState::Stepping;
 }
 

@@ -288,96 +288,10 @@ static const LifeNode* FindOrCreateFromCache(HashLifeCache& cache,
     return node;
 }
 
-static const LifeNode* BuildCache(HashLifeCache& cache,
-                                  const LifeNode* original) {
-    std::stack<const LifeNode*, std::vector<const LifeNode*>> stack{};
-
-    const auto resolved = [&](const LifeNode* node) {
-        return node == FalseNode || node == TrueNode ||
-               cache.TransferCopyCache.contains(node);
-    };
-    const auto get = [&](const LifeNode* node) {
-        if (node == FalseNode) {
-            return FalseNode;
-        }
-        if (node == TrueNode) {
-            return TrueNode;
-        }
-        return cache.TransferCopyCache[node];
-    };
-
-    stack.push(original);
-
-    while (!stack.empty()) {
-        const LifeNode* node = stack.top();
-
-        if (resolved(node)) {
-            stack.pop();
-            continue;
-        }
-
-        if (!resolved(node->NorthWest)) {
-            stack.push(node->NorthWest);
-            continue;
-        }
-        if (!resolved(node->NorthEast)) {
-            stack.push(node->NorthEast);
-            continue;
-        }
-        if (!resolved(node->SouthWest)) {
-            stack.push(node->SouthWest);
-            continue;
-        }
-        if (!resolved(node->SouthEast)) {
-            stack.push(node->SouthEast);
-            continue;
-        }
-
-        // All children ready → build node
-        const auto* ret = FindOrCreateFromCache(
-            cache, get(node->NorthWest), get(node->NorthEast),
-            get(node->SouthWest), get(node->SouthEast));
-
-        cache.TransferCopyCache[node] = ret;
-        stack.pop();
-    }
-
-    return cache.TransferCopyCache[original];
-}
-
 void HashQuadtree::Copy(const HashQuadtree& other) {
-    m_Root = FalseNode;
+    m_Root = other.m_Root;
     m_SeedOffset = other.m_SeedOffset;
     m_Depth = other.m_Depth;
-
-    if (other.m_Root == FalseNode) {
-        return;
-    }
-
-    const bool crossThread = std::this_thread::get_id() != other.m_TransferID;
-    if (!crossThread) {
-        m_Root = other.m_Root;
-        return;
-    }
-
-    if (other.m_TransferCache) {
-        m_Root = BuildCache(s_Cache, other.m_TransferRoot);
-        return;
-    }
-    assert(false && "Must prepare a transfer cache across threads");
-}
-
-void HashQuadtree::PrepareCopyBetweenThreads() {
-    m_TransferCache = std::make_unique<HashLifeCache>();
-    m_TransferRoot = BuildCache(*m_TransferCache, m_Root);
-
-    m_TransferID = std::this_thread::get_id();
-}
-
-void HashQuadtree::ClearTransferCache() {
-    m_TransferCache.reset();
-    m_TransferRoot = nullptr;
-    m_TransferID = std::this_thread::get_id();
 }
 
 int32_t HashQuadtree::CalculateDepth() const { return m_Depth; }

@@ -33,12 +33,6 @@ class GameGrid {
 
     void SetAlgorithm(LifeAlgorithm algorithm);
 
-    // IMPORTANT: This function MUST be called whenever a GameGrid is being
-    // copied across threads. The rationale behind this is explained in
-    // HashQuadtree.
-    void PrepareCopyBetweenThreads();
-    void ClearHashLifeTransferCache();
-
     // Advances the universe `numSteps` generations. A stop token can optionally
     // be provided if the thread may terminate during advance.
     BigInt Update(const BigInt& numSteps, std::stop_token stopToken = {});

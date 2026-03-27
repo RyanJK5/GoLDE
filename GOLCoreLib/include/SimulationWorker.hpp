@@ -22,7 +22,6 @@ class SimulationWorker {
 
     void Start(GameGrid& initialGrid, bool oneStep = false,
                const std::function<void()>& onStop = {});
-    void Resume(bool oneStep = false, const std::function<void()>& onStop = {});
 
     GameGrid Stop();
 

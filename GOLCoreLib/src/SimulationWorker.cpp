@@ -27,9 +27,6 @@ void SimulationWorker::ThreadLoop(std::stop_token threadStopToken) {
         auto runStopToken = m_RunStopSource.get_token();
         SimulationLoop(runStopToken);
 
-        m_Buffers[m_SnapshotIndex.load(std::memory_order_acquire)]
-            .PrepareCopyBetweenThreads();
-
         if (m_OneStep && !runStopToken.stop_requested()) {
             m_OnStop();
         }
@@ -96,28 +93,6 @@ void SimulationWorker::Start(GameGrid& initialGrid, bool oneStep,
     m_Buffers[2] = initialGrid;
     m_SnapshotIndex.store(0UZ, std::memory_order_release);
 
-    {
-        std::scoped_lock lock{m_ResumeMutex};
-        m_OneStep = oneStep;
-        m_OnStop = onStop;
-        m_ResumeReady = true;
-    }
-    m_ResumeCondition.notify_one();
-}
-
-void SimulationWorker::Resume(bool oneStep,
-                              const std::function<void()>& onStop) {
-    const auto validIndex = m_SnapshotIndex.load(std::memory_order_acquire);
-    m_Buffers[validIndex].ClearHashLifeTransferCache();
-
-    for (auto i = 0UZ; i < m_Buffers.size(); i++) {
-        if (i != validIndex) {
-            m_Buffers[i] = m_Buffers[validIndex];
-        }
-    }
-
-    m_IsRunning.store(true, std::memory_order_release);
-    m_RunStopSource = {};
     {
         std::scoped_lock lock{m_ResumeMutex};
         m_OneStep = oneStep;
