@@ -48,7 +48,8 @@ class SelectionManager {
     std::optional<VersionChange> InsertNoise(Rect selectionBounds,
                                              float density);
 
-    std::pair<std::optional<VersionChange>, std::optional<VersionChange>> ModifySelectionBounds(GameGrid& grid, Rect bounds);
+    std::pair<std::optional<VersionChange>, std::optional<VersionChange>>
+    ModifySelectionBounds(GameGrid& grid, Rect bounds);
 
     std::expected<VersionChange, std::string>
     Load(const std::filesystem::path& filePath);

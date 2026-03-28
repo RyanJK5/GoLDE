@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <cstdint>
 #include <charconv>
+#include <cstdint>
 #include <expected>
 #include <filesystem>
 #include <fstream>
@@ -198,17 +198,17 @@ LoadGollyRLE(const std::string& src) {
         // Trim leading whitespace
         const auto firstNonSpace = line.find_first_not_of(" \t\r");
         const auto trimmed = (firstNonSpace == std::string_view::npos)
-                                             ? std::string_view{}
-                                             : line.substr(firstNonSpace);
+                                 ? std::string_view{}
+                                 : line.substr(firstNonSpace);
 
         if (!trimmed.empty() && trimmed[0] == '#') {
             // #P x y  or  #R x y — explicit pattern origin
             if (trimmed.size() >= 2 &&
                 (trimmed[1] == 'P' || trimmed[1] == 'R')) {
                 const auto coords = trimmed.substr(2);
-                auto pointX = 0; 
+                auto pointX = 0;
                 auto pointY = 0;
-                
+
                 auto [p1, ec1] = std::from_chars(
                     coords.data(), coords.data() + coords.size(), pointX);
                 if (ec1 == std::errc{}) {
@@ -287,13 +287,15 @@ LoadGollyRLE(const std::string& src) {
         run = 0;
 
         switch (ch) {
-        case 'b': [[fallthrough]]; // dead cells — just advance X
+        case 'b':
+            [[fallthrough]]; // dead cells — just advance X
         case '.':
             currentX += count;
             break;
 
-        case 'o': [[fallthrough]]; // alive cells
-        case 'A': // some extended RLEs use 'A' for the first state
+        case 'o':
+            [[fallthrough]]; // alive cells
+        case 'A':            // some extended RLEs use 'A' for the first state
             for (auto i = 0; i < count; ++i)
                 result.Set(currentX + i, currentY, true);
             currentX += count;

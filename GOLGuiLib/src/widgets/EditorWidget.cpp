@@ -228,9 +228,9 @@ WidgetResult EditorWidget::UpdateImpl(const EditorResult& state) {
     UpdateResult(result, m_FlipVerticalButton.Update(state));
     UpdateResult(result, m_FlipHorizontalButton.Update(state));
     UpdateResult(result, m_SelectAllButton.Update(state));
-    
+
     UpdateResult(result, m_UndoButton.Update(state));
-    
+
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
     UpdateResult(result, m_RedoButton.Update(state));
     ImGui::PopStyleVar();

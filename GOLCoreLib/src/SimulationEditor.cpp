@@ -116,7 +116,9 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
                     .RedosAvailable = m_Model.Versions().RedosAvailable()},
         .File = {.CurrentFilePath = m_Model.CurrentFilePath(),
                  .HasUnsavedChanges = !m_Model.IsSaved()},
-        .SelectionBounds = m_Model.Selection().CanDrawGrid() ? m_Model.Selection().SelectionBounds() : std::optional<Rect>{},
+        .SelectionBounds = m_Model.Selection().CanDrawGrid()
+                               ? m_Model.Selection().SelectionBounds()
+                               : std::optional<Rect>{},
         .Active = (activeOverride && *activeOverride) || displayResult.Selected,
         .Closing = displayResult.Closing ||
                    (controlArgs.Command && std::holds_alternative<CloseCommand>(
@@ -327,7 +329,9 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
             [this](const PauseCommand&) { return m_Model.HandlePause(); },
             [this](const ResumeCommand&) { return m_Model.HandleResume(); },
             [this](const StepCommand&) { return m_Model.HandleStep(); },
-            [this](const SelectionBoundsCommand& cmd) { return m_Model.SetSelectionBounds(cmd.Bounds); },
+            [this](const SelectionBoundsCommand& cmd) {
+                return m_Model.SetSelectionBounds(cmd.Bounds);
+            },
             [this](const ResizeCommand& cmd) {
                 auto oldWidth = m_Model.Grid().Width();
                 auto oldHeight = m_Model.Grid().Height();
