@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 
+#include "DisabledScope.hpp"
 #include "GameEnums.hpp"
 #include "Graphics2D.hpp"
 #include "SimulationCommand.hpp"
@@ -98,41 +99,27 @@ void StepWidget::ShowInputText() {
 }
 
 WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
-    constexpr static auto beginGreyOutIf = [](bool condition) {
-        if (condition) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
-                                ImGui::GetStyle().Alpha * 0.5f);
-        }
-    };
-
-    constexpr static auto endGreyOutIf = [](bool condition) {
-        if (condition) {
-            ImGui::PopItemFlag();
-            ImGui::PopStyleVar();
-        }
-    };
-
     ImGui::Text("Step Count");
 
-    const bool stepEnabled = !m_HyperSpeed;
-    beginGreyOutIf(!stepEnabled);
-    ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
+    {
+        DisabledScope disableIf{m_HyperSpeed};
 
-    ShowInputText();
+        ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
 
-    const auto buttonSize = ImGui::GetFrameHeight();
+        ShowInputText();
 
-    ImGui::SameLine();
-    if (ImGui::Button("-##minus", {buttonSize, buttonSize}))
-        SetStepCount(m_StepCount - 1);
+        const auto buttonSize = ImGui::GetFrameHeight();
 
-    ImGui::SameLine();
-    if (ImGui::Button("+##plus", {buttonSize, buttonSize}))
-        SetStepCount(m_StepCount + 1);
+        ImGui::SameLine();
+        if (ImGui::Button("-##minus", {buttonSize, buttonSize}))
+            SetStepCount(m_StepCount - 1);
 
-    ImGui::PopStyleVar();
-    endGreyOutIf(!stepEnabled);
+        ImGui::SameLine();
+        if (ImGui::Button("+##plus", {buttonSize, buttonSize}))
+            SetStepCount(m_StepCount + 1);
+
+        ImGui::PopStyleVar();
+    }
 
     if (m_StepCount < 1)
         m_StepCount = 1;
@@ -145,17 +132,17 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
                                  : std::nullopt,
         .FromShortcut = result.FromShortcut};
 
-    const bool showAlgoDropbox =
-        state.Simulation.State != SimulationState::Empty &&
-        state.Simulation.State != SimulationState::Paint &&
-        state.Simulation.State != SimulationState::Paused;
-    beginGreyOutIf(showAlgoDropbox);
+    const auto algo = [&] {
+        const bool showAlgoDropbox =
+            state.Simulation.State != SimulationState::Empty &&
+            state.Simulation.State != SimulationState::Paint &&
+            state.Simulation.State != SimulationState::Paused;
+        DisabledScope disableIf{showAlgoDropbox};
 
-    auto algoID = std::to_underlying(m_Algorithm);
-    ImGui::Combo("Algorithm", &algoID, "HashLife\0SparseLife\0");
-    const auto algo = static_cast<LifeAlgorithm>(algoID);
-
-    endGreyOutIf(showAlgoDropbox);
+        auto algoID = std::to_underlying(m_Algorithm);
+        ImGui::Combo("Algorithm", &algoID, "HashLife\0SparseLife\0");
+        return static_cast<LifeAlgorithm>(algoID);
+    }();
 
     if (algo == LifeAlgorithm::HashLife)
         ImGui::SetItemTooltip(
@@ -172,19 +159,20 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
     retValue.FromShortcut = retValue.FromShortcut || result.FromShortcut;
     m_Algorithm = algo;
 
-    const bool showHyperSpeedOption =
-        state.Simulation.State == SimulationState::Simulation;
-    beginGreyOutIf(showHyperSpeedOption);
+    {
+        const bool hideHyperSpeedOption =
+            state.Simulation.State == SimulationState::Simulation;
+        DisabledScope disableIf(hideHyperSpeedOption);
 
-    ImGui::Checkbox("Enable Hyper Speed", &m_HyperSpeed);
-    ImGui::SetItemTooltip("Hyper Speed enables the HashLife algorithm to "
-                          "progress as fast as possible. However, this means\n"
-                          "it may skip several generations at a time, and step "
-                          "count will be ignored. Expect the simulation\n"
-                          "to run slowly for the first few jumps, but speed up "
-                          "significantly afterwards.");
-
-    endGreyOutIf(showHyperSpeedOption);
+        ImGui::Checkbox("Enable Hyper Speed", &m_HyperSpeed);
+        ImGui::SetItemTooltip(
+            "Hyper Speed enables the HashLife algorithm to "
+            "progress as fast as possible. However, this means\n"
+            "it may skip several generations at a time, and step "
+            "count will be ignored. Expect the simulation\n"
+            "to run slowly for the first few jumps, but speed up "
+            "significantly afterwards.");
+    }
 
     ImGui::Separator();
     ImGui::PopStyleVar();

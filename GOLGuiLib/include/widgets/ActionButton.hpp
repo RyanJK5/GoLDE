@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DisabledScope.hpp"
 #include "EditorResult.hpp"
 #include "GameEnums.hpp"
 #include "Graphics2D.hpp"
@@ -36,31 +37,26 @@ class MultiActionButton {
 
     ActionButtonResult<ActType> Update(const EditorResult& state) {
         const bool enabled = Enabled(state);
-        if (!enabled) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
-                                ImGui::GetStyle().Alpha * 0.5f);
-        }
+        auto result = [&] {
+            DisabledScope disableIf{!enabled};
 
-        if (!m_LineBreak)
-            ImGui::SameLine();
+            if (!m_LineBreak)
+                ImGui::SameLine();
 
-        auto result = [this, state]() {
-            bool active = false;
-            if (Enabled(state))
-                for (auto& shortcut : m_Shortcuts.at(Action(state))) {
-                    active = shortcut.Active() || active;
-                }
+            return [this, state] {
+                bool active = false;
+                if (Enabled(state))
+                    for (auto& shortcut : m_Shortcuts.at(Action(state))) {
+                        active = shortcut.Active() || active;
+                    }
 
-            if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
-                return ActionButtonResult<ActType>{Action(state), active};
-            return ActionButtonResult<ActType>{};
+                if (ImGui::Button(Label(state).c_str(), Dimensions()) || active)
+                    return ActionButtonResult<ActType>{Action(state), active};
+                return ActionButtonResult<ActType>{};
+            }();
         }();
 
-        if (!enabled) {
-            ImGui::PopItemFlag();
-            ImGui::PopStyleVar();
-        } else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
+        if (enabled && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
             auto tooltip = Actions::ToString(Action(state));
             const auto& shortcuts = m_Shortcuts.at(Action(state));
             if (!shortcuts.empty())

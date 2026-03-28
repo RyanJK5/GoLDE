@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 
+#include "DisabledScope.hpp"
 #include "EditorResult.hpp"
 #include "FileDialog.hpp"
 #include "GameEnums.hpp"
@@ -79,61 +80,57 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
                ImGui::GetContentRegionMax().x /
                (smallestCellSize * m_MaxGridDimensions.Width + spacing.x))));
 
-    if (!enabled) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
-                            ImGui::GetStyle().Alpha * 0.5f);
-    }
-    for (auto i = 0UZ; i < m_Library.size(); i++) {
-        if (!m_Library[i].FileName.contains(m_SearchText))
-            continue;
+    {
+        DisabledScope disableIf{!enabled};
+        for (auto i = 0UZ; i < m_Library.size(); i++) {
+            if (!m_Library[i].FileName.contains(m_SearchText))
+                continue;
 
-        const auto cellSize =
-            std::min({10.f, windowBounds.Width / m_Library[i].Grid.Width(),
-                      windowBounds.Height / m_Library[i].Grid.Height()});
+            const auto cellSize =
+                std::min({10.f, windowBounds.Width / m_Library[i].Grid.Width(),
+                          windowBounds.Height / m_Library[i].Grid.Height()});
 
-        GraphicsHandlerArgs graphicsArgs{.ViewportBounds = windowBounds,
-                                         .GridSize = m_Library[i].Grid.Size(),
-                                         .CellSize = {cellSize, cellSize},
-                                         .ShowGridLines = false};
+            GraphicsHandlerArgs graphicsArgs{.ViewportBounds = windowBounds,
+                                             .GridSize =
+                                                 m_Library[i].Grid.Size(),
+                                             .CellSize = {cellSize, cellSize},
+                                             .ShowGridLines = false};
 
-        m_Library[i].Graphics.RescaleFrameBuffer(windowBounds, windowBounds);
-        m_Library[i].Graphics.CenterCamera(graphicsArgs);
-        m_Library[i].Graphics.ClearBackground(graphicsArgs);
+            m_Library[i].Graphics.RescaleFrameBuffer(windowBounds,
+                                                     windowBounds);
+            m_Library[i].Graphics.CenterCamera(graphicsArgs);
+            m_Library[i].Graphics.ClearBackground(graphicsArgs);
 
-        m_Library[i].Graphics.DrawGrid(Vec2{}, m_Library[i].Grid.Data(),
-                                       graphicsArgs);
+            m_Library[i].Graphics.DrawGrid(Vec2{}, m_Library[i].Grid.Data(),
+                                           graphicsArgs);
 
-        if (numAvailable % numPerRow != 0)
-            ImGui::SameLine();
-        cursorPos = ImGui::GetCursorPos();
+            if (numAvailable % numPerRow != 0)
+                ImGui::SameLine();
+            cursorPos = ImGui::GetCursorPos();
 
-        ImGui::Image(
-            static_cast<ImTextureID>(m_Library[i].Graphics.TextureID()),
-            {windowBounds.Width, windowBounds.Height}, ImVec2{0, 1},
-            ImVec2{1, 0});
-        ImGui::SetItemTooltip(
-            "%s", std::format("{}.gol", m_Library[i].FileName).c_str());
+            ImGui::Image(
+                static_cast<ImTextureID>(m_Library[i].Graphics.TextureID()),
+                {windowBounds.Width, windowBounds.Height}, ImVec2{0, 1},
+                ImVec2{1, 0});
+            ImGui::SetItemTooltip(
+                "%s", std::format("{}.gol", m_Library[i].FileName).c_str());
 
-        ImGui::SetCursorPos(cursorPos);
+            ImGui::SetCursorPos(cursorPos);
 
-        if (ImGui::InvisibleButton(
-                std::format("##{}", m_Library[i].FileName).c_str(),
-                {windowBounds.Width, windowBounds.Height}))
-            retString =
-                RLEEncoder::EncodeRegion(m_Library[i].Grid,
-                                         {{0, 0}, m_Library[i].Grid.Size()})
-                    .c_str();
+            if (ImGui::InvisibleButton(
+                    std::format("##{}", m_Library[i].FileName).c_str(),
+                    {windowBounds.Width, windowBounds.Height}))
+                retString =
+                    RLEEncoder::EncodeRegion(m_Library[i].Grid,
+                                             {{0, 0}, m_Library[i].Grid.Size()})
+                        .c_str();
 
-        if (ImGui::IsItemHovered())
-            m_Library[i].Graphics.DrawSelection({{0, 0}, graphicsArgs.GridSize},
-                                                graphicsArgs);
+            if (ImGui::IsItemHovered())
+                m_Library[i].Graphics.DrawSelection(
+                    {{0, 0}, graphicsArgs.GridSize}, graphicsArgs);
 
-        numAvailable++;
-    }
-    if (!enabled) {
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
+            numAvailable++;
+        }
     }
     ImGui::End();
     return {.ClipboardText = retString};

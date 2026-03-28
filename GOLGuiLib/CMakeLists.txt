@@ -3,6 +3,7 @@ set(SOURCES
     src/dialogs/FileDialog.cpp
     src/dialogs/PopupWindow.cpp
     src/dialogs/WarnWindow.cpp
+    src/misc/DisabledScope.cpp
     src/misc/LoadingSpinner.cpp
     src/misc/RLEEncoder.cpp
     src/widgets/DelayWidget.cpp
@@ -25,6 +26,7 @@ set(HEADERS
     include/dialogs/PopupWindow.hpp
     include/dialogs/WarnWindow.hpp
     include/misc/ConfigLoader.hpp
+    include/misc/DisabledScope.hpp
     include/misc/LoadingSpinner.hpp
     include/misc/RLEEncoder.hpp
     include/widgets/ActionButton.hpp
