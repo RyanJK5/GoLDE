@@ -16,6 +16,7 @@
 #include "GameEnums.hpp"
 #include "KeyShortcut.hpp"
 #include "NoiseWidget.hpp"
+#include "SelectionBoundsWidget.hpp"
 #include "ResizeWidget.hpp"
 #include "SimulationControlResult.hpp"
 #include "StepWidget.hpp"
@@ -61,6 +62,7 @@ class SimulationControl {
     StepWidget m_StepWidget;
     DelayWidget m_DelayWidget;
     NoiseWidget m_NoiseWidget;
+    SelectionBoundsWidget m_SelectionBoundsWidget;
 
     std::filesystem::path m_ShortcutConfigPath;
     std::jthread m_ShortcutChecker;
@@ -72,6 +74,7 @@ void SimulationControl::ForEachWidget(auto&& widgetFunc) {
     widgetFunc(m_FileWidget);
     widgetFunc(m_ExecutionWidget);
     widgetFunc(m_EditorWidget);
+    widgetFunc(m_SelectionBoundsWidget);
     widgetFunc(m_ResizeWidget);
     widgetFunc(m_StepWidget);
     widgetFunc(m_DelayWidget);

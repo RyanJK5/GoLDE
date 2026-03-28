@@ -35,7 +35,8 @@ class MultiActionButton {
         : m_Shortcuts(shortcuts) {}
 
     ActionButtonResult<ActType> Update(const EditorResult& state) {
-        if (!Enabled(state)) {
+        const bool enabled = Enabled(state);
+        if (!enabled) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha,
                                 ImGui::GetStyle().Alpha * 0.5f);
@@ -56,7 +57,7 @@ class MultiActionButton {
             return ActionButtonResult<ActType>{};
         }();
 
-        if (!Enabled(state)) {
+        if (!enabled) {
             ImGui::PopItemFlag();
             ImGui::PopStyleVar();
         } else if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {

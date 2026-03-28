@@ -115,7 +115,8 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
 
     ImGui::Text("Step Count");
 
-    beginGreyOutIf(m_HyperSpeed);
+    const bool stepEnabled = !m_HyperSpeed;
+    beginGreyOutIf(!stepEnabled);
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
 
     ShowInputText();
@@ -131,7 +132,7 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
         SetStepCount(m_StepCount + 1);
 
     ImGui::PopStyleVar();
-    endGreyOutIf(m_HyperSpeed);
+    endGreyOutIf(!stepEnabled);
 
     if (m_StepCount < 1)
         m_StepCount = 1;

@@ -2,8 +2,10 @@
 #define EditorResult_hpp_
 
 #include <filesystem>
+#include <optional>
 
 #include "GameEnums.hpp"
+#include "Graphics2D.hpp"
 
 namespace gol {
 struct SimulationStatus {
@@ -25,6 +27,7 @@ struct EditorResult {
     SimulationStatus Simulation{};
     EditingStatus Editing{};
     FileStatus File{};
+    std::optional<Rect> SelectionBounds{};
     bool Active = true;
     bool Closing = false;
 };

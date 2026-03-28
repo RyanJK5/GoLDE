@@ -63,6 +63,7 @@ class EditorModel {
     // Deselect and paste from clipboard at the given position
     void InsertFromClipboard(Vec2 position);
 
+    SimulationState SetSelectionBounds(Rect bounds);
     bool UpdateSelectionAreaTracked(Vec2 gridPos);
     void TryResetSelection();
     void BeginPaintChange(Vec2 pos, bool insert);

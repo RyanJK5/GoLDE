@@ -35,15 +35,8 @@ SelectionUpdateResult SelectionManager::UpdateSelectionArea(GameGrid& grid,
         if (m_Selected && !m_LockSelection)
             return UpdateUnlockedSelection(gridPos);
 
-        m_Selected = grid.SubRegion(SelectionBounds());
-        auto change =
-            VersionChange{.Action = SelectionAction::Select,
-                          .SelectionBounds = SelectionBounds(),
-                          .CellsInserted = m_Selected->Data(),
-                          .CellsDeleted = grid.ReadRegion(SelectionBounds())};
-        grid.ClearRegion(SelectionBounds());
-
-        return {.Change = change, .BeginSelection = false};
+        auto change = Select(grid);
+        return {.Change = std::move(change), .BeginSelection = false};
     }
 
     auto deselectChange = Deselect(grid);
@@ -82,6 +75,19 @@ bool SelectionManager::TryResetSelection() {
     m_SentinelSelection = std::nullopt;
     m_Selected = std::nullopt;
     return true;
+}
+
+
+VersionChange SelectionManager::Select(GameGrid& grid) {
+    m_Selected = grid.SubRegion(SelectionBounds());
+    auto change =
+        VersionChange{.Action = SelectionAction::Select,
+                        .SelectionBounds = SelectionBounds(),
+                        .CellsInserted = m_Selected->Data(),
+                        .CellsDeleted = grid.ReadRegion(SelectionBounds())};
+    grid.ClearRegion(SelectionBounds());
+    
+    return change;
 }
 
 std::optional<VersionChange> SelectionManager::Deselect(GameGrid& grid) {
@@ -447,6 +453,49 @@ Rect SelectionManager::SelectionBounds() const {
             std::abs(m_SentinelSelection->Y - m_AnchorSelection->Y) + 1};
 }
 
+std::pair<std::optional<VersionChange>, std::optional<VersionChange>> SelectionManager::ModifySelectionBounds(GameGrid& grid, Rect bounds) {
+    if (CanDrawGrid() && bounds == SelectionBounds()) {
+        return {std::nullopt, std::nullopt};
+    }
+    
+    const bool previouslyValidBounds = CanDrawGrid();
+    const bool notSameBounds = previouslyValidBounds && bounds.Size() != SelectionBounds().Size();
+    const auto ogPos = previouslyValidBounds ? SelectionBounds().Pos() : std::optional<Vec2>{};
+
+    auto change1 = [&] -> std::optional<VersionChange> {
+        if (notSameBounds) {
+            return Deselect(grid);
+        }
+        return {};
+    }();
+
+    if ((bounds.Width == 0) != (bounds.Height == 0)) {
+        const auto size = std::max(bounds.Width, bounds.Height);
+        bounds.Width = size;
+        bounds.Height = size;
+    } else if (bounds.Width == 0 && bounds.Height == 0) {
+        bounds.Width = 2;
+        bounds.Height = 2;
+    }
+    SetSelectionBounds(bounds);
+    
+    auto change2 = [&] -> std::optional<VersionChange> {
+        if (!previouslyValidBounds || notSameBounds) {
+            return Select(grid);
+        }
+        if (previouslyValidBounds) {
+            return VersionChange{.Action = SelectionAction::NudgeDown,
+                                        .SelectionBounds = SelectionBounds(),
+                                        .NudgeTranslation =
+                                            bounds.Pos() - *ogPos};
+        }
+        return {};
+    }();
+
+    return {std::move(change1), std::move(change2)};
+}
+
+
 bool SelectionManager::GridAlive() const {
     return m_Selected && !m_Selected->Population().is_zero();
 }
@@ -473,7 +522,7 @@ bool SelectionManager::CanDrawGrid() const { return m_Selected.has_value(); }
 void SelectionManager::SetSelectionBounds(Rect bounds) {
     m_AnchorSelection = bounds.Pos();
     m_SentinelSelection =
-        *m_AnchorSelection + Vec2{bounds.Width - 1, bounds.Height - 1};
+        *m_AnchorSelection + Vec2{bounds.Width == 0 ? 0 : bounds.Width - 1, bounds.Height == 0 ? 0 : bounds.Height - 1};
 }
 
 Vec2 SelectionManager::RotatePoint(Vec2F center, Vec2F point, bool clockwise) {

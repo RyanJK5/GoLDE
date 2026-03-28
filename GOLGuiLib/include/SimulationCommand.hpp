@@ -50,6 +50,10 @@ struct LoadCommand {
 };
 struct CloseCommand {};
 
+struct SelectionBoundsCommand {
+    Rect Bounds;
+};
+
 // Selection command — wraps the existing SelectionAction enum
 struct SelectionCommand {
     SelectionAction Action;
@@ -61,7 +65,7 @@ using SimulationCommand =
                  ResetCommand, ClearCommand, StepCommand, ResizeCommand,
                  GenerateNoiseCommand, UndoCommand, RedoCommand, SaveCommand,
                  SaveAsNewCommand, NewFileCommand, LoadCommand, CloseCommand,
-                 SelectionCommand>;
+                 SelectionCommand, SelectionBoundsCommand>;
 
 // Convert individual action enum values to SimulationCommand.
 // Used by Widget::UpdateResult for simple (no-payload) buttons.

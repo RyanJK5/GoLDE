@@ -216,6 +216,15 @@ void EditorModel::InsertFromClipboard(Vec2 position) {
         m_VersionManager.PushChange(*result);
 }
 
+SimulationState EditorModel::SetSelectionBounds(Rect bounds) {
+    auto [change1, change2] = m_SelectionManager.ModifySelectionBounds(m_Grid, bounds);
+    m_VersionManager.TryPushChange(change1);
+    m_VersionManager.TryPushChange(change2);
+
+    return m_State;
+}
+
+
 bool EditorModel::UpdateSelectionAreaTracked(Vec2 gridPos) {
     auto result = m_SelectionManager.UpdateSelectionArea(m_Grid, gridPos);
     m_VersionManager.TryPushChange(result.Change);

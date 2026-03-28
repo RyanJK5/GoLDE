@@ -70,6 +70,8 @@ struct GenericSize {
 
     constexpr GenericSize() : Width(0), Height(0) {}
     constexpr GenericSize(T width, T height) : Width(width), Height(height) {}
+
+    constexpr auto operator<=>(const GenericSize<T>&) const = default;
 };
 
 template <std::totally_ordered T>
@@ -106,6 +108,8 @@ struct GenericRect {
     constexpr bool InBounds(GenericVec<T> pos) const {
         return InBounds(pos.X, pos.Y);
     }
+
+    constexpr auto operator<=>(const GenericRect&) const = default;
 };
 
 struct Vec2F : public GenericVec<float> {

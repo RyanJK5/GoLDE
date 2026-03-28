@@ -11,6 +11,7 @@ set(SOURCES
     src/widgets/FileWidget.cpp
     src/widgets/NoiseWidget.cpp
     src/widgets/ResizeWidget.cpp
+    src/widgets/SelectionBoundsWidget.cpp
     src/widgets/StepWidget.cpp
     src/GameEnums.cpp
     src/KeyShortcut.cpp
@@ -33,6 +34,7 @@ set(HEADERS
     include/widgets/FileWidget.hpp
     include/widgets/NoiseWidget.hpp
     include/widgets/ResizeWidget.hpp
+    include/widgets/SelectionBoundsWidget.hpp
     include/widgets/StepWidget.hpp
     include/widgets/Widget.hpp
     include/EditorResult.hpp
