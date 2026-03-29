@@ -8,7 +8,8 @@
 namespace gol {
 class GraphicsCamera {
   public:
-    static constexpr float MinZoom = 0.0001f;
+    static constexpr float MinZoom = 1e-7f;
+    static constexpr float MaxZoom = 40.f;
 
   public:
     float Zoom = 1.f;
