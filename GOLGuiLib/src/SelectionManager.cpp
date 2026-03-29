@@ -166,7 +166,7 @@ SelectionManager::Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold,
     m_Selected = std::move(decodeResult->Grid);
     m_AnchorSelection = gridPos;
     m_SentinelSelection = {gridPos->X + m_Selected->Width() - 1,
-                         gridPos->Y + m_Selected->Height() - 1};
+                           gridPos->Y + m_Selected->Height() - 1};
 
     return VersionChange{.Action = SelectionAction::Paste,
                          .SelectionBounds = SelectionBounds(),
