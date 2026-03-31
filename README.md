@@ -77,15 +77,20 @@ Start GOLDE and you'll be greeted with an interactive grid and control panel.
 ## Gallery
 
 ![](docs/breeder.gif)
+
+
 A simple breeder pattern running for over 10^1000 using HashLife.
 
 ![](docs/turing_machine.png)
+
+
 A turing machine in GOLDE.
 
-<video width="1600" height="1000" controls>
-  <source src="docs/editor.mp4" type="video/mp4">
+<video width="1600" height="1000" controls muted style="max-width: 100%;">
+  <source src="https://github.com/RyanJK5/GOLDE/blob/master/docs/editor.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
+
 
 A demonstration of basic GOLDE editing features.
 
