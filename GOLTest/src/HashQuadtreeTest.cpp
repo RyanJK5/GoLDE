@@ -48,8 +48,7 @@ static void CheckAgainstFile(const std::filesystem::path& unevolved,
         totalGenerations += genCount;
     }
 
-    EXPECT_EQ(current, expected)
-        << std::format("{} did not match expected: {}", current, expected);
+    EXPECT_EQ(current, expected);
     EXPECT_EQ(totalGenerations, expectedGenerationsPerJump * BigInt{numJumps})
         << "Total generations advanced should match expectation";
 }

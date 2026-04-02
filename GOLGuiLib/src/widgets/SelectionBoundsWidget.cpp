@@ -13,12 +13,14 @@ WidgetResult SelectionBoundsWidget::UpdateImpl(const EditorResult& state) {
 
     ImGui::Text("Selection Bounds");
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
 
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
     ImGui::InputInt4("##SelectionBoundsLabel", data.data());
     const bool copyBounds = ImGui::IsItemDeactivatedAfterEdit();
 
-    ImGui::Separator();
+    ImGui::PopStyleVar();
     ImGui::PopStyleVar();
 
     if (copyBounds) {

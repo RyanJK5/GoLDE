@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "CameraPositionWidget.hpp"
 #include "ConfigLoader.hpp"
 #include "DelayWidget.hpp"
 #include "EditorWidget.hpp"
@@ -63,6 +64,7 @@ class SimulationControl {
     DelayWidget m_DelayWidget;
     NoiseWidget m_NoiseWidget;
     SelectionBoundsWidget m_SelectionBoundsWidget;
+    CameraPositionWidget m_CameraPositionWidget;
 
     std::filesystem::path m_ShortcutConfigPath;
     std::jthread m_ShortcutChecker;
@@ -75,6 +77,7 @@ void SimulationControl::ForEachWidget(auto&& widgetFunc) {
     widgetFunc(m_ExecutionWidget);
     widgetFunc(m_EditorWidget);
     widgetFunc(m_SelectionBoundsWidget);
+    widgetFunc(m_CameraPositionWidget);
     widgetFunc(m_ResizeWidget);
     widgetFunc(m_StepWidget);
     widgetFunc(m_DelayWidget);

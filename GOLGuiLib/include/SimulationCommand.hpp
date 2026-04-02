@@ -54,6 +54,10 @@ struct SelectionBoundsCommand {
     Rect Bounds;
 };
 
+struct CameraPositionCommand {
+    Vec2 Position;
+};
+
 // Selection command — wraps the existing SelectionAction enum
 struct SelectionCommand {
     SelectionAction Action;
@@ -65,7 +69,8 @@ using SimulationCommand =
                  ResetCommand, ClearCommand, StepCommand, ResizeCommand,
                  GenerateNoiseCommand, UndoCommand, RedoCommand, SaveCommand,
                  SaveAsNewCommand, NewFileCommand, LoadCommand, CloseCommand,
-                 SelectionCommand, SelectionBoundsCommand>;
+                 SelectionCommand, SelectionBoundsCommand,
+                 CameraPositionCommand>;
 
 // Convert individual action enum values to SimulationCommand.
 // Used by Widget::UpdateResult for simple (no-payload) buttons.

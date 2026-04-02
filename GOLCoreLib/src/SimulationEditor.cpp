@@ -332,6 +332,12 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
             [this](const SelectionBoundsCommand& cmd) {
                 return m_Model.SetSelectionBounds(cmd.Bounds);
             },
+            [this](const CameraPositionCommand& cmd) {
+                glm::dvec2 precisePos{cmd.Position.X * DefaultCellWidth,
+                                      cmd.Position.Y * DefaultCellHeight};
+                m_Graphics.Camera.Center = precisePos;
+                return m_Model.State();
+            },
             [this](const ResizeCommand& cmd) {
                 auto oldWidth = m_Model.Grid().Width();
                 auto oldHeight = m_Model.Grid().Height();

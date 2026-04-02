@@ -6,6 +6,7 @@ set(SOURCES
     src/misc/DisabledScope.cpp
     src/misc/LoadingSpinner.cpp
     src/misc/RLEEncoder.cpp
+    src/widgets/CameraPositionWidget.cpp
     src/widgets/DelayWidget.cpp
     src/widgets/EditorWidget.cpp
     src/widgets/ExecutionWidget.cpp
@@ -30,6 +31,7 @@ set(HEADERS
     include/misc/LoadingSpinner.hpp
     include/misc/RLEEncoder.hpp
     include/widgets/ActionButton.hpp
+    include/widgets/CameraPositionWidget.hpp
     include/widgets/DelayWidget.hpp
     include/widgets/EditorWidget.hpp
     include/widgets/ExecutionWidget.hpp
