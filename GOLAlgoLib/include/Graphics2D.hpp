@@ -194,6 +194,12 @@ using Size2 = GenericSize<int32_t>;
 using Rect = GenericRect<int32_t>;
 using RectL = GenericRect<int64_t>;
 using RectDouble = GenericRect<double>;
+
+struct RowMajorEqual {
+    bool operator()(Vec2 a, Vec2 b) const {
+        return a.Y != b.Y ? a.Y < b.Y : a.X < b.X;
+    }
+};
 } // namespace gol
 
 namespace std {

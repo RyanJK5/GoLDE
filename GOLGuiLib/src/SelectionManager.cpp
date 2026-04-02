@@ -147,7 +147,7 @@ std::optional<VersionChange> SelectionManager::Cut() {
     return Delete();
 }
 
-std::expected<VersionChange, std::optional<uint32_t>>
+std::expected<VersionChange, RLEEncoder::DecodeError>
 SelectionManager::Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold,
                         bool unlock) {
     if (unlock)
@@ -160,8 +160,9 @@ SelectionManager::Paste(std::optional<Vec2> gridPos, uint32_t warnThreshold,
 
     auto decodeResult =
         RLEEncoder::DecodeRegion(ImGui::GetClipboardText(), warnThreshold);
-    if (!decodeResult)
-        return std::unexpected{decodeResult.error()};
+    if (!decodeResult) {
+        return std::unexpected<RLEEncoder::DecodeError>{decodeResult.error()};
+    }
 
     m_Selected = std::move(decodeResult->Grid);
     m_AnchorSelection = gridPos;
@@ -256,7 +257,7 @@ std::optional<VersionChange> SelectionManager::InsertNoise(Rect selectionBounds,
                          .CellsInserted = m_Selected->Data()};
 }
 
-std::expected<VersionChange, std::string>
+std::expected<VersionChange, RLEEncoder::DecodeError>
 SelectionManager::Load(const std::filesystem::path& filePath) {
     auto result = RLEEncoder::ReadRegion(filePath);
     if (!result)

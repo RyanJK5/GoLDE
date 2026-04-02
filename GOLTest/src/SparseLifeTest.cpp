@@ -12,13 +12,13 @@ TEST(SparseLifeTest, SquigglesTest) {
     EXPECT_TRUE(std::filesystem::exists(directory));
 
     auto data1 =
-        RLEEncoder::ReadRegion(directory / "squiggles1.gol")->Grid.Data();
+        RLEEncoder::ReadRegion(directory / "squiggles1.rle")->Grid.Data();
     auto data2 =
-        RLEEncoder::ReadRegion(directory / "squiggles2.gol")->Grid.Data();
+        RLEEncoder::ReadRegion(directory / "squiggles2.rle")->Grid.Data();
     auto data3 =
-        RLEEncoder::ReadRegion(directory / "squiggles3.gol")->Grid.Data();
+        RLEEncoder::ReadRegion(directory / "squiggles3.rle")->Grid.Data();
     auto data4 =
-        RLEEncoder::ReadRegion(directory / "squiggles4.gol")->Grid.Data();
+        RLEEncoder::ReadRegion(directory / "squiggles4.rle")->Grid.Data();
     const Rect bounds{};
 
     constexpr static auto DataEqual = [](const LifeHashSet& a,

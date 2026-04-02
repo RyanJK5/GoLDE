@@ -415,7 +415,11 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
             [this](const CloseCommand&) { return m_Model.State(); },
             [this](const SelectionCommand& cmd) {
                 if (cmd.Action == SelectionAction::Paste) {
-                    HandlePasteResult(m_Model.PasteSelection(CursorGridPos()));
+                    const auto result = m_Model.PasteSelection(CursorGridPos());
+                    if (!result) {
+                        HandlePasteError(result.error());
+                    }
+
                     return m_Model.State();
                 }
                 m_Model.HandleSelectionAction(cmd.Action, cmd.NudgeSize);
@@ -433,18 +437,18 @@ void SimulationEditor::SaveWithErrorHandling(const std::filesystem::path& path,
     }
 }
 
-void SimulationEditor::HandlePasteResult(const PasteResult& result) {
-    if (result.Value == PasteResult::Status::TooLarge) {
-        m_PasteWarning.Activate();
-        m_PasteWarning.Message =
-            std::format(std::locale{""},
-                        "Your selection ({:L} cells) is too large\n"
-                        "to paste without potential performance issues.\n"
-                        "Are you sure you want to continue?",
-                        *result.CellCount);
-    } else if (result.Value == PasteResult::Status::ClipboardError) {
-        m_FileErrorWindow.Activate();
-        m_FileErrorWindow.Message = "Failed to read from clipboard.";
+void SimulationEditor::HandlePasteError(const RLEEncoder::DecodeError& result) {
+    switch (result.ErrorType) {
+        using enum RLEEncoder::DecodeError::Type;
+        case TooManyCells:
+            m_PasteWarning.Activate();
+            m_PasteWarning.Message =
+            std::format("{}\nAre you sure you want to continue?",
+                        result.Message);
+            break;
+        default:
+            m_FileErrorWindow.Activate();
+            m_FileErrorWindow.Message = "Failed to read from clipboard.";
     }
 }
 

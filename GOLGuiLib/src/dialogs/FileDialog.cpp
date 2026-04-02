@@ -22,11 +22,10 @@ FileDialog::OpenFileDialog(const std::string& filters,
     if (result == NFD_OKAY) {
         auto ret = std::filesystem::path{outPath.get()};
         const auto extension = ret.extension().string();
-        if (extension != ".gol" && extension != ".rle") {
+        if (extension != ".rle") {
             return std::unexpected<FileDialogFailure>{
                 {.Type = FileFailureType::Error,
-                 .Message = "Invalid file type selected. Please select a .gol "
-                            "or .rle file."}};
+                 .Message = "Invalid file type selected. Please select a .rle file. "}};
         }
         return ret;
     } else if (result == NFD_CANCEL) {
@@ -52,9 +51,9 @@ FileDialog::SaveFileDialog(const std::string& filters,
     if (result == NFD_OKAY) {
         auto ret = std::filesystem::path{outPath.get()};
         if (ret.extension().empty())
-            ret += ".gol";
+            ret += ".rle";
         else if (ret.extension().string() == ".")
-            ret += "gol";
+            ret += "rle";
         return ret;
     } else if (result == NFD_CANCEL) {
         return std::unexpected<FileDialogFailure>{

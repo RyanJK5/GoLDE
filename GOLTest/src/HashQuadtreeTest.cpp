@@ -48,32 +48,32 @@ static void CheckAgainstFile(const std::filesystem::path& unevolved,
         totalGenerations += genCount;
     }
 
-    EXPECT_EQ(current, expected);
+    EXPECT_EQ(current, expected) << std::format("{} did not match expected: {}", current, expected);
     EXPECT_EQ(totalGenerations, expectedGenerationsPerJump * BigInt{numJumps})
         << "Total generations advanced should match expectation";
 }
 
 TEST(HashQuadtreeTest, SquigglesTest) {
     const std::filesystem::path directory{"universes"};
-    CheckAgainstFile(directory / "squiggles1.gol",
-                     directory / "squiggles64.gol", 64);
-    CheckAgainstFile(directory / "squiggles1.gol",
-                     directory / "squiggles64.gol", 16, 4, 16);
-    CheckAgainstFile(directory / "squiggles1.gol", directory / "squiggles2.gol",
+    CheckAgainstFile(directory / "squiggles1.rle",
+                     directory / "squiggles64.rle", 64);
+    CheckAgainstFile(directory / "squiggles1.rle",
+                     directory / "squiggles64.rle", 16, 4, 16);
+    CheckAgainstFile(directory / "squiggles1.rle", directory / "squiggles2.rle",
                      1, 1, 1);
 }
 
 TEST(HashQuadtreeTest, BigSquigglesTest) {
     const std::filesystem::path directory{"universes"};
-    CheckAgainstFile(directory / "bigsquiggles1.gol",
-                     directory / "bigsquiggles1024.gol", 1024);
-    CheckAgainstFile(directory / "bigsquiggles1.gol",
-                     directory / "bigsquiggles1024.gol", 128, 8, 128);
+    CheckAgainstFile(directory / "bigsquiggles1.rle",
+                     directory / "bigsquiggles1024.rle", 1024);
+    CheckAgainstFile(directory / "bigsquiggles1.rle",
+                     directory / "bigsquiggles1024.rle", 128, 8, 128);
 }
 
 TEST(HashQuadtreeTest, RectTest) {
     const std::filesystem::path directory{"universes"};
-    CheckAgainstFile(directory / "rect1.gol", directory / "rect4.gol", 4);
+    CheckAgainstFile(directory / "rect1.rle", directory / "rect4.rle", 4);
 }
 
 TEST(HashQuadtreeTest, EmptyTree) {
@@ -319,7 +319,7 @@ TEST(HashQuadtreeTest, ConstIteratorUsage) {
 TEST(HashQuadtreeTest, CopyingBreeder) {
     const std::filesystem::path directory{"universes"};
 
-    const auto data = RLEEncoder::ReadRegion(directory / "glider_gun.gol");
+    const auto data = RLEEncoder::ReadRegion(directory / "glider_gun.rle");
 
     HashQuadtree original{data->Grid.Data(), data->Offset};
 

@@ -6,33 +6,6 @@
 #include "RLEEncoder.hpp"
 
 namespace gol {
-constexpr static bool EncodeDecodeTest(std::integral auto value) {
-    const auto encoded = RLEEncoder::EncodeNumber(value);
-    const auto decoded = RLEEncoder::DecodeNumber(
-        std::string_view{encoded.data(), encoded.size()});
-
-    return (decoded == value);
-}
-
-TEST(EncodeTest, EncodeDecode) {
-    static_assert(EncodeDecodeTest(0));
-    static_assert(EncodeDecodeTest(150));
-    static_assert(EncodeDecodeTest(124987543));
-    static_assert(EncodeDecodeTest(99999999999999));
-
-    static_assert([] {
-        for (auto i = 1LL; i < std::numeric_limits<int32_t>::max(); i <<= 2)
-            if (!EncodeDecodeTest(i))
-                return false;
-        return true;
-    }());
-
-    static_assert(EncodeDecodeTest(
-        static_cast<int64_t>(std::numeric_limits<uint64_t>::max() >> 16)));
-    // SHOULD NOT COMPILE
-    // static_assert(EncodeDecodeTest(std::numeric_limits<uint64_t>::max() >>
-    // 15));
-}
 
 static std::expected<RLEEncoder::DecodeResult, std::string>
 EncodeDecodeRegionTest(const GameGrid& grid, Rect region, Vec2 offset) {
@@ -41,11 +14,7 @@ EncodeDecodeRegionTest(const GameGrid& grid, Rect region, Vec2 offset) {
 
     if (!decodeResult.has_value()) {
         const auto str =
-            std::format("Decode failed with error: {}",
-                        decodeResult.error().has_value()
-                            ? std::format("Data contains too many cells ({})",
-                                          decodeResult.error().value())
-                            : "Data is not in a valid format");
+            std::format("Decode failed with error: {}", decodeResult.error().Message);
         return std::unexpected{str};
     }
 
@@ -54,9 +23,9 @@ EncodeDecodeRegionTest(const GameGrid& grid, Rect region, Vec2 offset) {
 
 TEST(EncodeTest, DecodeEncodeTest) {
     const auto filePath =
-        std::filesystem::path{"universes"} / "bigsquiggles1.gol";
+        std::filesystem::path{"universes"} / "bigsquiggles1.rle";
     const auto result = RLEEncoder::ReadRegion(filePath);
-    ASSERT_TRUE(result.has_value()) << result.error();
+    ASSERT_TRUE(result.has_value()) << result.error().Message;
 
     const auto dataToWrite =
         result->Grid.Data() |
@@ -161,7 +130,7 @@ TEST(EncodeTest, IgnoresCellsOutsideRegionTest) {
     GameGrid expected{};
     expected.Set(0, 0, true);
     expected.Set(3, 3, true);
-
+    
     constexpr static Vec2 offset{1, 1};
     const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 4, 4}, offset);
 

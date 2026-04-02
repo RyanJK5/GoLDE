@@ -11,18 +11,13 @@
 #include "GameEnums.hpp"
 #include "GameGrid.hpp"
 #include "Graphics2D.hpp"
+#include "RLEEncoder.hpp"
 #include "SelectionManager.hpp"
 #include "SimulationSettings.hpp"
 #include "SimulationWorker.hpp"
 #include "VersionManager.hpp"
 
 namespace gol {
-
-struct PasteResult {
-    enum class Status { Success, TooLarge, ClipboardError };
-    Status Value = Status::ClipboardError;
-    std::optional<int64_t> CellCount{};
-};
 
 class EditorModel {
   public:
@@ -57,7 +52,7 @@ class EditorModel {
     bool SaveToFile(const std::filesystem::path& path, bool markAsSaved);
 
     // Paste operations
-    PasteResult PasteSelection(std::optional<Vec2> cursorPos);
+    std::expected<void, RLEEncoder::DecodeError> PasteSelection(std::optional<Vec2> cursorPos);
     void ForcePaste(std::optional<Vec2> cursorPos);
 
     // Deselect and paste from clipboard at the given position

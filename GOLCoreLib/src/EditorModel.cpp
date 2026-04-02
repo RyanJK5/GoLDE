@@ -171,7 +171,7 @@ EditorModel::LoadFile(const std::filesystem::path& path) {
         m_VersionManager.PushChange(*loadResult);
         return std::nullopt;
     }
-    return loadResult.error();
+    return loadResult.error().Message;
 }
 
 bool EditorModel::SaveToFile(const std::filesystem::path& path,
@@ -186,19 +186,16 @@ bool EditorModel::SaveToFile(const std::filesystem::path& path,
     return false;
 }
 
-PasteResult EditorModel::PasteSelection(std::optional<Vec2> cursorPos) {
+std::expected<void, RLEEncoder::DecodeError> EditorModel::PasteSelection(std::optional<Vec2> cursorPos) {
     if (cursorPos || m_SelectionManager.CanDrawGrid()) {
         m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid));
     }
     auto pasteResult = m_SelectionManager.Paste(cursorPos, 100'000'000U);
     if (pasteResult) {
         m_VersionManager.PushChange(*pasteResult);
-        return {.Value = PasteResult::Status::Success};
+        return {};
     }
-    if (pasteResult.error().has_value())
-        return {.Value = PasteResult::Status::TooLarge,
-                .CellCount = *pasteResult.error()};
-    return {.Value = PasteResult::Status::ClipboardError};
+    return std::unexpected{pasteResult.error()};
 }
 
 void EditorModel::ForcePaste(std::optional<Vec2> cursorPos) {

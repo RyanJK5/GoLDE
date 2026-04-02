@@ -79,7 +79,7 @@ Start GOLDE and you'll be greeted with an interactive grid and control panel.
 ![](docs/breeder.gif)
 
 
-A simple breeder pattern running for over 10^1000 using HashLife.
+A simple breeder pattern running for over 10^1000 generations using HashLife.
 
 ![](docs/turing_machine.png)
 
@@ -94,7 +94,7 @@ A demonstration of basic GOLDE editing features.
 ![](docs/life_in_life.gif)
 
 
-Game of Life simulating itself.
+Game of Life simulating itself in GOLDE.
 
 ## License
 

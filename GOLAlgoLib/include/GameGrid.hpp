@@ -98,7 +98,7 @@ class GameGrid {
     std::optional<bool> Get(Vec2 pos) const;
 
     // Returns a sorted set of the universe's data.
-    const std::set<Vec2>& SortedData() const;
+    const std::set<Vec2, RowMajorEqual>& SortedData() const;
     // Returns an unordered set of the universe's data.
     const LifeHashSet& Data() const;
 
@@ -123,7 +123,7 @@ class GameGrid {
     std::optional<HashQuadtree>
         m_HashLifeData; // Empty if the algorithm is not HashLife
 
-    mutable std::set<Vec2>
+    mutable std::set<Vec2, RowMajorEqual>
         m_SortedData; // Declared mutable due to hidden cache validation
 
     // TODO: Determine if this is actually functioning correctly

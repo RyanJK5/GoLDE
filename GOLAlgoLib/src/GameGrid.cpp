@@ -114,7 +114,7 @@ Rect GameGrid::BoundingBox() const {
     return findBox(m_Data);
 }
 
-const std::set<Vec2>& GameGrid::SortedData() const {
+const std::set<Vec2, RowMajorEqual>& GameGrid::SortedData() const {
     if (m_CacheInvalidated) {
         ValidateCache(true);
     }
@@ -347,7 +347,7 @@ void GameGrid::ValidateCache(bool validateSorted) const {
         m_Data = *m_HashLifeData | std::ranges::to<LifeHashSet>();
     }
     if (validateSorted) {
-        m_SortedData = m_Data | std::ranges::to<std::set<Vec2>>();
+        m_SortedData = m_Data | std::ranges::to<std::set<Vec2, RowMajorEqual>>();
     }
 }
 } // namespace gol

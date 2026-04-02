@@ -113,7 +113,7 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
                 {windowBounds.Width, windowBounds.Height}, ImVec2{0, 1},
                 ImVec2{1, 0});
             ImGui::SetItemTooltip(
-                "%s", std::format("{}.gol", m_Library[i].FileName).c_str());
+                "%s", std::format("{}.rle", m_Library[i].FileName).c_str());
 
             ImGui::SetCursorPos(cursorPos);
 
@@ -140,13 +140,13 @@ void PresetSelection::ReadFiles(const std::filesystem::path& path) {
     m_MaxGridDimensions = Size2F{};
     for (const auto& file :
          std::filesystem::recursive_directory_iterator(path)) {
-        if (file.path().extension() != ".gol")
+        if (file.path().extension() != ".rle")
             continue;
 
         auto result = RLEEncoder::ReadRegion(file.path());
         if (!result) {
-            ERROR("Failed to open file {}: {}", file.path().filename().string(),
-                  result.error());
+            ERROR("Failed to read file {}: {}", file.path().filename().string(),
+                  result.error().Message);
             continue;
         }
 
