@@ -25,7 +25,8 @@ FileDialog::OpenFileDialog(const std::string& filters,
         if (extension != ".rle") {
             return std::unexpected<FileDialogFailure>{
                 {.Type = FileFailureType::Error,
-                 .Message = "Invalid file type selected. Please select a .rle file. "}};
+                 .Message = "Invalid file type selected. Please select a .rle "
+                            "file. "}};
         }
         return ret;
     } else if (result == NFD_CANCEL) {

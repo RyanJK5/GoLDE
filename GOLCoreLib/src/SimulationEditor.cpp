@@ -440,15 +440,14 @@ void SimulationEditor::SaveWithErrorHandling(const std::filesystem::path& path,
 void SimulationEditor::HandlePasteError(const RLEEncoder::DecodeError& result) {
     switch (result.ErrorType) {
         using enum RLEEncoder::DecodeError::Type;
-        case TooManyCells:
-            m_PasteWarning.Activate();
-            m_PasteWarning.Message =
-            std::format("{}\nAre you sure you want to continue?",
-                        result.Message);
-            break;
-        default:
-            m_FileErrorWindow.Activate();
-            m_FileErrorWindow.Message = "Failed to read from clipboard.";
+    case TooManyCells:
+        m_PasteWarning.Activate();
+        m_PasteWarning.Message = std::format(
+            "{}\nAre you sure you want to continue?", result.Message);
+        break;
+    default:
+        m_FileErrorWindow.Activate();
+        m_FileErrorWindow.Message = "Failed to read from clipboard.";
     }
 }
 

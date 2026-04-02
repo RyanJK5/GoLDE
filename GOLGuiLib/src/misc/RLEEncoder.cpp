@@ -16,20 +16,22 @@
 
 namespace gol::RLEEncoder {
 std::string EncodeRegion(const GameGrid& grid, Rect region, Vec2 offset) {
-    
+
     std::string out{};
 
     if (offset.X != 0 || offset.Y != 0)
         out += std::format("#P {} {}\n", offset.X, offset.Y);
 
-    out += std::format("x = {}, y = {}, rule = B3/S23\n", region.Width, region.Height);
+    out += std::format("x = {}, y = {}, rule = B3/S23\n", region.Width,
+                       region.Height);
 
     constexpr static auto lineWidth = 70UZ;
     std::string body{};
     auto currentLineWidth = 0UZ;
 
     const auto appendRun = [&](char tag, int32_t count) {
-        const auto token = count == 1 ? std::string{tag} : std::format("{}{}", count, tag);
+        const auto token =
+            count == 1 ? std::string{tag} : std::format("{}{}", count, tag);
         if (currentLineWidth + token.size() > lineWidth) {
             body += '\n';
             currentLineWidth = 0;
@@ -46,14 +48,20 @@ std::string EncodeRegion(const GameGrid& grid, Rect region, Vec2 offset) {
             continue;
 
         if (const auto rowGap = pos.Y - prevPos.Y; rowGap > 0) {
-            if (aliveRun > 0) { appendRun('o', aliveRun); aliveRun = 0; }
+            if (aliveRun > 0) {
+                appendRun('o', aliveRun);
+                aliveRun = 0;
+            }
             appendRun('$', rowGap);
             prevPos.X = region.X;
             prevPos.Y = pos.Y;
         }
 
         if (const auto deadCount = pos.X - prevPos.X; deadCount > 0) {
-            if (aliveRun > 0) { appendRun('o', aliveRun); aliveRun = 0; }
+            if (aliveRun > 0) {
+                appendRun('o', aliveRun);
+                aliveRun = 0;
+            }
             appendRun('b', deadCount);
         }
 
@@ -82,8 +90,8 @@ bool WriteRegion(const GameGrid& grid, Rect region,
     return true;
 }
 
-std::expected<DecodeResult, DecodeError>
-DecodeRegion(std::string_view src, uint32_t warnThreshold) {
+std::expected<DecodeResult, DecodeError> DecodeRegion(std::string_view src,
+                                                      uint32_t warnThreshold) {
     // 1. Strip comment lines (#C, #c, #N, #O, #R, #P, #r ...).
     Vec2 explicitOffset{0, 0};
     bool hasExplicitOffset = false;
@@ -144,8 +152,7 @@ DecodeRegion(std::string_view src, uint32_t warnThreshold) {
         if (xEq == std::string::npos || yEq == std::string::npos) {
             return std::unexpected{DecodeError{
                 .ErrorType = DecodeError::Type::MissingHeader,
-                .Message = "Missing RLE header (x = ..., y = ...)."
-            }};
+                .Message = "Missing RLE header (x = ..., y = ...)."}};
         }
 
         const char* xPtr = rleBody.data() + xEq + 3;
@@ -161,10 +168,9 @@ DecodeRegion(std::string_view src, uint32_t warnThreshold) {
             yPtr, rleBody.data() + rleBody.size(), patternHeight);
 
         if (ecW != std::errc{} || ecH != std::errc{}) {
-            return std::unexpected{DecodeError{
-                .ErrorType = DecodeError::Type::IncorrectHeader,
-                .Message = "Malformed header dimensions."
-            }};
+            return std::unexpected{
+                DecodeError{.ErrorType = DecodeError::Type::IncorrectHeader,
+                            .Message = "Malformed header dimensions."}};
         }
     }
 
@@ -172,10 +178,9 @@ DecodeRegion(std::string_view src, uint32_t warnThreshold) {
     //    follows the header, up to and including '!'.
     const auto headerNewline = rleBody.find('\n');
     if (headerNewline == std::string::npos) {
-        return std::unexpected{DecodeError{
-            .ErrorType = DecodeError::Type::NoData,
-            .Message = "No RLE data found after header."
-        }};
+        return std::unexpected{
+            DecodeError{.ErrorType = DecodeError::Type::NoData,
+                        .Message = "No RLE data found after header."}};
     }
 
     const std::string_view rleData{rleBody.data() + headerNewline + 1,
@@ -206,19 +211,20 @@ DecodeRegion(std::string_view src, uint32_t warnThreshold) {
 
         const auto count = (run == 0) ? 1 : run;
         run = 0;
-        
+
         warnCount += count;
         if (warnCount >= warnThreshold) {
             continue;
         }
-        
 
         switch (ch) {
-        case 'b': [[fallthrough]]; // dead cells — just advance X
+        case 'b':
+            [[fallthrough]]; // dead cells — just advance X
         case '.':
             currentX += count;
             break;
-        case 'o': [[fallthrough]]; // alive cells
+        case 'o':
+            [[fallthrough]]; // alive cells
         case 'A':            // some extended RLEs use 'A' for the first state
             for (auto i = 0; i < count; ++i)
                 result.Set(currentX + i, currentY, true);
@@ -249,19 +255,18 @@ DecodeRegion(std::string_view src, uint32_t warnThreshold) {
     }
 
     if (!ended) {
-        return std::unexpected{DecodeError{
-            .ErrorType = DecodeError::Type::NoTermination,
-            .Message = "RLE data has no terminating '!'."
-        }};
+        return std::unexpected{
+            DecodeError{.ErrorType = DecodeError::Type::NoTermination,
+                        .Message = "RLE data has no terminating '!'."}};
     }
     if (warnCount >= warnThreshold) {
         return std::unexpected{DecodeError{
             .ErrorType = DecodeError::Type::TooManyCells,
-            .Message = std::format(std::locale{""},
-                        "Your selection ({:L} cells) is too large\n"
-                        "to paste without potential performance issues.\n", 
-                        warnCount)
-        }};
+            .Message =
+                std::format(std::locale{""},
+                            "Your selection ({:L} cells) is too large\n"
+                            "to paste without potential performance issues.\n",
+                            warnCount)}};
     }
 
     const auto offset = hasExplicitOffset ? explicitOffset : Vec2{0, 0};
@@ -273,10 +278,9 @@ std::expected<DecodeResult, DecodeError>
 ReadRegion(const std::filesystem::path& filePath) {
     auto in = std::ifstream{filePath};
     if (!in.is_open()) {
-        return std::unexpected{DecodeError{
-            .ErrorType = DecodeError::Type::CantOpenFile,
-            .Message = "Failed to open file for reading."
-        }};
+        return std::unexpected{
+            DecodeError{.ErrorType = DecodeError::Type::CantOpenFile,
+                        .Message = "Failed to open file for reading."}};
     }
 
     const std::string data{std::istreambuf_iterator<char>(in),

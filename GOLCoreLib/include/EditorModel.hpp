@@ -52,7 +52,8 @@ class EditorModel {
     bool SaveToFile(const std::filesystem::path& path, bool markAsSaved);
 
     // Paste operations
-    std::expected<void, RLEEncoder::DecodeError> PasteSelection(std::optional<Vec2> cursorPos);
+    std::expected<void, RLEEncoder::DecodeError>
+    PasteSelection(std::optional<Vec2> cursorPos);
     void ForcePaste(std::optional<Vec2> cursorPos);
 
     // Deselect and paste from clipboard at the given position

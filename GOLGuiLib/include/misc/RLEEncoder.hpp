@@ -40,8 +40,8 @@ struct DecodeError {
 std::string EncodeRegion(const GameGrid& grid, Rect region,
                          Vec2 offset = {0, 0});
 
-std::expected<DecodeResult, DecodeError>
-DecodeRegion(std::string_view data, uint32_t warnThreshold);
+std::expected<DecodeResult, DecodeError> DecodeRegion(std::string_view data,
+                                                      uint32_t warnThreshold);
 
 bool WriteRegion(const GameGrid& grid, Rect region,
                  const std::filesystem::path& filePath, Vec2 offset = {0, 0});

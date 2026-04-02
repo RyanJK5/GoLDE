@@ -13,8 +13,8 @@ EncodeDecodeRegionTest(const GameGrid& grid, Rect region, Vec2 offset) {
     const auto decodeResult = RLEEncoder::DecodeRegion(encoded, 1000000);
 
     if (!decodeResult.has_value()) {
-        const auto str =
-            std::format("Decode failed with error: {}", decodeResult.error().Message);
+        const auto str = std::format("Decode failed with error: {}",
+                                     decodeResult.error().Message);
         return std::unexpected{str};
     }
 
@@ -130,7 +130,7 @@ TEST(EncodeTest, IgnoresCellsOutsideRegionTest) {
     GameGrid expected{};
     expected.Set(0, 0, true);
     expected.Set(3, 3, true);
-    
+
     constexpr static Vec2 offset{1, 1};
     const auto result = EncodeDecodeRegionTest(grid, Rect{0, 0, 4, 4}, offset);
 
