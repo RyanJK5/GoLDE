@@ -41,6 +41,8 @@ HashLifeCache::HashLifeCache() {
 }
 
 thread_local HashLifeCache HashQuadtree::s_Cache{};
+thread_local LifeRule::LookupTable HashQuadtree::s_RuleTable{
+    LifeRule::Make("B3/S23")->RuleTable()};
 
 namespace {
 // ============================================================================
@@ -73,7 +75,6 @@ constexpr uint16_t MaskSE = 0x0033;
 // encoded in bits {5, 4, 1, 0} (the SE quadrant positions). This encoding
 // allows the results of 9 overlapping lookups to be efficiently assembled
 // via shifts into a full 4x4 result.
-const auto RuleTable = LifeRule::Make("B3/S23")->RuleTable();
 
 // Directly encodes a level-1 quadrant's cells into the known bit positions
 // for each 2x2 sub-quadrant of the 4x4 grid.
@@ -190,6 +191,10 @@ BigInt HashLife(HashQuadtree& data, const BigInt& numSteps,
     }
 
     return generation;
+}
+
+void HashQuadtree::SetRuleTable(const LifeRule& rule) {
+    s_RuleTable = rule.RuleTable();
 }
 
 // Mixes the node's precomputed hash with MaxAdvance. The node hash is already
@@ -956,12 +961,7 @@ const LifeNode* HashQuadtree::CenteredSubNode(const LifeNode& node) const {
                         node.SouthWest->NorthEast, node.SouthEast->NorthWest);
 }
 
-// Extracts the four 16-bit quadrant encodings from a level-3 node.
-struct LeafQuadrants {
-    uint16_t nw, ne, sw, se;
-};
-
-static LeafQuadrants EncodeLevel3(const LifeNode* node) {
+HashQuadtree::LeafQuadrants HashQuadtree::EncodeLevel3(const LifeNode* node) {
     return {EncodeLevel2(node->NorthWest), EncodeLevel2(node->NorthEast),
             EncodeLevel2(node->SouthWest), EncodeLevel2(node->SouthEast)};
 }
@@ -998,29 +998,26 @@ static uint16_t WindowCenter(uint16_t nw, uint16_t ne, uint16_t sw,
 
 // Computes the 9 first-generation 2x2 results from the overlapping 4x4 windows
 // of an 8x8 grid. Each result uses the SE-quadrant bit encoding {5,4,1,0}.
-struct FirstGenResults {
-    uint16_t nw, n, ne, w, center, e, sw, s, se;
-};
-
-static FirstGenResults ComputeFirstGeneration(const LeafQuadrants& q) {
+HashQuadtree::FirstGenResults
+HashQuadtree::ComputeFirstGeneration(const LeafQuadrants& q) {
     return {
-        RuleTable[q.nw],
-        RuleTable[WindowN(q.nw, q.ne)],
-        RuleTable[q.ne],
-        RuleTable[WindowW(q.nw, q.sw)],
-        RuleTable[WindowCenter(q.nw, q.ne, q.sw, q.se)],
-        RuleTable[WindowE(q.ne, q.se)],
-        RuleTable[q.sw],
-        RuleTable[WindowS(q.sw, q.se)],
-        RuleTable[q.se],
+        s_RuleTable[q.nw],
+        s_RuleTable[WindowN(q.nw, q.ne)],
+        s_RuleTable[q.ne],
+        s_RuleTable[WindowW(q.nw, q.sw)],
+        s_RuleTable[WindowCenter(q.nw, q.ne, q.sw, q.se)],
+        s_RuleTable[WindowE(q.ne, q.se)],
+        s_RuleTable[q.sw],
+        s_RuleTable[WindowS(q.sw, q.se)],
+        s_RuleTable[q.se],
     };
 }
 
 // Assembles a 4x4 result (16 bits) from four 2x2 sub-results.
 // Each sub-result occupies the SE-quadrant bits {5,4,1,0} and is shifted
 // into its respective quadrant position.
-static uint16_t AssembleQuadrants(uint16_t resultNW, uint16_t resultNE,
-                                  uint16_t resultSW, uint16_t resultSE) {
+uint16_t HashQuadtree::AssembleQuadrants(uint16_t resultNW, uint16_t resultNE,
+                                         uint16_t resultSW, uint16_t resultSE) {
     return static_cast<uint16_t>(
         ((resultNW << 10) & MaskNW) | ((resultNE << 8) & MaskNE) |
         ((resultSW << 2) & MaskSW) | (resultSE & MaskSE));
@@ -1028,8 +1025,9 @@ static uint16_t AssembleQuadrants(uint16_t resultNW, uint16_t resultNE,
 
 // Combines four 2x2 results (in SE-quadrant encoding) into a 16-bit index
 // for a second rule table lookup.
-static uint16_t Combine2x2ForLookup(uint16_t topLeft, uint16_t topRight,
-                                    uint16_t bottomLeft, uint16_t bottomRight) {
+uint16_t HashQuadtree::Combine2x2ForLookup(uint16_t topLeft, uint16_t topRight,
+                                           uint16_t bottomLeft,
+                                           uint16_t bottomRight) {
     return static_cast<uint16_t>((topLeft << 10) | (topRight << 8) |
                                  (bottomLeft << 2) | bottomRight);
 }
@@ -1037,7 +1035,7 @@ static uint16_t Combine2x2ForLookup(uint16_t topLeft, uint16_t topRight,
 // Assembles the 6x6 one-generation result (as a centered 4x4) from the
 // nine 2x2 sub-results. Each sub-result encodes a 2x2 in bits {5,4,1,0}.
 // This is the "combine9" operation from Golly.
-static uint16_t AssembleCentered6x6(const FirstGenResults& gen1) {
+uint16_t HashQuadtree::AssembleCentered6x6(const FirstGenResults& gen1) {
     return static_cast<uint16_t>(
         (gen1.nw << 15) | (gen1.n << 13) | ((gen1.ne << 11) & 0x1000) |
         ((gen1.w << 7) & 0x0880) | (gen1.center << 5) |
@@ -1054,13 +1052,13 @@ const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) const {
     // Second generation: combine adjacent 2x2 results into four overlapping
     // 4x4 windows, look up each to get a 2x2 result, then assemble.
     const auto secondGenNW =
-        RuleTable[Combine2x2ForLookup(gen1.nw, gen1.n, gen1.w, gen1.center)];
+        s_RuleTable[Combine2x2ForLookup(gen1.nw, gen1.n, gen1.w, gen1.center)];
     const auto secondGenNE =
-        RuleTable[Combine2x2ForLookup(gen1.n, gen1.ne, gen1.center, gen1.e)];
+        s_RuleTable[Combine2x2ForLookup(gen1.n, gen1.ne, gen1.center, gen1.e)];
     const auto secondGenSW =
-        RuleTable[Combine2x2ForLookup(gen1.w, gen1.center, gen1.sw, gen1.s)];
+        s_RuleTable[Combine2x2ForLookup(gen1.w, gen1.center, gen1.sw, gen1.s)];
     const auto secondGenSE =
-        RuleTable[Combine2x2ForLookup(gen1.center, gen1.e, gen1.s, gen1.se)];
+        s_RuleTable[Combine2x2ForLookup(gen1.center, gen1.e, gen1.s, gen1.se)];
 
     const auto resultBits =
         AssembleQuadrants(secondGenNW, secondGenNE, secondGenSW, secondGenSE);

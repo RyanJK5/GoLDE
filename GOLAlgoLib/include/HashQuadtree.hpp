@@ -23,6 +23,7 @@
 #include "Graphics2D.hpp"
 #include "LifeHashSet.hpp"
 #include "LifeNode.hpp"
+#include "LifeRule.hpp"
 
 // HashQuadtree and its related free functions and structs contain all of the
 // necessary representations for the HashLife algorithm. At a high level,
@@ -132,14 +133,9 @@ class HashQuadtree {
     HashQuadtree() = default;
     HashQuadtree(std::span<const Vec2> data, Vec2 offset = {});
 
-    // The move constructor and move assignment are left intentionally
-    // unspecified. Copying within a thread is essentially a move because
-    // all quadtrees within the same thread use the same node storage.
-    // Moving across threads is not possible because storage is thread local.
-
-    ~HashQuadtree() = default;
-
   public:
+    static void SetRuleTable(const LifeRule& rule);
+
     bool empty() const;
 
     Iterator begin() const;
@@ -288,10 +284,31 @@ class HashQuadtree {
                                    Vec2L destPos, const LifeNode* srcNode,
                                    int32_t srcLevel, Vec2L srcPos) const;
 
+    struct FirstGenResults {
+        uint16_t nw, n, ne, w, center, e, sw, s, se;
+    };
+
+    // Extracts the four 16-bit quadrant encodings from a level-3 node.
+    struct LeafQuadrants {
+        uint16_t nw, ne, sw, se;
+    };
+
+    static FirstGenResults ComputeFirstGeneration(const LeafQuadrants& q);
+
+    static uint16_t AssembleQuadrants(uint16_t resultNW, uint16_t resultNE,
+                                      uint16_t resultSW, uint16_t resultSE);
+
+    static uint16_t Combine2x2ForLookup(uint16_t topLeft, uint16_t topRight,
+                                        uint16_t bottomLeft,
+                                        uint16_t bottomRight);
+
+    static uint16_t AssembleCentered6x6(const FirstGenResults& gen1);
+
+    static LeafQuadrants EncodeLevel3(const LifeNode* node);
+
   private:
-    // The rationale for storing HashLifeCache in static, thread_local storage
-    // is provided above.
     static thread_local HashLifeCache s_Cache;
+    static thread_local LifeRule::LookupTable s_RuleTable;
 
     const LifeNode* m_Root = FalseNode;
 

@@ -8,18 +8,20 @@ namespace gol {
 class LifeRule {
   public:
     constexpr static uint32_t NumLeafPatterns = 1 << 16;
+    using LookupTable = std::array<uint16_t, NumLeafPatterns>;
 
     constexpr static std::expected<LifeRule, std::string_view>
     Make(std::string_view ruleString);
 
     constexpr LifeRule(int32_t birthMask, int32_t surviveMask);
-    constexpr auto RuleTable() const;
+    constexpr LookupTable RuleTable() const;
 
   private:
-    constexpr auto BuildRuleTable(int32_t birthMask, int32_t surviveMask);
+    constexpr LookupTable BuildRuleTable(int32_t birthMask,
+                                         int32_t surviveMask);
 
   private:
-    std::array<uint16_t, NumLeafPatterns> m_RuleTable;
+    LookupTable m_RuleTable;
 };
 
 constexpr std::expected<LifeRule, std::string_view>
@@ -51,8 +53,8 @@ LifeRule::Make(std::string_view ruleString) {
     return LifeRule{birthMask, surviveMask};
 }
 
-constexpr auto LifeRule::BuildRuleTable(int32_t birthMask,
-                                        int32_t surviveMask) {
+constexpr LifeRule::LookupTable LifeRule::BuildRuleTable(int32_t birthMask,
+                                                         int32_t surviveMask) {
     // The four center cells of a 4x4 grid whose next state we compute.
     constexpr std::array centerCol{1, 2, 1, 2};
     constexpr std::array centerRow{1, 1, 2, 2};
@@ -62,7 +64,8 @@ constexpr auto LifeRule::BuildRuleTable(int32_t birthMask,
     constexpr auto bitPosition = [](int32_t col, int32_t row) {
         return (3 - row) * 4 + (3 - col);
     };
-    std::array<uint16_t, NumLeafPatterns> table{};
+
+    LookupTable table{};
     for (uint32_t pattern = 0; pattern < NumLeafPatterns; ++pattern) {
         uint16_t result = 0;
         for (int cell = 0; cell < 4; ++cell) {
@@ -89,7 +92,9 @@ constexpr auto LifeRule::BuildRuleTable(int32_t birthMask,
     return table;
 }
 
-constexpr auto LifeRule::RuleTable() const { return m_RuleTable; }
+constexpr LifeRule::LookupTable LifeRule::RuleTable() const {
+    return m_RuleTable;
+}
 
 constexpr LifeRule::LifeRule(int32_t birthMask, int32_t surviveMask)
     : m_RuleTable(BuildRuleTable(birthMask, surviveMask)) {}
