@@ -242,7 +242,7 @@ void EditorModel::TryResetSelection() {
 }
 
 // TODO: Make sure this works
-void EditorModel::BeginPaintChange(Vec2 pos, bool insert) {
+void EditorModel::BeginPaintChange() {
     m_VersionManager.BeginPaintChange(m_Grid, m_State);
 }
 

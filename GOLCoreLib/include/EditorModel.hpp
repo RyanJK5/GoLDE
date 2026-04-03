@@ -63,7 +63,7 @@ class EditorModel {
 
     bool UpdateSelectionAreaTracked(Vec2 gridPos);
     void TryResetSelection();
-    void BeginPaintChange(Vec2 pos, bool insert);
+    void BeginPaintChange();
     void PaintCell(Vec2 pos, bool value);
     void MarkSaved();
 

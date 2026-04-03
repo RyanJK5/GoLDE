@@ -477,8 +477,7 @@ void SimulationEditor::UpdateMouseState(Vec2 gridPos) {
             m_EditorMode = *m_Model.Grid().Get(gridPos.X, gridPos.Y)
                                ? EditorMode::Delete
                                : EditorMode::Insert;
-            m_Model.BeginPaintChange(gridPos,
-                                     m_EditorMode == EditorMode::Insert);
+            m_Model.BeginPaintChange();
             m_LeftDeltaLast = {};
         }
 
