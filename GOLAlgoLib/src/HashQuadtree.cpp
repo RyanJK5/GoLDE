@@ -17,6 +17,7 @@
 #include "HashQuadtree.hpp"
 #include "LifeAlgorithm.hpp"
 #include "LifeHashSet.hpp"
+#include "LifeRule.hpp"
 
 namespace gol {
 // Returns the exponent of the greatest power of two less than `stepSize`.
@@ -67,50 +68,12 @@ constexpr uint16_t MaskNE = 0x3300;
 constexpr uint16_t MaskSW = 0x00CC;
 constexpr uint16_t MaskSE = 0x0033;
 
-// Returns the bit position (0-15) for a cell at (col, row) in a 4x4 grid.
-constexpr int BitPosition(int col, int row) {
-    return (3 - row) * 4 + (3 - col);
-}
-
 // Precomputed lookup table for Conway's Game of Life (B3/S23).
 // Maps each 16-bit 4x4 pattern to the next-generation state of the center 2x2,
 // encoded in bits {5, 4, 1, 0} (the SE quadrant positions). This encoding
 // allows the results of 9 overlapping lookups to be efficiently assembled
 // via shifts into a full 4x4 result.
-auto BuildRuleTable() {
-    // The four center cells of a 4x4 grid whose next state we compute.
-    constexpr std::array centerCol{1, 2, 1, 2};
-    constexpr std::array centerRow{1, 1, 2, 2};
-    // Where each center cell's result is placed in the output.
-    constexpr std::array resultBit{5, 4, 1, 0};
-
-    std::array<uint16_t, NumLeafPatterns> table{};
-    for (uint32_t pattern = 0; pattern < NumLeafPatterns; ++pattern) {
-        uint16_t result = 0;
-        for (int cell = 0; cell < 4; ++cell) {
-            const int col = centerCol[cell];
-            const int row = centerRow[cell];
-            int neighborCount = 0;
-            for (int dy = -1; dy <= 1; ++dy) {
-                for (int dx = -1; dx <= 1; ++dx) {
-                    if (dx == 0 && dy == 0)
-                        continue;
-                    neighborCount += static_cast<int>(
-                        (pattern >> BitPosition(col + dx, row + dy)) & 1);
-                }
-            }
-            const bool isAlive = ((pattern >> BitPosition(col, row)) & 1) != 0;
-            const bool survives = isAlive && neighborCount == 2;
-            const bool born = neighborCount == 3;
-            if (survives || born)
-                result |= static_cast<uint16_t>(1 << resultBit[cell]);
-        }
-        table[pattern] = result;
-    }
-    return table;
-}
-
-const auto RuleTable = BuildRuleTable();
+const auto RuleTable = LifeRule::Make("B3/S23")->RuleTable();
 
 // Directly encodes a level-1 quadrant's cells into the known bit positions
 // for each 2x2 sub-quadrant of the 4x4 grid.

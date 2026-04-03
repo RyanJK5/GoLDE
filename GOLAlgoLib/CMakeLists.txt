@@ -12,6 +12,7 @@ set(HEADERS
     include/HashQuadtree.hpp
     include/LifeAlgorithm.hpp
     include/LifeHashSet.hpp
+    include/LifeRule.hpp
 )
 add_library(GOLAlgoLib STATIC ${SOURCES} ${HEADERS})
 target_include_directories(GOLAlgoLib
