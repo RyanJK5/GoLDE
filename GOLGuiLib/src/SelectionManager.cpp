@@ -96,10 +96,6 @@ std::optional<VersionState> SelectionManager::Deselect(GameGrid& grid) {
 }
 
 std::optional<VersionState> SelectionManager::SelectAll(GameGrid& grid) {
-    if (!grid.ShouldValidateCache()) {
-        return std::nullopt;
-    }
-
     const auto bounds = grid.BoundingBox();
     m_AnchorSelection = bounds.UpperLeft();
     m_SentinelSelection = bounds.LowerRight() - Vec2{1, 1};
@@ -111,7 +107,7 @@ std::optional<VersionState> SelectionManager::SelectAll(GameGrid& grid) {
 }
 
 std::optional<VersionState> SelectionManager::Copy(GameGrid& grid) {
-    if (!m_Selected) {
+    if (!m_Selected || !m_Selected->ShouldValidateCache()) {
         return std::nullopt;
     }
 
@@ -122,7 +118,7 @@ std::optional<VersionState> SelectionManager::Copy(GameGrid& grid) {
 }
 
 std::optional<VersionState> SelectionManager::Cut(const GameGrid& grid) {
-    if (!m_Selected)
+    if (!m_Selected || !m_Selected->ShouldValidateCache())
         return std::nullopt;
 
     ImGui::SetClipboardText(

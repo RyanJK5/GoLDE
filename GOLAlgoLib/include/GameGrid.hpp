@@ -67,16 +67,13 @@ class GameGrid {
     // Copies provided region to a new GameGrid.
     GameGrid SubRegion(Rect region) const;
 
-    // Returns a set containing all live cells in `region`.
-    LifeHashSet ReadRegion(Rect region) const;
-
     // Kills all cells in `region`.
     void ClearRegion(Rect region);
 
     // Adds all cells from `grid` to this object, with each cell
     // offset by `offset`. Returns the set of all sells that were
     // not already present in this object.
-    LifeHashSet InsertGrid(const GameGrid& grid, Vec2 offset);
+    void InsertGrid(const GameGrid& grid, Vec2 offset);
 
     // Performs a 90 degree rotation.
     void RotateGrid(bool clockwise = true);

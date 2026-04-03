@@ -94,28 +94,7 @@ Rect GameGrid::BoundingBox() const {
         return {0, 0, m_Width, m_Height};
     }
 
-    const auto findBox = [](std::ranges::input_range auto&& data) {
-        auto least = Vec2{std::numeric_limits<int32_t>::max(),
-                          std::numeric_limits<int32_t>::max()};
-        auto most = Vec2{std::numeric_limits<int32_t>::min(),
-                         std::numeric_limits<int32_t>::min()};
-        for (const auto value : data) {
-            least.X = std::min(least.X, value.X);
-            least.Y = std::min(least.Y, value.Y);
-
-            most.X = std::max(most.X, value.X);
-            most.Y = std::max(most.Y, value.Y);
-        }
-
-        return Rect{least.X, least.Y, most.X - least.X + 1,
-                    most.Y - least.Y + 1};
-    };
-
-    if (m_HashLifeData.empty()) {
-        return {0, 0, 0, 0};
-    }
-
-    return findBox(m_HashLifeData);
+    return m_HashLifeData.FindBoundingBox();
 }
 
 std::span<Vec2> GameGrid::SortedData() const {
@@ -176,35 +155,16 @@ GameGrid GameGrid::SubRegion(Rect region) const {
     return GameGrid{m_HashLifeData.Extract(region), region.Size()};
 }
 
-// TODO: Unsafe if running hash life & cache is invalidated
-LifeHashSet GameGrid::ReadRegion(Rect region) const {
-    LifeHashSet result{};
-    for (const auto pos : std::ranges::subrange(m_HashLifeData.begin(region),
-                                                m_HashLifeData.end())) {
-        result.insert(pos);
-    }
-    return result;
-}
-
 void GameGrid::ClearRegion(Rect region) {
     m_HashLifeData.Clear(region);
     m_Population = m_HashLifeData.Population();
     m_SortedCacheInvalidated = true;
 }
 
-LifeHashSet GameGrid::InsertGrid(const GameGrid& region, Vec2 pos) {
-    LifeHashSet result{};
-    for (const auto cell : region.Data()) {
-        const Vec2 offsetPos{pos.X + cell.X, pos.Y + cell.Y};
-        if (m_HashLifeData.Get(offsetPos)) {
-            continue;
-        }
-        m_HashLifeData.Set(offsetPos, true);
-        result.insert(offsetPos);
-        m_Population++;
-    }
+void GameGrid::InsertGrid(const GameGrid& region, Vec2 pos) {
+    m_HashLifeData.Insert(region.Data(), pos);
+    m_Population = m_HashLifeData.Population();
     m_SortedCacheInvalidated = true;
-    return result;
 }
 
 void GameGrid::RotateGrid(bool clockwise) {

@@ -29,6 +29,8 @@ constexpr static int32_t Log2MaxAdvanceOf(const BigInt& stepSize) {
 
 constexpr BigInt BigPow2(int32_t exponent) { return BigOne << exponent; }
 
+constexpr static auto ViewportMaxLevel = 31;
+
 HashLifeCache::HashLifeCache() {
     NodeMap.reserve(
         1 << 20); // Reserve space for 1 million nodes to avoid rehashing
@@ -317,10 +319,171 @@ void HashQuadtree::Set(Vec2 targetPos, bool alive) {
         m_Depth++;
     }
 
-    const auto insertLevel = std::min(m_Depth, 32);
-    const auto [node, offset] = GetCenteredNode(32);
+    const auto insertLevel = std::min(m_Depth, ViewportMaxLevel);
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
     const auto* centered = SetImpl(node, offset, targetPos, insertLevel, alive);
     m_Root = SetCenteredNode(m_Root, m_Depth, centered, insertLevel);
+}
+
+void HashQuadtree::Insert(const HashQuadtree& other, Vec2 offset) {
+    if (other.m_Root == FalseNode || other.m_Root->IsEmpty) {
+        return;
+    }
+
+    const auto sourceLevel = std::min(other.m_Depth, ViewportMaxLevel);
+    const auto [sourceNode, sourceOffset] =
+        other.GetCenteredNode(ViewportMaxLevel);
+    const auto sourceTopLeft =
+        Vec2L{sourceOffset.X + offset.X, sourceOffset.Y + offset.Y};
+    const auto sourceSize = Pow2(sourceLevel);
+
+    const auto containsSource = [&] {
+        const auto insertLevel = std::min(m_Depth, ViewportMaxLevel);
+        const auto [node, topLeft] = GetCenteredNode(ViewportMaxLevel);
+        const auto size = Pow2(insertLevel);
+        return sourceTopLeft.X >= topLeft.X && sourceTopLeft.Y >= topLeft.Y &&
+               sourceTopLeft.X + sourceSize <= topLeft.X + size &&
+               sourceTopLeft.Y + sourceSize <= topLeft.Y + size;
+    };
+
+    while (!containsSource()) {
+        m_Root = ExpandUniverse(m_Root, m_Depth);
+        m_Depth++;
+    }
+
+    const auto insertLevel = std::min(m_Depth, ViewportMaxLevel);
+    const auto [centeredRoot, rootTopLeft] = GetCenteredNode(ViewportMaxLevel);
+    const auto* centered =
+        InsertNodeImpl(centeredRoot, insertLevel, rootTopLeft, sourceNode,
+                       sourceLevel, sourceTopLeft);
+    m_Root = SetCenteredNode(m_Root, m_Depth, centered, insertLevel);
+}
+
+const LifeNode* HashQuadtree::OverlayNodes(const LifeNode* a, const LifeNode* b,
+                                           int32_t level) const {
+    if (a == FalseNode || a->IsEmpty)
+        return b;
+    if (b == FalseNode || b->IsEmpty)
+        return a;
+    if (level == 0)
+        return TrueNode;
+
+    return FindOrCreate(OverlayNodes(a->NorthWest, b->NorthWest, level - 1),
+                        OverlayNodes(a->NorthEast, b->NorthEast, level - 1),
+                        OverlayNodes(a->SouthWest, b->SouthWest, level - 1),
+                        OverlayNodes(a->SouthEast, b->SouthEast, level - 1));
+}
+
+std::optional<const LifeNode*>
+HashQuadtree::TryOverlayAlignedImpl(const LifeNode* destNode, int32_t destLevel,
+                                    Vec2L destPos, const LifeNode* srcNode,
+                                    int32_t srcLevel, Vec2L srcPos) const {
+    if (srcLevel > destLevel) {
+        return std::nullopt;
+    }
+
+    const auto srcSize = Pow2(srcLevel);
+    const auto destSize = Pow2(destLevel);
+
+    if (srcPos.X < destPos.X || srcPos.Y < destPos.Y ||
+        srcPos.X + srcSize > destPos.X + destSize ||
+        srcPos.Y + srcSize > destPos.Y + destSize) {
+        return std::nullopt;
+    }
+
+    if (((srcPos.X - destPos.X) % srcSize) != 0 ||
+        ((srcPos.Y - destPos.Y) % srcSize) != 0) {
+        return std::nullopt;
+    }
+
+    if (destLevel == srcLevel) {
+        if (destPos != srcPos) {
+            return std::nullopt;
+        }
+        return OverlayNodes(destNode, srcNode, destLevel);
+    }
+
+    const auto* source =
+        (destNode == FalseNode) ? EmptyTree(destLevel) : destNode;
+    const auto half = Pow2(destLevel - 1);
+    const auto midX = destPos.X + half;
+    const auto midY = destPos.Y + half;
+
+    const bool west = (srcPos.X + srcSize) <= midX;
+    const bool east = srcPos.X >= midX;
+    const bool north = (srcPos.Y + srcSize) <= midY;
+    const bool south = srcPos.Y >= midY;
+
+    if (!(west || east) || !(north || south)) {
+        return std::nullopt;
+    }
+
+    const auto* nw = source->NorthWest;
+    const auto* ne = source->NorthEast;
+    const auto* sw = source->SouthWest;
+    const auto* se = source->SouthEast;
+
+    if (north && west) {
+        const auto overlaid =
+            TryOverlayAlignedImpl(nw, destLevel - 1, {destPos.X, destPos.Y},
+                                  srcNode, srcLevel, srcPos);
+        if (!overlaid)
+            return std::nullopt;
+        nw = *overlaid;
+    } else if (north && east) {
+        const auto overlaid = TryOverlayAlignedImpl(
+            ne, destLevel - 1, {midX, destPos.Y}, srcNode, srcLevel, srcPos);
+        if (!overlaid)
+            return std::nullopt;
+        ne = *overlaid;
+    } else if (south && west) {
+        const auto overlaid = TryOverlayAlignedImpl(
+            sw, destLevel - 1, {destPos.X, midY}, srcNode, srcLevel, srcPos);
+        if (!overlaid)
+            return std::nullopt;
+        sw = *overlaid;
+    } else {
+        const auto overlaid = TryOverlayAlignedImpl(
+            se, destLevel - 1, {midX, midY}, srcNode, srcLevel, srcPos);
+        if (!overlaid)
+            return std::nullopt;
+        se = *overlaid;
+    }
+
+    return FindOrCreate(nw, ne, sw, se);
+}
+
+const LifeNode* HashQuadtree::InsertNodeImpl(const LifeNode* destNode,
+                                             int32_t destLevel, Vec2L destPos,
+                                             const LifeNode* srcNode,
+                                             int32_t srcLevel,
+                                             Vec2L srcPos) const {
+    if (srcNode == FalseNode || srcNode->IsEmpty) {
+        return destNode;
+    }
+
+    const auto overlaid = TryOverlayAlignedImpl(destNode, destLevel, destPos,
+                                                srcNode, srcLevel, srcPos);
+    if (overlaid.has_value()) {
+        return *overlaid;
+    }
+
+    if (srcLevel == 0) {
+        return destNode;
+    }
+
+    const auto childHalf = Pow2(srcLevel - 1);
+    auto* updated = destNode;
+    updated = InsertNodeImpl(updated, destLevel, destPos, srcNode->NorthWest,
+                             srcLevel - 1, srcPos);
+    updated = InsertNodeImpl(updated, destLevel, destPos, srcNode->NorthEast,
+                             srcLevel - 1, {srcPos.X + childHalf, srcPos.Y});
+    updated = InsertNodeImpl(updated, destLevel, destPos, srcNode->SouthWest,
+                             srcLevel - 1, {srcPos.X, srcPos.Y + childHalf});
+    updated = InsertNodeImpl(updated, destLevel, destPos, srcNode->SouthEast,
+                             srcLevel - 1,
+                             {srcPos.X + childHalf, srcPos.Y + childHalf});
+    return updated;
 }
 
 const LifeNode* HashQuadtree::SetImpl(const LifeNode* node, Vec2L pos,
@@ -359,10 +522,10 @@ const LifeNode* HashQuadtree::SetImpl(const LifeNode* node, Vec2L pos,
 }
 
 void HashQuadtree::Clear(Rect region) {
-    const auto [node, offset] = GetCenteredNode(32);
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
     const auto* centered =
-        ClearImpl(node, offset, region, std::min(m_Depth, 32));
-    m_Root = SetCenteredNode(m_Root, m_Depth, centered, 32);
+        ClearImpl(node, offset, region, std::min(m_Depth, ViewportMaxLevel));
+    m_Root = SetCenteredNode(m_Root, m_Depth, centered, ViewportMaxLevel);
 }
 
 const LifeNode* HashQuadtree::ClearImpl(const LifeNode* node, Vec2L pos,
@@ -408,12 +571,126 @@ HashQuadtree HashQuadtree::Extract(Rect region) const {
     if (m_Root == FalseNode)
         return result;
 
-    const auto [node, offset] = GetCenteredNode(32);
-    result.m_Root = ExtractImpl(node, offset, region, std::min(m_Depth, 32));
-    result.m_Depth = std::min(m_Depth, 32);
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
+    result.m_Root =
+        ExtractImpl(node, offset, region, std::min(m_Depth, ViewportMaxLevel));
+    result.m_Depth = std::min(m_Depth, ViewportMaxLevel);
     return result;
 }
+static int64_t FindExtentImpl(const LifeNode* node, Vec2L pos, int32_t level,
+                              bool returnX, bool findLeast) {
+    const auto hasLiveCells = [](const LifeNode* n) {
+        return n != FalseNode && !n->IsEmpty;
+    };
 
+    if (!hasLiveCells(node)) {
+        return returnX ? pos.X : pos.Y;
+    }
+
+    if (level == 0)
+        return returnX ? pos.X : pos.Y;
+
+    const auto half = Pow2(level - 1);
+
+    const auto* nw = node->NorthWest;
+    const auto* ne = node->NorthEast;
+    const auto* sw = node->SouthWest;
+    const auto* se = node->SouthEast;
+
+    const auto reduce = [&](int64_t a, int64_t b) {
+        return findLeast ? std::min(a, b) : std::max(a, b);
+    };
+
+    const auto recurseNW = [&] {
+        return FindExtentImpl(nw, {pos.X, pos.Y}, level - 1, returnX,
+                              findLeast);
+    };
+    const auto recurseNE = [&] {
+        return FindExtentImpl(ne, {pos.X + half, pos.Y}, level - 1, returnX,
+                              findLeast);
+    };
+    const auto recurseSW = [&] {
+        return FindExtentImpl(sw, {pos.X, pos.Y + half}, level - 1, returnX,
+                              findLeast);
+    };
+    const auto recurseSE = [&] {
+        return FindExtentImpl(se, {pos.X + half, pos.Y + half}, level - 1,
+                              returnX, findLeast);
+    };
+
+    // Greedy side selection: prefer the half that can contain the target
+    // extreme, then resolve between the two quadrants in that half.
+    if (returnX) {
+        if (findLeast) {
+            const bool hasWest = hasLiveCells(nw) || hasLiveCells(sw);
+            if (hasWest) {
+                if (hasLiveCells(nw) && hasLiveCells(sw))
+                    return reduce(recurseNW(), recurseSW());
+                return hasLiveCells(nw) ? recurseNW() : recurseSW();
+            }
+            if (hasLiveCells(ne) && hasLiveCells(se))
+                return reduce(recurseNE(), recurseSE());
+            return hasLiveCells(ne) ? recurseNE() : recurseSE();
+        }
+
+        const bool hasEast = hasLiveCells(ne) || hasLiveCells(se);
+        if (hasEast) {
+            if (hasLiveCells(ne) && hasLiveCells(se))
+                return reduce(recurseNE(), recurseSE());
+            return hasLiveCells(ne) ? recurseNE() : recurseSE();
+        }
+        if (hasLiveCells(nw) && hasLiveCells(sw))
+            return reduce(recurseNW(), recurseSW());
+        return hasLiveCells(nw) ? recurseNW() : recurseSW();
+    }
+
+    if (findLeast) {
+        const bool hasNorth = hasLiveCells(nw) || hasLiveCells(ne);
+        if (hasNorth) {
+            if (hasLiveCells(nw) && hasLiveCells(ne))
+                return reduce(recurseNW(), recurseNE());
+            return hasLiveCells(nw) ? recurseNW() : recurseNE();
+        }
+        if (hasLiveCells(sw) && hasLiveCells(se))
+            return reduce(recurseSW(), recurseSE());
+        return hasLiveCells(sw) ? recurseSW() : recurseSE();
+    }
+
+    const bool hasSouth = hasLiveCells(sw) || hasLiveCells(se);
+    if (hasSouth) {
+        if (hasLiveCells(sw) && hasLiveCells(se))
+            return reduce(recurseSW(), recurseSE());
+        return hasLiveCells(sw) ? recurseSW() : recurseSE();
+    }
+    if (hasLiveCells(nw) && hasLiveCells(ne))
+        return reduce(recurseNW(), recurseNE());
+    return hasLiveCells(nw) ? recurseNW() : recurseNE();
+}
+
+Rect HashQuadtree::FindBoundingBox() const {
+    if (m_Root == FalseNode || m_Root->IsEmpty)
+        return {0, 0, 0, 0};
+
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
+    const auto level = std::min(m_Depth, ViewportMaxLevel);
+
+    const auto minX = FindExtentImpl(node, offset, level, true, true);
+    const auto minY = FindExtentImpl(node, offset, level, false, true);
+    const auto maxX = FindExtentImpl(node, offset, level, true, false);
+    const auto maxY = FindExtentImpl(node, offset, level, false, false);
+
+    std::println("{}, {}, {}, {}", minX, minY, maxX - minX + 1,
+                 maxY - minY + 1);
+
+    constexpr static auto clampToInt32 = [](int64_t num) {
+        return static_cast<int32_t>(
+            std::clamp(num, int64_t{std::numeric_limits<int32_t>::min()},
+                       int64_t{std::numeric_limits<int32_t>::max()}));
+    };
+
+    return {clampToInt32(minX), clampToInt32(minY),
+            clampToInt32(maxX - minX + 1), clampToInt32(maxY - minY + 1)};
+}
 const LifeNode* HashQuadtree::ExtractImpl(const LifeNode* node, Vec2L pos,
                                           Rect region, int32_t level) const {
     if (node == FalseNode || node->IsEmpty) {
@@ -448,8 +725,9 @@ const LifeNode* HashQuadtree::ExtractImpl(const LifeNode* node, Vec2L pos,
 }
 
 bool HashQuadtree::Get(Vec2 targetPos) const {
-    const auto [node, offset] = GetCenteredNode(32);
-    return GetImpl(node, offset, targetPos, std::min(m_Depth, 32));
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
+    return GetImpl(node, offset, targetPos,
+                   std::min(m_Depth, ViewportMaxLevel));
 }
 
 bool HashQuadtree::GetImpl(const LifeNode* node, Vec2L pos, Vec2 targetPos,
@@ -631,8 +909,9 @@ HashQuadtree::Iterator HashQuadtree::begin() const {
         return end();
     }
 
-    const auto [node, offset] = GetCenteredNode(32);
-    return Iterator{node, offset, std::min(m_Depth, 32), false, nullptr};
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
+    return Iterator{node, offset, std::min(m_Depth, ViewportMaxLevel), false,
+                    nullptr};
 }
 
 HashQuadtree::Iterator HashQuadtree::end() const { return Iterator{}; }
@@ -641,8 +920,9 @@ HashQuadtree::Iterator HashQuadtree::begin(Rect bounds) const {
     if (m_Root == FalseNode)
         return end();
 
-    const auto [node, offset] = GetCenteredNode(32);
-    return Iterator{node, offset, std::min(m_Depth, 32), false, &bounds};
+    const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
+    return Iterator{node, offset, std::min(m_Depth, ViewportMaxLevel), false,
+                    &bounds};
 }
 
 const LifeNode* HashQuadtree::FindOrCreate(const LifeNode* nw,
@@ -1251,7 +1531,7 @@ const LifeNode* HashQuadtree::BuildTree(std::span<const Vec2> cells) {
                              static_cast<int64_t>(cell.Y));
 
     const auto* result = BuildTreeRegion(cellVec, offset, gridExponent);
-    EmptyTree(32);
+    EmptyTree(ViewportMaxLevel);
     return result;
 }
 } // namespace gol

@@ -10,6 +10,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <print>
 #include <ranges>
 #include <stack>
@@ -171,11 +172,18 @@ class HashQuadtree {
 
     void Set(Vec2 pos, bool alive);
 
+    // Inserts `other` shifted by `offset` into this tree.
+    // This operation can merge aligned subtrees directly to avoid
+    // per-cell insertion in common cases.
+    void Insert(const HashQuadtree& other, Vec2 offset);
+
     bool Get(Vec2 pos) const;
 
     void Clear(Rect region);
 
     HashQuadtree Extract(Rect region) const;
+
+    Rect FindBoundingBox() const;
 
   private:
     const LifeNode* SetImpl(const LifeNode* node, Vec2L pos, Vec2 targetPos,
@@ -269,6 +277,16 @@ class HashQuadtree {
     const LifeNode* SetCenteredNode(const LifeNode* outer, int32_t currentLevel,
                                     const LifeNode* toInsert,
                                     int32_t level) const;
+
+    const LifeNode* OverlayNodes(const LifeNode* a, const LifeNode* b,
+                                 int32_t level) const;
+    std::optional<const LifeNode*>
+    TryOverlayAlignedImpl(const LifeNode* destNode, int32_t destLevel,
+                          Vec2L destPos, const LifeNode* srcNode,
+                          int32_t srcLevel, Vec2L srcPos) const;
+    const LifeNode* InsertNodeImpl(const LifeNode* destNode, int32_t destLevel,
+                                   Vec2L destPos, const LifeNode* srcNode,
+                                   int32_t srcLevel, Vec2L srcPos) const;
 
   private:
     // The rationale for storing HashLifeCache in static, thread_local storage

@@ -449,7 +449,7 @@ void SimulationEditor::HandlePasteError(const RLEEncoder::DecodeError& result) {
         break;
     default:
         m_FileErrorWindow.Activate();
-        m_FileErrorWindow.Message = "Failed to read from clipboard.";
+        m_FileErrorWindow.Message = result.Message;
     }
 }
 

@@ -212,27 +212,29 @@ std::expected<DecodeResult, DecodeError> DecodeRegion(std::string_view src,
         const auto count = (run == 0) ? 1 : run;
         run = 0;
 
-        warnCount += count;
-        if (warnCount >= warnThreshold) {
-            continue;
-        }
-
         switch (ch) {
         case 'b':
             [[fallthrough]]; // dead cells — just advance X
         case '.':
-            currentX += count;
+            if (warnCount <= warnThreshold) {
+                currentX += count;
+            }
             break;
         case 'o':
             [[fallthrough]]; // alive cells
         case 'A':            // some extended RLEs use 'A' for the first state
-            for (auto i = 0; i < count; ++i)
-                result.Set(currentX + i, currentY, true);
-            currentX += count;
+            warnCount += count;
+            if (warnCount < warnThreshold) {
+                for (auto i = 0; i < count; ++i)
+                    result.Set(currentX + i, currentY, true);
+                currentX += count;
+            }
             break;
         case '$': // end of row(s)
-            currentY += count;
-            currentX = 0;
+            if (warnCount < warnThreshold) {
+                currentY += count;
+                currentX = 0;
+            }
             break;
         case '!': // end of pattern
             ended = true;
@@ -255,9 +257,9 @@ std::expected<DecodeResult, DecodeError> DecodeRegion(std::string_view src,
     }
 
     if (!ended) {
-        return std::unexpected{
-            DecodeError{.ErrorType = DecodeError::Type::NoTermination,
-                        .Message = "RLE data has no terminating '!'."}};
+        return std::unexpected{DecodeError{
+            .ErrorType = DecodeError::Type::NoTermination,
+            .Message = "RLE data has no terminating exclamation point."}};
     }
     if (warnCount >= warnThreshold) {
         return std::unexpected{DecodeError{
