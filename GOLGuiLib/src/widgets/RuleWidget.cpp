@@ -14,7 +14,7 @@ WidgetResult RuleWidget::UpdateImpl(const EditorResult& state) {
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);
     ImGui::Text("Rule");
 
-    bool success = ImGui::InputTextWithHint(
+    const bool pressedEnter = ImGui::InputTextWithHint(
         "##RuleWidgetInput", "Enter Rule...", &m_InputText,
         ImGuiInputTextFlags_EnterReturnsTrue);
     ImGui::SetItemTooltip(
@@ -29,11 +29,11 @@ WidgetResult RuleWidget::UpdateImpl(const EditorResult& state) {
     ImGui::SameLine();
     ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
 
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    {
+    const bool pressedButton = [&] {
         DisabledScope disableIf{!Actions::Editable(state.Simulation.State)};
-        success = ImGui::Button("Set Rule") || success;
-    }
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        return ImGui::Button("Set Rule");
+    }();
 
     ImGui::Separator();
     ImGui::PopStyleVar();
@@ -42,7 +42,8 @@ WidgetResult RuleWidget::UpdateImpl(const EditorResult& state) {
 
     m_InputError.Update();
 
-    if (!success) {
+    if (!Actions::Editable(state.Simulation.State) ||
+        (!pressedEnter && !pressedButton)) {
         return {};
     }
 

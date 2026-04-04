@@ -82,6 +82,7 @@ class SimulationEditor {
 
     ErrorWindow m_FileErrorWindow;
     ErrorWindow m_CopyErrorWindow;
+    ErrorWindow m_GenerateNoiseError;
     WarnWindow m_PasteWarning;
     WarnWindow m_SaveWarning;
 

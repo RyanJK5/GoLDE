@@ -130,16 +130,22 @@ SimulationState EditorModel::HandleResize(Size2 newDimensions) {
     return SimulationState::Paint;
 }
 
-SimulationState EditorModel::HandleGenerateNoise(float density) {
+bool EditorModel::HandleGenerateNoise(float density, uint32_t warnThreshold) {
     if (!m_SelectionManager.CanDrawGrid())
-        return m_State;
+        return false;
     const auto selectionBounds = m_SelectionManager.SelectionBounds();
     m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid),
                                    m_State);
-    m_VersionManager.TryPushChange(
-        m_SelectionManager.InsertNoise(m_Grid, selectionBounds, density),
-        m_State);
-    return m_State;
+
+    const auto result = m_SelectionManager.InsertNoise(m_Grid, selectionBounds,
+                                                       warnThreshold, density);
+    if (result) {
+        m_VersionManager.TryPushChange(result, m_State);
+        return true;
+    } else {
+        m_SelectionManager.ModifySelectionBounds(m_Grid, selectionBounds);
+        return false;
+    }
 }
 
 SimulationState EditorModel::HandleUndo() {

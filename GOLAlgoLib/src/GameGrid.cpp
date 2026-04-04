@@ -21,14 +21,19 @@
 #include "LifeHashSet.hpp"
 
 namespace gol {
-GameGrid GameGrid::GenerateNoise(Rect bounds, float density) {
+std::expected<GameGrid, std::string>
+GameGrid::GenerateNoise(Rect bounds, float density, uint32_t warnThreshold) {
     static std::random_device random{};
     static std::mt19937 generator{random()};
 
     // Since our density is not totally accurate because it can produce
     // overlapping cells, we create the illusion that it is fully accurate when
     // density == 1.
-    if (density == 1.F) {
+    if (bounds.Height > (std::numeric_limits<int32_t>::max() / bounds.Width) ||
+        bounds.Width * bounds.Height > static_cast<int32_t>(warnThreshold)) {
+        return std::unexpected{"Too many cells to generate."};
+    }
+    if (density == 1.f) {
         std::vector<Vec2> cells{};
         cells.reserve(static_cast<size_t>(bounds.Width) * bounds.Height);
         for (auto x = 0; x < bounds.Width; x++) {
@@ -169,7 +174,7 @@ void GameGrid::InsertGrid(const GameGrid& region, Vec2 pos) {
 
 void GameGrid::RotateGrid(bool clockwise) {
     // Probably more easily read as ((width - 1) / 2, (height - 1) / 2)
-    const Vec2F center{((m_Width / 2.F) - 0.5F), ((m_Height / 2.F) - 0.5F)};
+    const Vec2F center{((m_Width / 2.f) - 0.5f), ((m_Height / 2.f) - 0.5F)};
     std::vector<Vec2> newSet{};
     newSet.reserve(static_cast<size_t>(m_Population.convert_to<int64_t>()));
 

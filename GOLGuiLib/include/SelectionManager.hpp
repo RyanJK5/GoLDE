@@ -46,8 +46,10 @@ class SelectionManager {
 
     std::optional<VersionState> Nudge(Vec2 translation, const GameGrid& grid);
 
-    std::optional<VersionState>
-    InsertNoise(const GameGrid& grid, Rect selectionBounds, float density);
+    std::optional<VersionState> InsertNoise(const GameGrid& grid,
+                                            Rect selectionBounds,
+                                            uint32_t warnThreshold,
+                                            float density);
 
     std::pair<std::optional<VersionState>, std::optional<VersionState>>
     ModifySelectionBounds(GameGrid& grid, Rect bounds);

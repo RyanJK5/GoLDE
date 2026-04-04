@@ -3,6 +3,7 @@
 
 #include <ankerl/unordered_dense.h>
 #include <cstdint>
+#include <expected>
 #include <memory>
 #include <optional>
 #include <stop_token>
@@ -20,7 +21,8 @@ class GameGrid {
   public:
     // Returns a GameGrid with randomly generated cells according to the
     // provided density.
-    static GameGrid GenerateNoise(Rect bounds, float density);
+    static std::expected<GameGrid, std::string>
+    GenerateNoise(Rect bounds, float density, uint32_t warnThreshold);
 
     // Calling with `width` or `height` set to zero creates an unbounded
     // universe.

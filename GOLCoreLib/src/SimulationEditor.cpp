@@ -47,6 +47,7 @@ SimulationEditor::SimulationEditor(uint32_t id,
       m_PasteWarning(
           "Paste Warning",
           std::bind_front(&SimulationEditor::PasteWarnUpdated, this)),
+      m_GenerateNoiseError("Noise Generation Error", [](auto) {}),
       m_SaveWarning("Save Warning", [](auto) {}) {}
 
 bool SimulationEditor::operator==(const SimulationEditor& other) const {
@@ -76,6 +77,7 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
 
     m_PasteWarning.Update();
     m_CopyErrorWindow.Update();
+    m_GenerateNoiseError.Update();
     m_FileErrorWindow.Update();
     m_SaveWarning.Update();
 
@@ -318,6 +320,7 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
     if (result.FromShortcut && !m_TakeKeyboardInput)
         return m_Model.State();
 
+    const static BigInt threshold{10'000'000U};
     return std::visit(
         Overloaded{
             [this](const StartCommand&) { return m_Model.HandleStart(); },
@@ -349,7 +352,15 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                 return state;
             },
             [this](const GenerateNoiseCommand& cmd) {
-                return m_Model.HandleGenerateNoise(cmd.Density);
+                auto result = m_Model.HandleGenerateNoise(
+                    cmd.Density, static_cast<uint32_t>(threshold));
+                if (!result) {
+                    m_GenerateNoiseError.Activate();
+                    m_GenerateNoiseError.Message =
+                        "The region you have selected is too large to generate "
+                        "noise.\n";
+                }
+                return m_Model.State();
             },
             [this](const UndoCommand&) {
                 if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
@@ -362,7 +373,6 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                 return m_Model.HandleRedo();
             },
             [this](const SaveCommand& cmd) {
-                const static BigInt threshold{10'000'000U};
                 if (m_Model.Grid().Population() > threshold) {
                     m_SaveWarning.SetCallback(
                         [this, path = cmd.FilePath](PopupWindowState state) {
@@ -384,7 +394,6 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                 return m_Model.State();
             },
             [this](const SaveAsNewCommand& cmd) {
-                const static BigInt threshold{10'000'000U};
                 if (m_Model.Grid().Population() > threshold) {
                     m_SaveWarning.SetCallback(
                         [this, path = cmd.FilePath](PopupWindowState state) {

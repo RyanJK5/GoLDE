@@ -207,10 +207,17 @@ std::optional<VersionState> SelectionManager::Nudge(Vec2 translation,
     return CaptureState(grid);
 }
 
-std::optional<VersionState> SelectionManager::InsertNoise(const GameGrid& grid,
-                                                          Rect selectionBounds,
-                                                          float density) {
-    m_Selected = GameGrid::GenerateNoise(selectionBounds, density);
+std::optional<VersionState>
+SelectionManager::InsertNoise(const GameGrid& grid, Rect selectionBounds,
+                              uint32_t warnThreshold, float density) {
+    auto result =
+        GameGrid::GenerateNoise(selectionBounds, density, warnThreshold);
+    if (result) {
+        m_Selected = std::move(*result);
+    } else {
+        return std::nullopt;
+    }
+
     m_SentinelSelection = selectionBounds.Pos();
     m_AnchorSelection = selectionBounds.LowerRight() - Vec2{1, 1};
 
