@@ -17,6 +17,10 @@ void SimulationWorker::ThreadLoop(std::stop_token threadStopToken) {
             std::unique_lock lock{m_ResumeMutex};
             m_ResumeCondition.wait(lock, threadStopToken,
                                    [&] { return m_ResumeReady; });
+            if (m_BufferedRule != nullptr) {
+                HashQuadtree::SetRule(*m_BufferedRule);
+                m_BufferedRule = nullptr;
+            }
 
             if (threadStopToken.stop_requested()) {
                 return;
@@ -129,5 +133,9 @@ const GameGrid* SimulationWorker::GetResult() const {
 std::chrono::duration<float> SimulationWorker::GetTimeSinceLastUpdate() const {
     return std::chrono::steady_clock::now() -
            m_LastUpdate.load(std::memory_order_relaxed);
+}
+
+void SimulationWorker::BufferRule(std::unique_ptr<LifeRule> rule) {
+    m_BufferedRule = std::move(rule);
 }
 } // namespace gol

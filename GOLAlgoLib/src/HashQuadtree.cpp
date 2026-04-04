@@ -40,9 +40,13 @@ HashLifeCache::HashLifeCache() {
     EmptyNodeCache.resize(64, nullptr);
 }
 
+void HashLifeCache::ResetMaps() {
+    NodeMap.clear();
+    SlowCache.clear();
+}
+
 thread_local HashLifeCache HashQuadtree::s_Cache{};
-thread_local LifeRule::LookupTable HashQuadtree::s_RuleTable{
-    LifeRule::Make("B3/S23")->RuleTable()};
+thread_local LifeRule HashQuadtree::s_Rule{*LifeRule::Make("B3/S23")};
 
 namespace {
 // ============================================================================
@@ -193,8 +197,9 @@ BigInt HashLife(HashQuadtree& data, const BigInt& numSteps,
     return generation;
 }
 
-void HashQuadtree::SetRuleTable(const LifeRule& rule) {
-    s_RuleTable = rule.RuleTable();
+void HashQuadtree::SetRule(const LifeRule& rule) {
+    s_Rule = rule;
+    s_Cache.ResetMaps(); // Clear the cache when the rule changes
 }
 
 // Mixes the node's precomputed hash with MaxAdvance. The node hash is already
@@ -1001,15 +1006,15 @@ static uint16_t WindowCenter(uint16_t nw, uint16_t ne, uint16_t sw,
 HashQuadtree::FirstGenResults
 HashQuadtree::ComputeFirstGeneration(const LeafQuadrants& q) {
     return {
-        s_RuleTable[q.nw],
-        s_RuleTable[WindowN(q.nw, q.ne)],
-        s_RuleTable[q.ne],
-        s_RuleTable[WindowW(q.nw, q.sw)],
-        s_RuleTable[WindowCenter(q.nw, q.ne, q.sw, q.se)],
-        s_RuleTable[WindowE(q.ne, q.se)],
-        s_RuleTable[q.sw],
-        s_RuleTable[WindowS(q.sw, q.se)],
-        s_RuleTable[q.se],
+        s_Rule.Table()[q.nw],
+        s_Rule.Table()[WindowN(q.nw, q.ne)],
+        s_Rule.Table()[q.ne],
+        s_Rule.Table()[WindowW(q.nw, q.sw)],
+        s_Rule.Table()[WindowCenter(q.nw, q.ne, q.sw, q.se)],
+        s_Rule.Table()[WindowE(q.ne, q.se)],
+        s_Rule.Table()[q.sw],
+        s_Rule.Table()[WindowS(q.sw, q.se)],
+        s_Rule.Table()[q.se],
     };
 }
 
@@ -1052,13 +1057,17 @@ const LifeNode* HashQuadtree::AdvanceBase(const LifeNode* node) const {
     // Second generation: combine adjacent 2x2 results into four overlapping
     // 4x4 windows, look up each to get a 2x2 result, then assemble.
     const auto secondGenNW =
-        s_RuleTable[Combine2x2ForLookup(gen1.nw, gen1.n, gen1.w, gen1.center)];
+        s_Rule
+            .Table()[Combine2x2ForLookup(gen1.nw, gen1.n, gen1.w, gen1.center)];
     const auto secondGenNE =
-        s_RuleTable[Combine2x2ForLookup(gen1.n, gen1.ne, gen1.center, gen1.e)];
+        s_Rule
+            .Table()[Combine2x2ForLookup(gen1.n, gen1.ne, gen1.center, gen1.e)];
     const auto secondGenSW =
-        s_RuleTable[Combine2x2ForLookup(gen1.w, gen1.center, gen1.sw, gen1.s)];
+        s_Rule
+            .Table()[Combine2x2ForLookup(gen1.w, gen1.center, gen1.sw, gen1.s)];
     const auto secondGenSE =
-        s_RuleTable[Combine2x2ForLookup(gen1.center, gen1.e, gen1.s, gen1.se)];
+        s_Rule
+            .Table()[Combine2x2ForLookup(gen1.center, gen1.e, gen1.s, gen1.se)];
 
     const auto resultBits =
         AssembleQuadrants(secondGenNW, secondGenNE, secondGenSW, secondGenSE);

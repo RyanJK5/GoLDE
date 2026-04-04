@@ -71,7 +71,7 @@ class EditorModel {
     const GameGrid& Grid() const { return m_Grid; }
     const SelectionManager& Selection() const { return m_SelectionManager; }
     const VersionManager& Versions() const { return m_VersionManager; }
-    const SimulationWorker& Worker() const { return *m_Worker; }
+    SimulationWorker& Worker() { return *m_Worker; }
 
     SimulationState State() const { return m_State; }
     void SetState(SimulationState state) { m_State = state; }

@@ -13,8 +13,11 @@ class LifeRule {
     constexpr static std::expected<LifeRule, std::string_view>
     Make(std::string_view ruleString);
 
+    constexpr static std::expected<void, std::string_view>
+    IsValidRule(std::string_view ruleString);
+
     constexpr LifeRule(int32_t birthMask, int32_t surviveMask);
-    constexpr LookupTable RuleTable() const;
+    constexpr const LookupTable& Table() const;
 
   private:
     constexpr LookupTable BuildRuleTable(int32_t birthMask,
@@ -26,31 +29,67 @@ class LifeRule {
 
 constexpr std::expected<LifeRule, std::string_view>
 LifeRule::Make(std::string_view ruleString) {
-    auto birthMask = 0;
-    auto surviveMask = 0;
 
     const auto slash = ruleString.find('/');
     if (slash == std::string_view::npos || ruleString[0] != 'B' ||
-        ruleString[slash + 1] != 'S')
+        ruleString[slash + 1] != 'S') {
         return std::unexpected{
-            std::string_view{"Rule string must be in B.../S... format"}};
+            std::string_view{"Rule string must be in B.../S... format."}};
+    }
 
+    auto birthMask = 0;
     for (char c : ruleString.substr(1, slash - 1)) {
+        if (c == '0') {
+            return std::unexpected{
+                std::string_view{"B0 rules are not currently supported."}};
+        }
         if (c < '0' || c > '8') {
             return std::unexpected{
-                std::string_view{"Invalid birth neighbor count"}};
+                std::string_view{"Invalid birth neighbor count."}};
         }
         birthMask |= (1 << (c - '0'));
     }
+
+    auto surviveMask = 0;
     for (char c : ruleString.substr(slash + 2)) {
         if (c < '0' || c > '8') {
             return std::unexpected{
-                std::string_view{"Invalid survive neighbor count"}};
+                std::string_view{"Invalid survive neighbor count."}};
         }
         surviveMask |= (1 << (c - '0'));
     }
 
     return LifeRule{birthMask, surviveMask};
+}
+
+constexpr std::expected<void, std::string_view>
+LifeRule::IsValidRule(std::string_view ruleString) {
+    const auto slash = ruleString.find('/');
+    if (slash == std::string_view::npos || ruleString[0] != 'B' ||
+        ruleString[slash + 1] != 'S') {
+        return std::unexpected{
+            std::string_view{"Rule string must be in B.../S... format."}};
+    }
+
+    for (char c : ruleString.substr(1, slash - 1)) {
+        if (c == '0') {
+            return std::unexpected{
+                std::string_view{"B0 rules are not currently supported."}};
+        }
+        if (c < '0' || c > '8') {
+            return std::unexpected{
+                std::string_view{"Invalid birth neighbor count."}};
+        }
+    }
+
+    for (char c : ruleString.substr(slash + 2)) {
+        if (c < '0' || c > '8') {
+            return std::unexpected{
+                std::string_view{"Invalid survive neighbor count."}};
+        }
+    }
+
+    return std::expected<void, std::string_view>{};
 }
 
 constexpr LifeRule::LookupTable LifeRule::BuildRuleTable(int32_t birthMask,
@@ -92,7 +131,7 @@ constexpr LifeRule::LookupTable LifeRule::BuildRuleTable(int32_t birthMask,
     return table;
 }
 
-constexpr LifeRule::LookupTable LifeRule::RuleTable() const {
+constexpr const LifeRule::LookupTable& LifeRule::Table() const {
     return m_RuleTable;
 }
 

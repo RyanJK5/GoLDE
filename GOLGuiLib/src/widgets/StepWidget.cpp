@@ -124,7 +124,6 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
     if (m_StepCount < 1)
         m_StepCount = 1;
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
     auto result = m_Button.Update(state);
 
     auto retValue = WidgetResult{
@@ -134,6 +133,7 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
 
     retValue.FromShortcut = retValue.FromShortcut || result.FromShortcut;
 
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
     {
         const bool hideHyperSpeedOption =
             state.Simulation.State == SimulationState::Simulation;
@@ -148,8 +148,6 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
             "to run slowly for the first few jumps, but speed up "
             "significantly afterwards.");
     }
-
-    ImGui::Separator();
     ImGui::PopStyleVar();
 
     return retValue;

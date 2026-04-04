@@ -4,7 +4,6 @@
 
 namespace gol {
 WidgetResult SelectionBoundsWidget::UpdateImpl(const EditorResult& state) {
-
     const auto inputBounds =
         state.SelectionBounds ? state.SelectionBounds : Rect{};
 

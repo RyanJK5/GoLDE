@@ -66,16 +66,13 @@ struct HashLifeCache {
     ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
         SlowCache{};
 
-    // Simple container for using some dynamic programming when preparing
-    // quadtree copies.
-    ankerl::unordered_dense::map<const LifeNode*, const LifeNode*>
-        TransferCopyCache{};
-
     // Level-indexed cache for empty nodes. Index i holds the empty node for
     // size 2^i. At most 64 entries needed (levels 0..63).
     std::vector<const LifeNode*> EmptyNodeCache{};
 
     HashLifeCache();
+
+    void ResetMaps();
 };
 
 // This is the primary data structure for executing the HashLife algorithm. It
@@ -134,7 +131,7 @@ class HashQuadtree {
     HashQuadtree(std::span<const Vec2> data, Vec2 offset = {});
 
   public:
-    static void SetRuleTable(const LifeRule& rule);
+    static void SetRule(const LifeRule& rule);
 
     bool empty() const;
 
@@ -308,7 +305,7 @@ class HashQuadtree {
 
   private:
     static thread_local HashLifeCache s_Cache;
-    static thread_local LifeRule::LookupTable s_RuleTable;
+    static thread_local LifeRule s_Rule;
 
     const LifeNode* m_Root = FalseNode;
 

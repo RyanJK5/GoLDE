@@ -417,6 +417,11 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
             },
             [this](const NewFileCommand&) { return m_Model.State(); },
             [this](const CloseCommand&) { return m_Model.State(); },
+            [this](const RuleCommand& cmd) {
+                m_Model.Worker().BufferRule(std::make_unique<LifeRule>(
+                    *LifeRule::Make(cmd.RuleString)));
+                return m_Model.State();
+            },
             [this](const SelectionCommand& cmd) {
                 if (cmd.Action == SelectionAction::Paste) {
                     const auto result = m_Model.PasteSelection(CursorGridPos());

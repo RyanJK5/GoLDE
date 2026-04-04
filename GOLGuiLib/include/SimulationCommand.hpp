@@ -64,13 +64,17 @@ struct SelectionCommand {
     int32_t NudgeSize = 1;
 };
 
+struct RuleCommand {
+    std::string RuleString;
+};
+
 using SimulationCommand =
     std::variant<StartCommand, PauseCommand, ResumeCommand, RestartCommand,
                  ResetCommand, ClearCommand, StepCommand, ResizeCommand,
                  GenerateNoiseCommand, UndoCommand, RedoCommand, SaveCommand,
                  SaveAsNewCommand, NewFileCommand, LoadCommand, CloseCommand,
                  SelectionCommand, SelectionBoundsCommand,
-                 CameraPositionCommand>;
+                 CameraPositionCommand, RuleCommand>;
 
 // Convert individual action enum values to SimulationCommand.
 // Used by Widget::UpdateResult for simple (no-payload) buttons.

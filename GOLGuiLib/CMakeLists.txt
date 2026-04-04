@@ -13,6 +13,7 @@ set(SOURCES
     src/widgets/FileWidget.cpp
     src/widgets/NoiseWidget.cpp
     src/widgets/ResizeWidget.cpp
+    src/widgets/RuleWidget.cpp
     src/widgets/SelectionBoundsWidget.cpp
     src/widgets/StepWidget.cpp
     src/GameEnums.cpp
@@ -38,6 +39,7 @@ set(HEADERS
     include/widgets/FileWidget.hpp
     include/widgets/NoiseWidget.hpp
     include/widgets/ResizeWidget.hpp
+    include/widgets/RuleWidget.hpp
     include/widgets/SelectionBoundsWidget.hpp
     include/widgets/StepWidget.hpp
     include/widgets/Widget.hpp
