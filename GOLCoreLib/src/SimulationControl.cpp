@@ -111,12 +111,14 @@ SimulationControlResult SimulationControl::Update(const EditorResult& state) {
     ImGui::Begin("Simulation Control", nullptr, ImGuiWindowFlags_NoNav);
 
     if (m_UpdateShortcuts.exchange(false, std::memory_order_relaxed)) {
-        const auto fileInfo =
-            ConfigLoader::LoadYAML<ImVec4>(m_ShortcutConfigPath);
+        const auto fileInfoResult =
+            ConfigLoader::TryLoadYAML<ImVec4>(m_ShortcutConfigPath);
 
-        ForEachWidget([&fileInfo](auto&& widget) {
-            widget.SetShortcuts(fileInfo.Shortcuts);
-        });
+        if (fileInfoResult) {
+            ForEachWidget([&](auto&& widget) {
+                widget.SetShortcuts(fileInfoResult->Shortcuts);
+            });
+        }
     }
 
     std::optional<SimulationCommand> command;

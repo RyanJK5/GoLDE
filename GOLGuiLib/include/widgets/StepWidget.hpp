@@ -40,7 +40,7 @@ class StepWidget : public Widget {
   private:
     WidgetResult UpdateImpl(const EditorResult& state);
 
-    void SetShortcutsImpl(const ShortcutMap&) {}
+    void SetShortcutsImpl(const ShortcutMap& shortcuts);
 
     void SetStepCount(const BigInt& stepCount);
 

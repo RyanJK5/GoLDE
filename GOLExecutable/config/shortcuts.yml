@@ -5,7 +5,7 @@ shortcuts:
     reset: [Ctrl+R]
     restart: [Ctrl+Shift+R]
     clear: [Ctrl+Backspace, Ctrl+Delete]
-    step: [Ctrl+Right, Ctrl+.]
+    step: [Ctrl+Right, Ctrl+., Tab]
 
     resize: [G]
     generate_noise: [N]

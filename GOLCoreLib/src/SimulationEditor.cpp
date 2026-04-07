@@ -19,6 +19,7 @@
 #include <utility>
 #include <variant>
 
+#include "BigInt.hpp"
 #include "EditorModel.hpp"
 #include "EditorResult.hpp"
 #include "GameEnums.hpp"
@@ -39,29 +40,42 @@ namespace gol {
 namespace {
 constexpr int32_t SelectionCoordLimit = std::numeric_limits<int32_t>::max() / 2;
 
+std::optional<BigInt> FloorToBigInt(double value) {
+    if (!std::isfinite(value)) {
+        return std::nullopt;
+    }
+
+    const auto floored = std::floor(value);
+    if (std::abs(floored) <=
+        static_cast<double>(std::numeric_limits<int64_t>::max())) {
+        return BigInt{static_cast<int64_t>(floored)};
+    }
+
+    return BigInt{std::format("{:.0f}", floored)};
+}
+
 std::string FormatSelectionPoint(Vec2 point) {
     return std::format("({}, {})", point.X, point.Y);
 }
 
 std::string FormatHoverPoint(glm::dvec2 worldCellPos) {
-    const auto cursorX = std::floor(worldCellPos.x);
-    const auto cursorY = std::floor(worldCellPos.y);
-
-    if (!std::isfinite(cursorX) || !std::isfinite(cursorY)) {
+    const auto cursorX = FloorToBigInt(worldCellPos.x);
+    const auto cursorY = FloorToBigInt(worldCellPos.y);
+    if (!cursorX || !cursorY) {
         return "(out of range)";
     }
 
-    const auto minCoord = static_cast<double>(-SelectionCoordLimit);
-    const auto maxCoord = static_cast<double>(SelectionCoordLimit);
-    const auto inRange = cursorX >= minCoord && cursorX <= maxCoord &&
-                         cursorY >= minCoord && cursorY <= maxCoord;
+    const BigInt minCoord = -BigInt{SelectionCoordLimit};
+    const BigInt maxCoord = BigInt{SelectionCoordLimit};
+    const auto inRange = *cursorX >= minCoord && *cursorX <= maxCoord &&
+                         *cursorY >= minCoord && *cursorY <= maxCoord;
 
     if (inRange) {
-        return std::format("({}, {})", static_cast<int32_t>(cursorX),
-                           static_cast<int32_t>(cursorY));
+        return std::format("({}, {})", static_cast<int32_t>(*cursorX),
+                           static_cast<int32_t>(*cursorY));
     }
 
-    return std::format("({:.0f}, {:.0f}) [out of range]", cursorX, cursorY);
+    return std::format("{} [out of range]", BigVec2{*cursorX, *cursorY});
 }
 } // namespace
 
@@ -290,7 +304,7 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
 
     const auto mousePos = Vec2F{ImGui::GetMousePos()};
     const auto viewportBounds = ViewportBounds();
-    const auto hoverText = [&]() -> std::optional<std::string> {
+    const auto hoverText = [&] -> std::optional<std::string> {
         if (!viewportBounds.InBounds(mousePos.X, mousePos.Y)) {
             return std::nullopt;
         }

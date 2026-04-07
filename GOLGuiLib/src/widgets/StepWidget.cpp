@@ -98,6 +98,10 @@ void StepWidget::ShowInputText() {
     ImGui::PopItemWidth();
 }
 
+void StepWidget::SetShortcutsImpl(const ShortcutMap& shortcuts) {
+    m_Button.SetShortcuts(shortcuts.at(GameAction::Step));
+}
+
 WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
     ImGui::Text("Step Count");
 

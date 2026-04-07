@@ -426,8 +426,19 @@ TryLoadYAML(const std::filesystem::path& styleInfoPath) {
     std::optional<SectionType> section{};
     StyleInfo<Vec> output{.OriginPath = styleInfoPath};
 
+    const auto zeroPossibleEntries =
+        [&](const std::ranges::input_range auto& stringMap) {
+            for (auto&& [key, value] : stringMap) {
+                output.Shortcuts[value] = {};
+            }
+        };
+    zeroPossibleEntries(Actions::GameActionDefinitions);
+    zeroPossibleEntries(Actions::EditorActionDefinitions);
+    zeroPossibleEntries(Actions::SelectionActionDefinitions);
+
     while (std::getline(input, line)) {
         lineNum++;
+        std::println("{}", line);
 
         auto start =
             std::ranges::find_if(line, [](char c) { return std::isalpha(c); });
@@ -451,7 +462,7 @@ TryLoadYAML(const std::filesystem::path& styleInfoPath) {
             case StyleColors: {
                 auto result = ReadColorPair<Vec>(lineNum, line, start);
                 if (!result)
-                    return std::unexpected<YAMLError>(result.error());
+                    break;
                 output.StyleColors[result->first] = result->second;
             } break;
             case ImGUIStyle: {
@@ -459,7 +470,7 @@ TryLoadYAML(const std::filesystem::path& styleInfoPath) {
                     lineNum, line, start, MakeConverter(AttributeDefinitions),
                     MakeConverter(ColorDefinitions));
                 if (!result)
-                    return std::unexpected<YAMLError>(result.error());
+                    break;
                 output.AttributeColors[result->first] = result->second;
             } break;
             case Shortcuts: {
@@ -495,7 +506,6 @@ TryLoadYAML(const std::filesystem::path& styleInfoPath) {
                         output.Shortcuts[result->first] = result->second;
                         break;
                     }
-                    return std::unexpected<YAMLError>(result.error());
                 }
             }
             }
