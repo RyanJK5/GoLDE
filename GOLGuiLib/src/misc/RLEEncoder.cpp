@@ -113,7 +113,7 @@ std::expected<DecodeResult, DecodeError> DecodeRegion(std::string_view src,
                                  : line.substr(firstNonSpace);
 
         if (!trimmed.empty() && trimmed[0] == '#') {
-            if (trimmed.starts_with("CXRLE")) {
+            if (trimmed.starts_with("#CXRLE")) {
                 const auto posField = trimmed.find("Pos");
 
                 const auto eq = trimmed.find('=', posField);

@@ -72,7 +72,7 @@ GameGrid::GenerateNoise(Rect bounds, float density, uint32_t warnThreshold) {
 }
 
 GameGrid::GameGrid(int32_t width, int32_t height)
-    : m_Algorithm(std::make_unique<HashLife>()), m_Width(width),
+    : m_Algorithm(std::make_unique<HashLife<>>()), m_Width(width),
       m_Height(height) {}
 
 GameGrid::GameGrid(Size2 size) : GameGrid(size.Width, size.Height) {}
@@ -106,7 +106,7 @@ GameGrid& GameGrid::operator=(const GameGrid& other) {
 GameGrid::GameGrid(const HashQuadtree& data, Size2 size)
     : m_Width(size.Width), m_Height(size.Height), m_HashLifeData(data),
       m_Population(data.Population()),
-      m_Algorithm(std::make_unique<HashLife>()) {}
+      m_Algorithm(std::make_unique<HashLife<>>()) {}
 
 void GameGrid::SetAlgorithm(std::string_view algorithmIdentifier) {
     if (algorithmIdentifier == m_Algorithm->GetIdentifier()) {

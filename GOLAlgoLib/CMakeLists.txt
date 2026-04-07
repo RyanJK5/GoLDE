@@ -1,6 +1,5 @@
 set(SOURCES
     src/GameGrid.cpp
-    src/HashLife.cpp
     src/HashQuadtree.cpp
     src/HashQuadtreeIterator.cpp
     src/LifeAlgorithm.cpp
