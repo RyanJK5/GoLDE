@@ -1,10 +1,12 @@
 set(SOURCES
     src/GameGrid.cpp
+    src/HashLife.cpp
     src/HashQuadtree.cpp
     src/HashQuadtreeIterator.cpp
     src/LifeAlgorithm.cpp
     src/LifeNode.cpp
     src/LifeHashSet.cpp
+    src/Topology.cpp
 )
 set(HEADERS
     include/GameGrid.hpp
@@ -15,6 +17,7 @@ set(HEADERS
     include/LifeDataStructure.hpp
     include/LifeHashSet.hpp
     include/LifeRule.hpp
+    include/Topology.hpp
 )
 add_library(GOLAlgoLib STATIC ${SOURCES} ${HEADERS})
 target_include_directories(GOLAlgoLib

@@ -8,63 +8,67 @@
 
 namespace gol {
 
-template <typename T>
-concept HashDataStructure =
-    std::derived_from<T, LifeDataStructure> &&
-    requires(T obj, int32_t advanceDepth, std::stop_token stopToken) {
-        { obj.Advance(advanceDepth, stopToken) } -> std::same_as<int32_t>;
-    };
-
-template <HashDataStructure DataStructure = HashQuadtree>
-class HashLife : public LifeAlgorithm,
-                 AlgorithmRegistrator<HashLife<DataStructure>> {
+class HashLife : public LifeAlgorithm, AlgorithmRegistrator<HashLife> {
   public:
     static std::string_view Identifier;
 
     HashLife();
 
+    void SetTopology(std::unique_ptr<Topology> topology) override;
+
+    void SetRule(const LifeRule& rule) override;
+
+    bool CompatibleWith(const LifeDataStructure& data) const override;
+
     BigInt Step(LifeDataStructure& data, const BigInt& numSteps,
                 std::stop_token stopToken = {}) override;
+
+  private:
+    int32_t DoOneJump(HashQuadtree& data, int32_t advanceLevel,
+                      std::stop_token stopToken);
+
+    NodeUpdateInfo AdvanceNode(const HashQuadtree& data,
+                               std::stop_token stopToken, const LifeNode* node,
+                               int32_t level, int32_t advanceDepth) const;
+
+    NodeUpdateInfo AdvanceSlow(const HashQuadtree& data,
+                               std::stop_token stopToken, const LifeNode* node,
+                               int32_t level, int32_t advanceLevel) const;
+
+    NodeUpdateInfo AdvanceFast(const HashQuadtree& data,
+                               std::stop_token stopToken, const LifeNode* node,
+                               int32_t level, int32_t advanceLevel) const;
+
+    const LifeNode* AdvanceBase(const HashQuadtree& data,
+                                const LifeNode* node) const;
+
+    const LifeNode* AdvanceBaseOneGen(const HashQuadtree& data,
+                                      const LifeNode* node) const;
+
+    struct FirstGenResults {
+        uint16_t nw, n, ne, w, center, e, sw, s, se;
+    };
+
+    // Extracts the four 16-bit quadrant encodings from a level-3 node.
+    struct LeafQuadrants {
+        uint16_t nw, ne, sw, se;
+    };
+
+    FirstGenResults ComputeFirstGeneration(const LeafQuadrants& q) const;
+    uint16_t AssembleCentered6x6(const FirstGenResults& gen1) const;
+
+    LeafQuadrants EncodeLevel3(const LifeNode* node) const;
+
+  private:
+    std::unique_ptr<Topology> m_Topology = nullptr;
+
+    static thread_local LifeRule s_Rule;
+
+    // The cache for the HashLife algorithm when the step size is bounded.
+    static thread_local ankerl::unordered_dense::map<SlowKey, const LifeNode*,
+                                                     SlowHash>
+        s_SlowCache;
 };
-
-template <HashDataStructure DataStructure>
-std::string_view HashLife<DataStructure>::Identifier = "HashLife";
-
-template <HashDataStructure DataStructure>
-HashLife<DataStructure>::HashLife() : LifeAlgorithm(this) {}
-
-// Returns the exponent of the greatest power of two less than `stepSize`.
-constexpr inline int32_t Log2MaxAdvanceOf(const BigInt& stepSize) {
-    if (stepSize.is_zero())
-        return 0;
-
-    return static_cast<int32_t>(boost::multiprecision::msb(stepSize));
-}
-
-constexpr inline BigInt BigPow2(int32_t exponent) { return BigOne << exponent; }
-
-template <HashDataStructure DataStructure>
-BigInt HashLife<DataStructure>::Step(LifeDataStructure& data,
-                                     const BigInt& numSteps,
-                                     std::stop_token stopToken) {
-    auto& hashQuadtree = dynamic_cast<DataStructure&>(data);
-
-    if (numSteps.is_zero()) // Hyper speed
-        return BigPow2(hashQuadtree.Advance(-1, stopToken));
-
-    BigInt generation{};
-    while (generation < numSteps) {
-        const auto advanceLevel = Log2MaxAdvanceOf(numSteps - generation);
-
-        const auto gens =
-            BigPow2(hashQuadtree.Advance(advanceLevel, stopToken));
-        if (stopToken.stop_requested())
-            return generation;
-        generation += gens;
-    }
-
-    return generation;
-}
 } // namespace gol
 
 #endif

@@ -111,6 +111,8 @@ class GameGrid {
     // Returns the underlying universe representation.
     const HashQuadtree& IterableData() const;
 
+    void SetRule(const LifeRule& rule);
+
     bool ShouldValidateCache() const;
 
   private:
@@ -118,7 +120,7 @@ class GameGrid {
 
   private:
     HashQuadtree m_HashLifeData;
-    std::unique_ptr<LifeAlgorithm> m_Algorithm = std::make_unique<HashLife<>>();
+    std::unique_ptr<LifeAlgorithm> m_Algorithm = std::make_unique<HashLife>();
 
     mutable std::vector<Vec2>
         m_SortedData; // Declared mutable due to hidden cache validation

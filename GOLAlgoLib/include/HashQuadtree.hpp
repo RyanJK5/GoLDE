@@ -50,10 +50,9 @@ struct HashLifeCache {
     // accessed by pointer outside of the cache.
     LifeNodeArena NodeStorage{};
 
-    // The cache for the core HashLife algorithm, with hyper speed enabled.
     ankerl::unordered_dense::map<const LifeNode*, const LifeNode*, LifeNodeHash,
                                  LifeNodeEqual>
-        NodeMap{};
+        NodeMap;
 
     ankerl::unordered_dense::map<const LifeNode*, BigInt, LifeNodeHash,
                                  LifeNodeEqual>
@@ -63,17 +62,11 @@ struct HashLifeCache {
                                  LifeNodeEqual>
         SmallPopulationCache{};
 
-    // The cache for the HashLife algorithm when the step size is bounded.
-    ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
-        SlowCache{};
-
     // Level-indexed cache for empty nodes. Index i holds the empty node for
     // size 2^i. At most 64 entries needed (levels 0..63).
     std::vector<const LifeNode*> EmptyNodeCache{};
 
     HashLifeCache();
-
-    void ResetMaps();
 };
 
 // This is the primary data structure for executing the HashLife algorithm. It
@@ -132,8 +125,6 @@ class HashQuadtree : public LifeDataStructure {
     HashQuadtree(std::span<const Vec2> data, Vec2 offset = {});
 
   public:
-    static void SetRule(const LifeRule& rule);
-
     bool empty() const;
 
     Iterator begin() const;
@@ -144,12 +135,6 @@ class HashQuadtree : public LifeDataStructure {
     Iterator begin(Rect bounds) const;
 
     BigInt Population() const;
-
-    // Advances the simulation. Passing `maxAdvance = 0` indicates that hyper
-    // speed should be used. If the stop token is called during advance, the
-    // function exits early, and `HashQuadtree` is left in a valid but
-    // unspecified state (likely part-way through iteration).
-    int32_t Advance(int32_t advanceDepth = -1, std::stop_token stopToken = {});
 
     // Applies func to all cells within the given bounds. More efficient than
     // iterators because recursion can be used.
@@ -179,6 +164,24 @@ class HashQuadtree : public LifeDataStructure {
 
     Rect FindBoundingBox() const override;
 
+    // This is the primary interface for interaction with HashLife's cache.
+    const LifeNode* FindOrCreate(const LifeNode* nw, const LifeNode* ne,
+                                 const LifeNode* sw, const LifeNode* se) const;
+
+    std::optional<const LifeNode*> Find(const LifeNode* node) const;
+
+    void CacheResult(const LifeNode* key, const LifeNode* value) const;
+
+    void ClearCache() const;
+
+    // AdvanceNode always returns a node that is one half the size.
+    // ExpandUniverse is necessary to ensure that no data is lost when HashLife
+    // is executed.
+    const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
+
+    const LifeNode* Data() const;
+    void OverwriteData(const LifeNode* root, int32_t level);
+
   private:
     const LifeNode* SetImpl(const LifeNode* node, Vec2L pos, Vec2 targetPos,
                             int32_t level, bool alive);
@@ -199,29 +202,17 @@ class HashQuadtree : public LifeDataStructure {
     static BigInt PopulationOf(const LifeNode* node);
     static int64_t PopulationOf(const LifeNode* node, bool);
 
-    // AdvanceNode always returns a node that is one half the size.
-    // ExpandUniverse is necessary to ensure that no data is lost when HashLife
-    // is executed.
-    const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
-
-    // Checks if data WOULD be lost if the quadtree were advanced.
-    bool NeedsExpansion(const LifeNode* node, int32_t level) const;
-
     // Advances a node at the specified level by `maxAdvance` generations. Early
     // exit is possible through `stopToken`.
     NodeUpdateInfo AdvanceNode(std::stop_token stopToken, const LifeNode* node,
                                int32_t level, int32_t advanceLevel) const;
-
-    // This is the primary interface for interaction with HashLife's cache.
-    static const LifeNode* FindOrCreate(const LifeNode* nw, const LifeNode* ne,
-                                        const LifeNode* sw, const LifeNode* se);
 
     // Helper function for converting a LifeHashSet into a quadtree.
     const LifeNode* BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
                                     int32_t level);
 
     // Returns an empty tree at the given level (size 2^level).
-    static const LifeNode* EmptyTree(int32_t level);
+    const LifeNode* EmptyTree(int32_t level) const;
 
     const LifeNode* BuildTree(std::span<const Vec2> data);
 
@@ -237,11 +228,6 @@ class HashQuadtree : public LifeDataStructure {
 
     // Returns the subnode centered within `node`.
     const LifeNode* CenteredSubNode(const LifeNode& node) const;
-
-    // Converts a 2x2 set of data into a LifeNode.
-    template <int32_t Size, typename T>
-    const LifeNode* Combine2x2(const T& nodes, int32_t topLeftX,
-                               int32_t topLeftY) const;
 
     // Handles the base case for HashLife (8x8 node, advances 2 generations).
     const LifeNode* AdvanceBase(const LifeNode* node) const;
@@ -282,31 +268,8 @@ class HashQuadtree : public LifeDataStructure {
                                    Vec2L destPos, const LifeNode* srcNode,
                                    int32_t srcLevel, Vec2L srcPos) const;
 
-    struct FirstGenResults {
-        uint16_t nw, n, ne, w, center, e, sw, s, se;
-    };
-
-    // Extracts the four 16-bit quadrant encodings from a level-3 node.
-    struct LeafQuadrants {
-        uint16_t nw, ne, sw, se;
-    };
-
-    static FirstGenResults ComputeFirstGeneration(const LeafQuadrants& q);
-
-    static uint16_t AssembleQuadrants(uint16_t resultNW, uint16_t resultNE,
-                                      uint16_t resultSW, uint16_t resultSE);
-
-    static uint16_t Combine2x2ForLookup(uint16_t topLeft, uint16_t topRight,
-                                        uint16_t bottomLeft,
-                                        uint16_t bottomRight);
-
-    static uint16_t AssembleCentered6x6(const FirstGenResults& gen1);
-
-    static LeafQuadrants EncodeLevel3(const LifeNode* node);
-
   private:
     static thread_local HashLifeCache s_Cache;
-    static thread_local LifeRule s_Rule;
 
     const LifeNode* m_Root = FalseNode;
 
@@ -319,28 +282,6 @@ class HashQuadtree : public LifeDataStructure {
 template <int32_t Size>
 constexpr int32_t Index2D(int32_t x, int32_t y) {
     return y * Size + x;
-}
-
-template <int32_t Size, typename T>
-const LifeNode* HashQuadtree::Combine2x2(const T& nodes, int32_t topLeftX,
-                                         int32_t topLeftY) const {
-    // Some functionality is provided to support bitsets here as well,
-    // with a future refactor of HashLife's base case in mind.
-    if constexpr (std::is_same_v<T, std::bitset<Size * Size>>) {
-        constexpr static auto toNode = [](bool live) {
-            return live ? TrueNode : FalseNode;
-        };
-        return FindOrCreate(
-            toNode(nodes[Index2D<Size>(topLeftX, topLeftY)]),
-            toNode(nodes[Index2D<Size>(topLeftX + 1, topLeftY)]),
-            toNode(nodes[Index2D<Size>(topLeftX, topLeftY + 1)]),
-            toNode(nodes[Index2D<Size>(topLeftX + 1, topLeftY + 1)]));
-    } else {
-        return FindOrCreate(nodes[Index2D<Size>(topLeftX, topLeftY)],
-                            nodes[Index2D<Size>(topLeftX + 1, topLeftY)],
-                            nodes[Index2D<Size>(topLeftX, topLeftY + 1)],
-                            nodes[Index2D<Size>(topLeftX + 1, topLeftY + 1)]);
-    }
 }
 
 template <std::invocable<Vec2, int64_t> Func>

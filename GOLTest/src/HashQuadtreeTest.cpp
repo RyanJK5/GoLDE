@@ -107,10 +107,10 @@ TEST(HashQuadtreeTest, PopulationMatchesLiveCells) {
     HashQuadtree blockTree{blockCells};
     EXPECT_EQ(blockTree.Population(), BigInt{blockCells.size()});
 
-    blockTree.Advance();
+    HashLife{}.Step(blockTree, 0);
     EXPECT_EQ(blockTree.Population(), BigInt{blockCells.size()});
 
-    singleTree.Advance(1);
+    HashLife{}.Step(singleTree, 1);
 
     EXPECT_EQ(singleTree.Population(), BigZero);
 }
@@ -208,12 +208,12 @@ TEST(HashQuadtreeTest, AdvanceBlock) {
     HashQuadtree tree{cells};
 
     // Should remain stable
-    auto gens = tree.Advance();
+    auto gens = HashLife{}.Step(tree, 0);
     EXPECT_GE(gens, 2); // At least 2 generations (level 3)
     VerifyContent(tree, cells);
 
     // Advance again
-    gens = tree.Advance();
+    gens = HashLife{}.Step(tree, 0);
     EXPECT_GE(gens, 2);
     VerifyContent(tree, cells);
 }
@@ -223,7 +223,7 @@ TEST(HashQuadtreeTest, AdvanceBlinker) {
     LifeHashSet start{{0, 0}, {0, 1}, {0, 2}};
     HashQuadtree tree(start);
 
-    auto gens = tree.Advance();
+    auto gens = HashLife{}.Step(tree, 0);
     // HashLife advances by 2^(k-2) steps. For k=3, steps=2.
     // A blinker's period is 2, so it should be back to start if steps is a
     // multiple of 2.
@@ -246,7 +246,7 @@ TEST(HashQuadtreeTest, AdvanceGlider) {
     LifeHashSet start{{1, 0}, {2, 1}, {0, 2}, {1, 2}, {2, 2}};
 
     HashQuadtree tree{start};
-    auto gens = tree.Advance();
+    auto gens = HashLife{}.Step(tree, 0);
     EXPECT_GT(gens, 0);
 
     LifeHashSet actual;
@@ -333,7 +333,7 @@ TEST(HashQuadtreeTest, CopyingBreeder) {
     HashQuadtree original{data->Grid.Data() | std::ranges::to<LifeHashSet>(),
                           data->Offset};
 
-    original.Advance(32);
+    HashLife{}.Step(original, 32);
     HashQuadtree copy{original};
 
     ASSERT_TRUE(true);
@@ -350,8 +350,8 @@ TEST(HashQuadtreeTest, TranslationInvariance) {
     HashQuadtree tree1{blockAtOrigin};
     HashQuadtree tree2{blockAtDistance};
 
-    auto gens1 = tree1.Advance();
-    auto gens2 = tree2.Advance();
+    auto gens1 = HashLife{}.Step(tree1, 0);
+    auto gens2 = HashLife{}.Step(tree2, 0);
 
     EXPECT_EQ(gens1, gens2) << "Translation should not affect step size";
     EXPECT_EQ(std::ranges::distance(tree1), 4);
@@ -363,7 +363,7 @@ TEST(HashQuadtreeTest, UniverseHeatDeath) {
     LifeHashSet cells{{42, 42}};
     HashQuadtree tree{cells};
 
-    const auto gens = tree.Advance();
+    const auto gens = HashLife{}.Step(tree, 0);
 
     EXPECT_GT(gens, 0);
     EXPECT_TRUE(tree.empty());
@@ -380,7 +380,7 @@ TEST(HashQuadtreeTest, LargeCoordinateStability) {
 
     EXPECT_EQ(std::ranges::distance(tree), 4);
 
-    auto gens = tree.Advance();
+    auto gens = HashLife{}.Step(tree, 0);
     EXPECT_GT(gens, 0);
 
     EXPECT_EQ(std::ranges::distance(tree), 4);
@@ -404,8 +404,8 @@ TEST(HashQuadtreeTest, LifecycleAndCopy) {
     VerifyContent(tree3, cells);
 
     // Identity check via NextGeneration
-    auto gen2 = tree2.Advance();
-    auto gen3 = tree3.Advance();
+    auto gen2 = HashLife{}.Step(tree2, 0);
+    auto gen3 = HashLife{}.Step(tree3, 0);
 
     EXPECT_EQ(gen2, gen3);
     EXPECT_EQ(std::ranges::distance(tree2), std::ranges::distance(tree3));
@@ -435,24 +435,10 @@ TEST(HashQuadtreeTest, SlowAdvanceSingleStepDyingPattern) {
     EXPECT_GE(tree.CalculateDepth(), 3)
         << "Tree must be deep enough to trigger slow advance";
 
-    const auto gens = tree.Advance(1);
+    const auto gens = HashLife{}.Step(tree, 1);
     EXPECT_EQ(gens, 1);
     EXPECT_TRUE(tree.empty())
         << "All isolated cells should die after one generation";
-}
-
-TEST(HashQuadtreeTest, HashLifeSlowAdvanceConsistency) {
-    LifeHashSet cells{{0, 0}, {7, 0}, {0, 7}, {7, 7}};
-    HashQuadtree tree1{cells};
-    HashQuadtree tree2{cells};
-    ASSERT_EQ(tree1, tree2);
-
-    const auto directUpdate = tree1.Advance(1);
-    const auto hashLifeUpdate = HashLife{}.Step(tree2, 1);
-
-    EXPECT_EQ(directUpdate, 1);
-    EXPECT_EQ(hashLifeUpdate, 1);
-    EXPECT_EQ(directUpdate, hashLifeUpdate);
 }
 
 // ========== Tests for Vec2L refactoring and bounds checking ==========
@@ -783,7 +769,7 @@ TEST(HashQuadtreeTest, Vec2LNextGenerationPreservesCoordinates) {
     LifeHashSet blockCells{{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     HashQuadtree tree{blockCells};
 
-    tree.Advance();
+    HashLife{}.Step(tree, 1);
     LifeHashSet resultCells;
     for (const auto pos : tree)
         resultCells.insert(pos);

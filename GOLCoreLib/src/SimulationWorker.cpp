@@ -18,7 +18,9 @@ void SimulationWorker::ThreadLoop(std::stop_token threadStopToken) {
             m_ResumeCondition.wait(lock, threadStopToken,
                                    [&] { return m_ResumeReady; });
             if (m_BufferedRule != nullptr) {
-                HashQuadtree::SetRule(*m_BufferedRule);
+                for (auto i = 0UZ; i < 3UZ; i++) {
+                    m_Buffers[i].SetRule(*m_BufferedRule);
+                }
                 m_BufferedRule = nullptr;
             }
 
