@@ -60,7 +60,7 @@ class HashLife : public LifeAlgorithm, AlgorithmRegistrator<HashLife> {
     LeafQuadrants EncodeLevel3(const LifeNode* node) const;
 
   private:
-    std::unique_ptr<Topology> m_Topology = nullptr;
+    std::unique_ptr<Topology> m_Topology;
 
     static thread_local LifeRule s_Rule;
 

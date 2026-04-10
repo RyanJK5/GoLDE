@@ -7,6 +7,7 @@ set(SOURCES
     src/LifeNode.cpp
     src/LifeHashSet.cpp
     src/Topology.cpp
+    src/UnboundedTopology.cpp
 )
 set(HEADERS
     include/GameGrid.hpp
@@ -18,6 +19,7 @@ set(HEADERS
     include/LifeHashSet.hpp
     include/LifeRule.hpp
     include/Topology.hpp
+    include/UnboundedTopology.hpp
 )
 add_library(GOLAlgoLib STATIC ${SOURCES} ${HEADERS})
 target_include_directories(GOLAlgoLib

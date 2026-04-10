@@ -1,4 +1,5 @@
 #include "HashLife.hpp"
+#include "UnboundedTopology.hpp"
 
 namespace gol {
 namespace {
@@ -259,76 +260,6 @@ constexpr int32_t Log2MaxAdvanceOf(const BigInt& stepSize) {
 }
 
 constexpr BigInt BigPow2(int32_t exponent) { return BigOne << exponent; }
-
-bool NeedsExpansion(const LifeNode* node, int32_t level) {
-    if (node == FalseNode)
-        return false;
-    if (level <= 3)
-        return true;
-
-    const auto notEmpty = [&](const LifeNode* n) {
-        return n != FalseNode && !n->IsEmpty;
-    };
-
-    // We simply want to consider if the outer rim of cells is completely empty,
-    // and if the next level down is completely empty. This may sometimes cause
-    // unnecessary expansion, but it is a fairly low-overhead procedure that may
-    // actually result in better performance when hyper speed is enabled.
-
-    const auto* nw = node->NorthWest;
-    if (notEmpty(nw)) {
-        if (notEmpty(nw->NorthWest) || notEmpty(nw->NorthEast) ||
-            notEmpty(nw->SouthWest))
-            return true;
-
-        const auto* nwSe = nw->SouthEast;
-        if (notEmpty(nwSe) &&
-            (notEmpty(nwSe->NorthWest) || notEmpty(nwSe->NorthEast) ||
-             notEmpty(nwSe->SouthWest)))
-            return true;
-    }
-
-    const auto* ne = node->NorthEast;
-    if (notEmpty(ne)) {
-        if (notEmpty(ne->NorthWest) || notEmpty(ne->NorthEast) ||
-            notEmpty(ne->SouthEast))
-            return true;
-
-        const auto* neSw = ne->SouthWest;
-        if (notEmpty(neSw) &&
-            (notEmpty(neSw->NorthWest) || notEmpty(neSw->NorthEast) ||
-             notEmpty(neSw->SouthEast)))
-            return true;
-    }
-
-    const auto* sw = node->SouthWest;
-    if (notEmpty(sw)) {
-        if (notEmpty(sw->NorthWest) || notEmpty(sw->SouthWest) ||
-            notEmpty(sw->SouthEast))
-            return true;
-
-        const auto* swNe = sw->NorthEast;
-        if (notEmpty(swNe) &&
-            (notEmpty(swNe->NorthWest) || notEmpty(swNe->SouthWest) ||
-             notEmpty(swNe->SouthEast)))
-            return true;
-    }
-
-    const auto* se = node->SouthEast;
-    if (notEmpty(se)) {
-        if (notEmpty(se->NorthEast) || notEmpty(se->SouthWest) ||
-            notEmpty(se->SouthEast))
-            return true;
-
-        const auto* seNw = se->NorthWest;
-        if (notEmpty(seNw) &&
-            (notEmpty(seNw->NorthEast) || notEmpty(seNw->SouthWest) ||
-             notEmpty(seNw->SouthEast)))
-            return true;
-    }
-
-    return false;
-}
 
 } // namespace
 
@@ -616,7 +547,8 @@ thread_local LifeRule HashLife::s_Rule = *LifeRule::Make("B3/S23");
 thread_local ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
     HashLife::s_SlowCache{};
 
-HashLife::HashLife() : LifeAlgorithm(this) {
+HashLife::HashLife()
+    : LifeAlgorithm(this), m_Topology(std::make_unique<UnboundedTopology>()) {
     // Reserve space for 1 million nodes to avoid rehashing
     // during early stages of the simulation.
     s_SlowCache.reserve(std::max(s_SlowCache.size(), 1UZ << 20UZ));
@@ -639,12 +571,14 @@ BigInt HashLife::Step(LifeDataStructure& data, const BigInt& numSteps,
                       std::stop_token stopToken) {
     auto& hashQuadtree = dynamic_cast<HashQuadtree&>(data);
 
-    if (numSteps.is_zero()) // Hyper speed
+    const bool hyperSpeedAllowed = m_Topology->Log2MaxIncrement(numSteps) == -1;
+    if (hyperSpeedAllowed)
         return BigPow2(DoOneJump(hashQuadtree, -1, stopToken));
 
     BigInt generation{};
     while (generation < numSteps) {
-        const auto advanceLevel = Log2MaxAdvanceOf(numSteps - generation);
+        const auto advanceLevel =
+            m_Topology->Log2MaxIncrement(numSteps - generation);
 
         const auto gens =
             BigPow2(DoOneJump(hashQuadtree, advanceLevel, stopToken));
@@ -661,20 +595,16 @@ int32_t HashLife::DoOneJump(HashQuadtree& data, int32_t advanceLevel,
     if (data.Data() == FalseNode)
         return {};
 
-    const auto* root = data.Data();
-
-    // Before we can actually advance, we must make sure the universe is
-    // sufficiently large so that no data is lost after advancing (remember that
-    // HashLife will cut off 75% of the universe's area)
-
-    auto depth = data.CalculateDepth();
+    m_Topology->PrepareBorderCells(data);
 
     // The second condition in this while loop is to prevent freezing when the
     // user asks for a large step size on a small pattern. For example, running
     // hyperspeed on a 2x2 block will not cause it to advance particularly fast
     // since it exhibits no expansion, but if maxAdvance is specified to 2^32,
     // we can make it happen instantly.
-    while (NeedsExpansion(root, depth) || (depth - 2 < advanceLevel)) {
+    const auto* root = data.Data();
+    auto depth = data.CalculateDepth();
+    while (depth - 2 < advanceLevel) {
         root = data.ExpandUniverse(root, depth);
         depth++;
     }
@@ -683,6 +613,8 @@ int32_t HashLife::DoOneJump(HashQuadtree& data, int32_t advanceLevel,
         AdvanceNode(data, stopToken, root, depth, advanceLevel);
 
     data.OverwriteData(advanced.Node, depth - 1);
+    m_Topology->CleanupBorderCells(data);
+
     return advanced.AdvanceLevel;
 }
 } // namespace gol
