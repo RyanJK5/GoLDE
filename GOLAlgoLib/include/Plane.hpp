@@ -1,13 +1,18 @@
-#ifndef UnboundedTopology_hpp_
-#define UnboundedTopology_hpp_
+#ifndef Plane_hpp_
+#define Plane_hpp_
 
 #include "Topology.hpp"
 
 namespace gol {
-class UnboundedTopology : public Topology {
+class Plane : public Topology {
+  public:
+    Plane(Rect bounds = {});
+
     std::string_view GetIdentifier() const override;
 
     bool CompatibleWith(LifeDataStructure& data) const override;
+
+    std::unique_ptr<Topology> Clone() const override;
 
     int32_t Log2MaxIncrement(const BigInt& requestedStep) const override;
 

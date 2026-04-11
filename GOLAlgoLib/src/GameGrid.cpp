@@ -20,6 +20,7 @@
 #include "HashQuadtree.hpp"
 #include "LifeAlgorithm.hpp"
 #include "LifeHashSet.hpp"
+#include "Plane.hpp"
 
 namespace gol {
 std::expected<GameGrid, std::string>
@@ -73,23 +74,30 @@ GameGrid::GenerateNoise(Rect bounds, float density, uint32_t warnThreshold) {
 
 GameGrid::GameGrid(int32_t width, int32_t height)
     : m_Algorithm(std::make_unique<HashLife>()), m_Width(width),
-      m_Height(height) {}
+      m_Height(height) {
+    m_Algorithm->SetTopology(
+        std::make_unique<Plane>(Rect{0, 0, width, height}));
+}
 
 GameGrid::GameGrid(Size2 size) : GameGrid(size.Width, size.Height) {}
 
-GameGrid::GameGrid(const GameGrid& other, Size2 size) : GameGrid(size) {
+GameGrid::GameGrid(const GameGrid& other, Size2 size)
+    : m_Width(size.Width), m_Height(size.Height) {
     auto cropped =
         other.Data() |
         std::views::filter([this](Vec2 pos) { return InBounds(pos); }) |
         std::ranges::to<std::vector<Vec2>>();
     m_HashLifeData = HashQuadtree{cropped};
+    m_Algorithm = other.m_Algorithm->Clone();
+    m_Algorithm->SetTopology(
+        std::make_unique<Plane>(Rect{0, 0, size.Width, size.Height}));
     m_Population = m_HashLifeData.Population();
 }
 
 GameGrid::GameGrid(const GameGrid& other)
     : m_HashLifeData(other.m_HashLifeData), m_Width(other.m_Width),
-      m_Height(other.m_Height), m_Population(other.m_Population),
-      m_Generation(other.m_Generation) {}
+      m_Height(other.m_Height), m_Algorithm(other.m_Algorithm->Clone()),
+      m_Population(other.m_Population), m_Generation(other.m_Generation) {}
 
 GameGrid& GameGrid::operator=(const GameGrid& other) {
     if (this == &other) {
@@ -99,6 +107,7 @@ GameGrid& GameGrid::operator=(const GameGrid& other) {
     m_HashLifeData = other.m_HashLifeData;
     m_Width = other.m_Width;
     m_Height = other.m_Height;
+    m_Algorithm = other.m_Algorithm->Clone();
     m_Population = other.m_Population;
     m_Generation = other.m_Generation;
 
@@ -108,13 +117,15 @@ GameGrid& GameGrid::operator=(const GameGrid& other) {
 GameGrid::GameGrid(const HashQuadtree& data, Size2 size)
     : m_Width(size.Width), m_Height(size.Height), m_HashLifeData(data),
       m_Population(data.Population()),
-      m_Algorithm(std::make_unique<HashLife>()) {}
-
-void GameGrid::SetAlgorithm(std::string_view algorithmIdentifier) {
-    if (algorithmIdentifier == m_Algorithm->GetIdentifier()) {
-        return;
+      m_Algorithm(std::make_unique<HashLife>()) {
+    if (size.Width != 0 && size.Height != 0) {
+        m_Algorithm->SetTopology(
+            std::make_unique<Plane>(Rect{0, 0, size.Width, size.Height}));
     }
-    m_Algorithm = LifeAlgorithm::MakeAlgorithm(algorithmIdentifier);
+}
+
+void GameGrid::SetAlgorithm(std::unique_ptr<LifeAlgorithm> algo) {
+    m_Algorithm = std::move(algo);
 }
 
 bool GameGrid::Dead() const { return m_HashLifeData.empty(); }

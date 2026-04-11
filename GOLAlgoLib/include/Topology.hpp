@@ -23,6 +23,8 @@ class Topology {
 
     virtual bool CompatibleWith(LifeDataStructure& data) const = 0;
 
+    virtual std::unique_ptr<Topology> Clone() const = 0;
+
     // log2 of the maximum number of generations an algorithm can currently
     // step. Returns -1 if hyper speed can be used.
     virtual int32_t Log2MaxIncrement(const BigInt& requestedStep) const = 0;

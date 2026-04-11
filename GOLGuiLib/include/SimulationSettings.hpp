@@ -9,7 +9,7 @@ namespace gol {
 
 struct SimulationSettings {
     BigInt StepCount = BigOne;
-    std::string_view AlgorithmIdentifier = "HashLife";
+    std::unique_ptr<LifeAlgorithm> Algorithm = nullptr;
     int32_t TickDelayMs = 1;
     bool HyperSpeed = false;
     bool GridLines = false;

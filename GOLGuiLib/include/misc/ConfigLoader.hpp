@@ -438,7 +438,6 @@ TryLoadYAML(const std::filesystem::path& styleInfoPath) {
 
     while (std::getline(input, line)) {
         lineNum++;
-        std::println("{}", line);
 
         auto start =
             std::ranges::find_if(line, [](char c) { return std::isalpha(c); });

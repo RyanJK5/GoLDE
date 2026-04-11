@@ -469,9 +469,6 @@ Rect HashQuadtree::FindBoundingBox() const {
     const auto maxX = FindExtentImpl(node, offset, level, true, false);
     const auto maxY = FindExtentImpl(node, offset, level, false, false);
 
-    std::println("{}, {}, {}, {}", minX, minY, maxX - minX + 1,
-                 maxY - minY + 1);
-
     constexpr static auto clampToInt32 = [](int64_t num) {
         return static_cast<int32_t>(
             std::clamp(num, int64_t{std::numeric_limits<int32_t>::min()},

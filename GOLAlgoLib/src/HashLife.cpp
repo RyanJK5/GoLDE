@@ -1,5 +1,5 @@
 #include "HashLife.hpp"
-#include "UnboundedTopology.hpp"
+#include "Plane.hpp"
 
 namespace gol {
 namespace {
@@ -547,12 +547,14 @@ thread_local LifeRule HashLife::s_Rule = *LifeRule::Make("B3/S23");
 thread_local ankerl::unordered_dense::map<SlowKey, const LifeNode*, SlowHash>
     HashLife::s_SlowCache{};
 
-HashLife::HashLife()
-    : LifeAlgorithm(this), m_Topology(std::make_unique<UnboundedTopology>()) {
+HashLife::HashLife() : m_Topology(std::make_unique<Plane>()) {
     // Reserve space for 1 million nodes to avoid rehashing
     // during early stages of the simulation.
     s_SlowCache.reserve(std::max(s_SlowCache.size(), 1UZ << 20UZ));
 }
+
+HashLife::HashLife(std::unique_ptr<Topology> topology)
+    : m_Topology(std::move(topology)) {}
 
 void HashLife::SetTopology(std::unique_ptr<Topology> topology) {
     m_Topology = std::move(topology);
@@ -567,13 +569,19 @@ bool HashLife::CompatibleWith(const LifeDataStructure& data) const {
     return typeid(HashQuadtree) == typeid(data);
 }
 
+std::string_view HashLife::GetIdentifier() const { return "HashLife"; }
+
+std::unique_ptr<LifeAlgorithm> HashLife::Clone() const {
+    return std::make_unique<HashLife>(m_Topology->Clone());
+}
+
 BigInt HashLife::Step(LifeDataStructure& data, const BigInt& numSteps,
                       std::stop_token stopToken) {
     auto& hashQuadtree = dynamic_cast<HashQuadtree&>(data);
 
-    const bool hyperSpeedAllowed = m_Topology->Log2MaxIncrement(numSteps) == -1;
-    if (hyperSpeedAllowed)
-        return BigPow2(DoOneJump(hashQuadtree, -1, stopToken));
+    if (numSteps.is_zero())
+        return BigPow2(DoOneJump(
+            hashQuadtree, m_Topology->Log2MaxIncrement(numSteps), stopToken));
 
     BigInt generation{};
     while (generation < numSteps) {

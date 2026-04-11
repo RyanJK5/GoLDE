@@ -58,7 +58,6 @@ void EditorModel::CheckStopStep() {
 void EditorModel::ApplySettings(const SimulationSettings& settings) {
     m_Worker->SetTickDelayMs(settings.TickDelayMs);
     m_Worker->SetStepCount(settings.StepCount);
-    m_Grid.SetAlgorithm(settings.AlgorithmIdentifier);
 }
 
 SimulationState EditorModel::HandleStart() {

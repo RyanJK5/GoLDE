@@ -46,7 +46,7 @@ class GameGrid {
 
     const LifeAlgorithm& GetAlgorithm() const { return *m_Algorithm; }
 
-    void SetAlgorithm(std::string_view algorithm);
+    void SetAlgorithm(std::unique_ptr<LifeAlgorithm> algo);
 
     // Advances the universe `numSteps` generations. A stop token can optionally
     // be provided if the thread may terminate during advance.
@@ -117,7 +117,7 @@ class GameGrid {
 
   private:
     HashQuadtree m_HashLifeData;
-    std::unique_ptr<LifeAlgorithm> m_Algorithm = std::make_unique<HashLife>();
+    std::unique_ptr<LifeAlgorithm> m_Algorithm;
 
     mutable std::vector<Vec2>
         m_SortedData; // Declared mutable due to hidden cache validation

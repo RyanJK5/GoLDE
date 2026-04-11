@@ -1,17 +1,24 @@
-#include "UnboundedTopology.hpp"
+#include "Plane.hpp"
 #include "HashQuadtree.hpp"
-#include "LifeNode.hpp"
+#include <iostream>
 
 namespace gol {
-std::string_view UnboundedTopology::GetIdentifier() const {
-    return "Unbounded";
+Plane::Plane(Rect bounds) : Topology(bounds) {}
+
+std::string_view Plane::GetIdentifier() const { return "Plane"; }
+
+std::unique_ptr<Topology> Plane::Clone() const {
+    auto bounds = GetBounds();
+    return std::make_unique<Plane>(bounds ? *bounds : Rect{});
 }
 
-bool UnboundedTopology::CompatibleWith(LifeDataStructure& data) const {
+bool Plane::CompatibleWith(LifeDataStructure& data) const {
     return typeid(HashQuadtree) == typeid(data);
 }
 
-int32_t UnboundedTopology::Log2MaxIncrement(const BigInt& requestedStep) const {
+int32_t Plane::Log2MaxIncrement(const BigInt& requestedStep) const {
+    if (GetBounds())
+        return 0;
     if (requestedStep.is_zero())
         return -1;
 
@@ -88,11 +95,7 @@ static bool NeedsExpansion(const LifeNode* node, int32_t level) {
     return false;
 }
 
-void UnboundedTopology::PrepareBorderCells(LifeDataStructure& data) {
-    // Before we can actually advance, we must make sure the universe is
-    // sufficiently large so that no data is lost after advancing (remember that
-    // HashLife will cut off 75% of the universe's area)
-
+void Plane::PrepareBorderCells(LifeDataStructure& data) {
     auto& hashQuadtree = dynamic_cast<HashQuadtree&>(data);
 
     const auto* root = hashQuadtree.Data();
@@ -106,7 +109,15 @@ void UnboundedTopology::PrepareBorderCells(LifeDataStructure& data) {
     hashQuadtree.OverwriteData(root, depth);
 }
 
-void UnboundedTopology::CleanupBorderCells(LifeDataStructure& data) {
-    // No need to do any extra work in an unbounded universe
+void Plane::CleanupBorderCells(LifeDataStructure& data) {
+    auto bounds = GetBounds();
+    if (!bounds) {
+        return;
+    }
+
+    auto& hashQuadtree = dynamic_cast<HashQuadtree&>(data);
+
+    const auto newData = hashQuadtree.Extract(*bounds);
+    hashQuadtree.OverwriteData(newData.Data(), newData.CalculateDepth());
 }
 } // namespace gol

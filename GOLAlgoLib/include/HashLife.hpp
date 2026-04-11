@@ -8,11 +8,13 @@
 
 namespace gol {
 
-class HashLife : public LifeAlgorithm, AlgorithmRegistrator<HashLife> {
+class HashLife : public LifeAlgorithm {
   public:
     static std::string_view Identifier;
 
     HashLife();
+
+    HashLife(std::unique_ptr<Topology> topology);
 
     void SetTopology(std::unique_ptr<Topology> topology) override;
 
@@ -22,6 +24,10 @@ class HashLife : public LifeAlgorithm, AlgorithmRegistrator<HashLife> {
 
     BigInt Step(LifeDataStructure& data, const BigInt& numSteps,
                 std::stop_token stopToken = {}) override;
+
+    std::string_view GetIdentifier() const override;
+
+    std::unique_ptr<LifeAlgorithm> Clone() const override;
 
   private:
     int32_t DoOneJump(HashQuadtree& data, int32_t advanceLevel,
