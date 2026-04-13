@@ -9,7 +9,10 @@ namespace gol {
 SimulationWorker::SimulationWorker()
     : m_Thread(std::bind_front(&SimulationWorker::ThreadLoop, this)) {}
 
-SimulationWorker::~SimulationWorker() { m_RunStopSource.request_stop(); }
+SimulationWorker::~SimulationWorker() {
+    m_RunStopSource.request_stop();
+    HashQuadtree::ClearCache();
+}
 
 void SimulationWorker::ThreadLoop(std::stop_token threadStopToken) {
     while (true) {

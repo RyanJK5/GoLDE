@@ -180,7 +180,7 @@ class HashQuadtree : public LifeDataStructure {
 
     void CacheResult(const LifeNode* key, const LifeNode* value) const;
 
-    void ClearCache() const;
+    static void ClearCache();
 
     // AdvanceNode always returns a node that is one half the size.
     // ExpandUniverse is necessary to ensure that no data is lost when HashLife

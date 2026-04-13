@@ -760,7 +760,11 @@ void HashQuadtree::CacheResult(const LifeNode* key,
     s_Cache.NodeMap[key] = value;
 }
 
-void HashQuadtree::ClearCache() const { s_Cache.NodeMap.clear(); }
+void HashQuadtree::ClearCache() {
+    s_Cache.NodeMap.clear();
+    s_Cache.PopulationCache.clear();
+    s_Cache.SmallPopulationCache.clear();
+}
 
 const LifeNode* HashQuadtree::ExpandUniverse(const LifeNode* node,
                                              int32_t level) const {
