@@ -1,5 +1,6 @@
 #include "HashLife.hpp"
 #include "Plane.hpp"
+#include "Torus.hpp"
 
 namespace gol {
 namespace {
@@ -539,6 +540,76 @@ NodeUpdateInfo HashLife::AdvanceFast(const HashQuadtree& data,
     return {result, level - 2};
 }
 
+static bool NeedsExpansion(const LifeNode* node, int32_t level) {
+    if (node == FalseNode)
+        return false;
+    if (level <= 3)
+        return true;
+
+    const auto notEmpty = [&](const LifeNode* n) {
+        return n != FalseNode && !n->IsEmpty;
+    };
+
+    // We simply want to consider if the outer rim of cells is completely empty,
+    // and if the next level down is completely empty. This may sometimes cause
+    // unnecessary expansion, but it is a fairly low-overhead procedure that may
+    // actually result in better performance when hyper speed is enabled.
+
+    const auto* nw = node->NorthWest;
+    if (notEmpty(nw)) {
+        if (notEmpty(nw->NorthWest) || notEmpty(nw->NorthEast) ||
+            notEmpty(nw->SouthWest))
+            return true;
+
+        const auto* nwSe = nw->SouthEast;
+        if (notEmpty(nwSe) &&
+            (notEmpty(nwSe->NorthWest) || notEmpty(nwSe->NorthEast) ||
+             notEmpty(nwSe->SouthWest)))
+            return true;
+    }
+
+    const auto* ne = node->NorthEast;
+    if (notEmpty(ne)) {
+        if (notEmpty(ne->NorthWest) || notEmpty(ne->NorthEast) ||
+            notEmpty(ne->SouthEast))
+            return true;
+
+        const auto* neSw = ne->SouthWest;
+        if (notEmpty(neSw) &&
+            (notEmpty(neSw->NorthWest) || notEmpty(neSw->NorthEast) ||
+             notEmpty(neSw->SouthEast)))
+            return true;
+    }
+
+    const auto* sw = node->SouthWest;
+    if (notEmpty(sw)) {
+        if (notEmpty(sw->NorthWest) || notEmpty(sw->SouthWest) ||
+            notEmpty(sw->SouthEast))
+            return true;
+
+        const auto* swNe = sw->NorthEast;
+        if (notEmpty(swNe) &&
+            (notEmpty(swNe->NorthWest) || notEmpty(swNe->SouthWest) ||
+             notEmpty(swNe->SouthEast)))
+            return true;
+    }
+
+    const auto* se = node->SouthEast;
+    if (notEmpty(se)) {
+        if (notEmpty(se->NorthEast) || notEmpty(se->SouthWest) ||
+            notEmpty(se->SouthEast))
+            return true;
+
+        const auto* seNw = se->NorthWest;
+        if (notEmpty(seNw) &&
+            (notEmpty(seNw->NorthEast) || notEmpty(seNw->SouthWest) ||
+             notEmpty(seNw->SouthEast)))
+            return true;
+    }
+
+    return false;
+}
+
 std::string_view HashLife::Identifier = "HashLife";
 
 thread_local LifeRule HashLife::s_Rule = *LifeRule::Make("B3/S23");
@@ -616,7 +687,7 @@ int32_t HashLife::DoOneJump(HashQuadtree& data, int32_t advanceLevel,
     // we can make it happen instantly.
     const auto* root = data.Data();
     auto depth = data.CalculateDepth();
-    while (depth - 2 < advanceLevel) {
+    while (NeedsExpansion(root, depth) || depth - 2 < advanceLevel) {
         root = data.ExpandUniverse(root, depth);
         depth++;
     }

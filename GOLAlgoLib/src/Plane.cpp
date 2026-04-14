@@ -17,10 +17,12 @@ bool Plane::CompatibleWith(LifeDataStructure& data) const {
 }
 
 int32_t Plane::Log2MaxIncrement(const BigInt& requestedStep) const {
-    if (GetBounds())
+    if (GetBounds()) {
         return 0;
-    if (requestedStep.is_zero())
+    }
+    if (requestedStep.is_zero()) {
         return -1;
+    }
 
     return static_cast<int32_t>(boost::multiprecision::msb(requestedStep));
 }
@@ -95,19 +97,7 @@ static bool NeedsExpansion(const LifeNode* node, int32_t level) {
     return false;
 }
 
-void Plane::PrepareBorderCells(LifeDataStructure& data) {
-    auto& hashQuadtree = dynamic_cast<HashQuadtree&>(data);
-
-    const auto* root = hashQuadtree.Data();
-    auto depth = hashQuadtree.CalculateDepth();
-
-    while (NeedsExpansion(root, depth)) {
-        root = hashQuadtree.ExpandUniverse(root, depth);
-        depth++;
-    }
-
-    hashQuadtree.OverwriteData(root, depth);
-}
+void Plane::PrepareBorderCells(LifeDataStructure& data) {}
 
 void Plane::CleanupBorderCells(LifeDataStructure& data) {
     auto bounds = GetBounds();

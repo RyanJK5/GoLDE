@@ -21,6 +21,7 @@
 #include "LifeAlgorithm.hpp"
 #include "LifeHashSet.hpp"
 #include "Plane.hpp"
+#include "Torus.hpp"
 
 namespace gol {
 std::expected<GameGrid, std::string>
