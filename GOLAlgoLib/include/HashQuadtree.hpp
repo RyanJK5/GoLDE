@@ -208,10 +208,12 @@ class HashQuadtree : public LifeDataStructure {
                             int32_t level, int32_t minLevel, Rect bounds);
 
     template <std::invocable<const BigVec2&, int64_t> Func>
-    static void ForEachBigImpl(const Func& func, const LifeNode* node,
-                               const BigVec2& pos, int32_t level,
-                               int32_t minLevel, const BigRect& bounds,
-                               const BigInt& size);
+    static void
+    ForEachBigImpl(const Func& func, const LifeNode* node, int32_t level,
+                   int32_t minLevel, const BigInt& left, const BigInt& top,
+                   const BigInt& right, const BigInt& bottom,
+                   const BigInt& boundsLeft, const BigInt& boundsTop,
+                   const BigInt& boundsRight, const BigInt& boundsBottom);
 
     static BigInt PopulationOf(const LifeNode* node);
     static int64_t PopulationOf(const LifeNode* node, bool);
@@ -330,37 +332,6 @@ void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
 }
 
 template <std::invocable<const BigVec2&, int64_t> Func>
-void HashQuadtree::ForEachBigImpl(const Func& func, const LifeNode* node,
-                                  const BigVec2& pos, int32_t level,
-                                  int32_t minLevel, const BigRect& bounds,
-                                  const BigInt& size) {
-    if (node == FalseNode || node->IsEmpty ||
-        !IntersectsBounds(bounds, pos, size)) {
-        return;
-    }
-
-    if (level == minLevel) {
-        bool containsCells = node != FalseNode && !node->IsEmpty;
-        if (containsCells && IsWithinBounds(bounds, pos)) {
-            func(pos, PopulationOf(node, true));
-        }
-        return;
-    }
-
-    const auto childLevel = level - 1;
-    const auto halfSize = size >> 1;
-
-    ForEachBigImpl(func, node->NorthWest, pos, childLevel, minLevel, bounds,
-                   halfSize);
-    ForEachBigImpl(func, node->NorthEast, {pos.X + halfSize, pos.Y}, childLevel,
-                   minLevel, bounds, halfSize);
-    ForEachBigImpl(func, node->SouthWest, {pos.X, pos.Y + halfSize}, childLevel,
-                   minLevel, bounds, halfSize);
-    ForEachBigImpl(func, node->SouthEast, {pos.X + halfSize, pos.Y + halfSize},
-                   childLevel, minLevel, bounds, halfSize);
-}
-
-template <std::invocable<const BigVec2&, int64_t> Func>
 void HashQuadtree::ForEachCell(const Func& func, const BigRect& bounds,
                                int32_t minLevel) const {
     if (m_Root == FalseNode) {
@@ -368,13 +339,63 @@ void HashQuadtree::ForEachCell(const Func& func, const BigRect& bounds,
     }
 
     const auto clampedMinLevel = std::clamp(minLevel, 0, m_Depth);
-    const auto size = BigOne << m_Depth;
     const auto half = (m_Depth == 0) ? BigZero : (BigOne << (m_Depth - 1));
-    const BigVec2 offset{BigInt{m_SeedOffset.X} - half,
-                         BigInt{m_SeedOffset.Y} - half};
+    const auto left = BigInt{m_SeedOffset.X} - half;
+    const auto top = BigInt{m_SeedOffset.Y} - half;
+    const auto right = left + (BigOne << m_Depth);
+    const auto bottom = top + (BigOne << m_Depth);
 
-    return this->ForEachBigImpl(func, m_Root, offset, m_Depth, clampedMinLevel,
-                                bounds, size);
+    const auto boundsLeft = bounds.X;
+    const auto boundsTop = bounds.Y;
+    const auto boundsRight = bounds.X + bounds.Width;
+    const auto boundsBottom = bounds.Y + bounds.Height;
+
+    return ForEachBigImpl(func, m_Root, m_Depth, clampedMinLevel, left, top,
+                          right, bottom, boundsLeft, boundsTop, boundsRight,
+                          boundsBottom);
+}
+
+template <std::invocable<const BigVec2&, int64_t> Func>
+void HashQuadtree::ForEachBigImpl(
+    const Func& func, const LifeNode* node, int32_t level, int32_t minLevel,
+    const BigInt& left, const BigInt& top, const BigInt& right,
+    const BigInt& bottom, const BigInt& boundsLeft, const BigInt& boundsTop,
+    const BigInt& boundsRight, const BigInt& boundsBottom) {
+    // Intersects check — no temporaries on the bounds side
+    if (node == FalseNode || node->IsEmpty || right <= boundsLeft ||
+        left >= boundsRight || bottom <= boundsTop || top >= boundsBottom) {
+        return;
+    }
+
+    if (level == minLevel) {
+        if (left >= boundsLeft && left < boundsRight && top >= boundsTop &&
+            top < boundsBottom) {
+            func(BigVec2{left, top}, PopulationOf(node, true));
+        }
+        return;
+    }
+
+    // Computed once, shared across all four children
+    const auto midX = left + ((right - left) >> 1);
+    const auto midY = top + ((bottom - top) >> 1);
+
+    const auto childLevel = level - 1;
+
+    // NW: (left, top, midX, midY)
+    ForEachBigImpl(func, node->NorthWest, childLevel, minLevel, left, top, midX,
+                   midY, boundsLeft, boundsTop, boundsRight, boundsBottom);
+    // NE: reuses right, top, midY — one new value is midX
+    ForEachBigImpl(func, node->NorthEast, childLevel, minLevel, midX, top,
+                   right, midY, boundsLeft, boundsTop, boundsRight,
+                   boundsBottom);
+    // SW: reuses left, bottom, midX — one new value is midY
+    ForEachBigImpl(func, node->SouthWest, childLevel, minLevel, left, midY,
+                   midX, bottom, boundsLeft, boundsTop, boundsRight,
+                   boundsBottom);
+    // SE: reuses right, bottom — midX and midY already computed
+    ForEachBigImpl(func, node->SouthEast, childLevel, minLevel, midX, midY,
+                   right, bottom, boundsLeft, boundsTop, boundsRight,
+                   boundsBottom);
 }
 
 template <std::invocable<Vec2, int64_t> Func>

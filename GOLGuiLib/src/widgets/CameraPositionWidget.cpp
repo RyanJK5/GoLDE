@@ -61,12 +61,11 @@ WidgetResult CameraPositionWidget::UpdateImpl(const EditorResult& info) {
 
     auto leftReturn = [&] {
         const char* enabledFormat = (pixelsPerCell <= 100.f) ? "%.2f" : "%.2e";
-        const bool input = ImGui::InputFloat(
+        ImGui::InputFloat(
             "##CameraZoomLabel", leftDisabled ? &one : &pixelsPerCell, 0.f, 0.f,
-            (leftDisabled || pixelsPerCell == 1.f) ? "%.0f" : enabledFormat,
-            ImGuiInputTextFlags_EnterReturnsTrue);
-        if (input && pixelsPerCell != inputPixelsPerCell &&
-            pixelsPerCell > 0.f) {
+            (leftDisabled || pixelsPerCell == 1.f) ? "%.0f" : enabledFormat);
+        if (ImGui::IsItemDeactivatedAfterEdit() &&
+            pixelsPerCell != inputPixelsPerCell && pixelsPerCell > 0.f) {
             return WidgetResult{
                 .Command = CameraZoomCommand{.Zoom = pixelsPerCell /
                                                      BasePixelsPerCellAtZoom1}};
@@ -85,11 +84,10 @@ WidgetResult CameraPositionWidget::UpdateImpl(const EditorResult& info) {
 
     auto rightReturn = [&] {
         const char* enabledFormat = (cellsPerPixel <= 100.f) ? "%.2f" : "%.2e";
-        const bool input = ImGui::InputFloat(
+        ImGui::InputFloat(
             "##RatioLabel", leftDisabled ? &cellsPerPixel : &one, 0.f, 0.f,
-            (leftDisabled || cellsPerPixel == 1.f) ? enabledFormat : "%.0f",
-            ImGuiInputTextFlags_EnterReturnsTrue);
-        if (input && cellsPerPixel > 0.f &&
+            (leftDisabled || cellsPerPixel == 1.f) ? enabledFormat : "%.0f");
+        if (ImGui::IsItemDeactivatedAfterEdit() && cellsPerPixel > 0.f &&
             cellsPerPixel != 1.f / inputPixelsPerCell) {
             return WidgetResult{
                 .Command = CameraZoomCommand{
