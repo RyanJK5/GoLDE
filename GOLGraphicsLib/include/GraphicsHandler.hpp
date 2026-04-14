@@ -160,8 +160,8 @@ void GraphicsHandler::GenerateGLBuffer(
         const auto boundsHeight = visibleWorldBounds.Height;
 
         const auto fitsInt32 = [&] {
-            const BigInt int32Min{std::numeric_limits<int32_t>::min()};
-            const BigInt int32Max{std::numeric_limits<int32_t>::max()};
+            const static BigInt int32Min{std::numeric_limits<int32_t>::min()};
+            const static BigInt int32Max{std::numeric_limits<int32_t>::max()};
 
             if (boundsWidth < BigZero || boundsHeight < BigZero) {
                 return false;

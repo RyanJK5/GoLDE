@@ -201,56 +201,51 @@ GraphicsHandler::CalculateGridLineInfo(Vec2,
         Vec2D{Camera.Center.x - args.ViewportBounds.Width / 2.0 / Camera.Zoom,
               Camera.Center.y - args.ViewportBounds.Height / 2.0 / Camera.Zoom};
 
-    const bool bounded = args.GridSize.Width != 0 && args.GridSize.Height != 0;
+    const bool boundedX = args.GridSize.Width != 0;
+    const bool boundedY = args.GridSize.Height != 0;
 
-    const auto upperLeft = [cameraCorner, bounded, args]() {
-        const auto unboundedReturn =
-            Vec2D{std::floor(cameraCorner.X / args.CellSize.Width) *
-                      args.CellSize.Width,
-                  std::floor(cameraCorner.Y / args.CellSize.Height) *
-                      args.CellSize.Height};
+    const auto unboundedUpperLeft = Vec2D{
+        std::floor(cameraCorner.X / args.CellSize.Width) * args.CellSize.Width,
+        std::floor(cameraCorner.Y / args.CellSize.Height) *
+            args.CellSize.Height};
 
-        if (!bounded)
-            return unboundedReturn;
-        return Vec2D{std::max(unboundedReturn.X, 0.0),
-                     std::max(unboundedReturn.Y, 0.0)};
-    }();
+    const auto unboundedLowerRight =
+        Vec2D{cameraCorner.X + args.ViewportBounds.Width / Camera.Zoom,
+              cameraCorner.Y + args.ViewportBounds.Height / Camera.Zoom};
 
-    const auto lowerRight = [cameraCorner, bounded, args, this]() {
-        const auto unboundedReturn =
-            Vec2D{cameraCorner.X + args.ViewportBounds.Width / Camera.Zoom,
-                  cameraCorner.Y + args.ViewportBounds.Height / Camera.Zoom};
+    const auto gridPixelWidth =
+        static_cast<double>(args.GridSize.Width * args.CellSize.Width);
+    const auto gridPixelHeight =
+        static_cast<double>(args.GridSize.Height * args.CellSize.Height);
 
-        if (!bounded)
-            return unboundedReturn;
-        return Vec2D{std::min(unboundedReturn.X,
-                              static_cast<double>(args.GridSize.Width *
-                                                  args.CellSize.Width)),
-                     std::min(unboundedReturn.Y,
-                              static_cast<double>(args.GridSize.Height *
-                                                  args.CellSize.Height))};
-    }();
+    const auto upperLeft = Vec2D{
+        boundedX ? std::max(unboundedUpperLeft.X, 0.0) : unboundedUpperLeft.X,
+        boundedY ? std::max(unboundedUpperLeft.Y, 0.0) : unboundedUpperLeft.Y};
 
-    const auto gridSize = [upperLeft, bounded, args, this]() {
-        const auto unboundedReturn = Size2{
-            static_cast<int32_t>(std::ceil(args.ViewportBounds.Width /
-                                           Camera.Zoom / args.CellSize.Width)),
-            static_cast<int32_t>(
-                std::ceil(args.ViewportBounds.Height / Camera.Zoom /
-                          args.CellSize.Height))};
+    const auto lowerRight =
+        Vec2D{boundedX ? std::min(unboundedLowerRight.X, gridPixelWidth)
+                       : unboundedLowerRight.X,
+              boundedY ? std::min(unboundedLowerRight.Y, gridPixelHeight)
+                       : unboundedLowerRight.Y};
 
-        if (!bounded)
-            return unboundedReturn;
+    const auto unboundedGridSize = Size2{
+        static_cast<int32_t>(std::ceil(args.ViewportBounds.Width / Camera.Zoom /
+                                       args.CellSize.Width)),
+        static_cast<int32_t>(std::ceil(args.ViewportBounds.Height /
+                                       Camera.Zoom / args.CellSize.Height))};
 
-        const auto gridDimensions =
-            Size2{args.GridSize.Width -
-                      static_cast<int32_t>(upperLeft.X / args.CellSize.Width),
-                  args.GridSize.Height -
-                      static_cast<int32_t>(upperLeft.Y / args.CellSize.Height)};
+    const auto boundedWidth =
+        args.GridSize.Width -
+        static_cast<int32_t>(upperLeft.X / args.CellSize.Width);
+    const auto boundedHeight =
+        args.GridSize.Height -
+        static_cast<int32_t>(upperLeft.Y / args.CellSize.Height);
 
-        return Size2{std::min(gridDimensions.Width, unboundedReturn.Width),
-                     std::min(gridDimensions.Height, unboundedReturn.Height)};
-    }();
+    const auto gridSize =
+        Size2{boundedX ? std::min(boundedWidth, unboundedGridSize.Width)
+                       : unboundedGridSize.Width,
+              boundedY ? std::min(boundedHeight, unboundedGridSize.Height)
+                       : unboundedGridSize.Height};
 
     return GridLineInfo{
         .UpperLeft = upperLeft, .LowerRight = lowerRight, .GridSize = gridSize};
