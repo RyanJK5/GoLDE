@@ -18,6 +18,10 @@ void GraphicsCamera::ZoomBy(Vec2F screenPos, RectF viewBounds, float zoom) {
         Zoom = MinPositiveZoom;
         return;
     }
+    if (nextZoom > MaxZoom) {
+        Zoom = MaxZoom;
+        return;
+    }
 
     Zoom = nextZoom;
 
