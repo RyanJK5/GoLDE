@@ -118,10 +118,8 @@ GameGrid::GameGrid(const HashQuadtree& data, Size2 size)
     : m_Width(size.Width), m_Height(size.Height), m_HashLifeData(data),
       m_Population(data.Population()),
       m_Algorithm(std::make_unique<HashLife>()) {
-    if (size.Width != 0 && size.Height != 0) {
-        m_Algorithm->SetTopology(
-            std::make_unique<Plane>(Rect{0, 0, size.Width, size.Height}));
-    }
+    m_Algorithm->SetTopology(
+        std::make_unique<Plane>(Rect{0, 0, size.Width, size.Height}));
 }
 
 void GameGrid::SetAlgorithm(std::unique_ptr<LifeAlgorithm> algo) {

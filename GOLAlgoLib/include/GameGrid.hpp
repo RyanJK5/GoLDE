@@ -57,7 +57,7 @@ class GameGrid {
 
     Size2 Size() const { return {m_Width, m_Height}; }
 
-    bool Bounded() const { return m_Width > 0 && m_Height > 0; }
+    bool Bounded() const { return m_Width > 0 || m_Height > 0; }
 
     // If bounded, returns the universe's bounds; otherwise, returns the
     // smallest `Rect` that encompasses all live cells.
@@ -65,7 +65,16 @@ class GameGrid {
 
     bool InBounds(int32_t x, int32_t y) const { return InBounds({x, y}); }
     bool InBounds(Vec2 pos) const {
-        return !Bounded() || Rect{0, 0, m_Width, m_Height}.InBounds(pos);
+        if (!Bounded()) {
+            return true;
+        }
+        if (m_Width == 0) {
+            return pos.Y >= 0 && pos.Y < m_Height;
+        }
+        if (m_Height == 0) {
+            return pos.X >= 0 && pos.X < m_Width;
+        }
+        return Rect{0, 0, m_Width, m_Height}.InBounds(pos);
     }
 
     const BigInt& Generation() const { return m_Generation; }

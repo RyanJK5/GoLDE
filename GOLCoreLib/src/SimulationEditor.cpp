@@ -376,7 +376,7 @@ std::optional<Vec2> SimulationEditor::ConvertToGridPos(Vec2F screenPos) {
         return std::nullopt;
     }
 
-    Vec2 result = {static_cast<int32_t>(cellX), static_cast<int32_t>(cellY)};
+    const Vec2 result{static_cast<int32_t>(cellX), static_cast<int32_t>(cellY)};
     if (!m_Model.Grid().InBounds(result))
         return std::nullopt;
     return result;

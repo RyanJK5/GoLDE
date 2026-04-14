@@ -10,7 +10,7 @@ RuleWidget::RuleWidget()
     : m_InputError("Invalid Rule",
                    [this](auto) { m_InputText = m_LastValid; }) {}
 
-std::optional<Size2> RuleWidget::ResizeComponent(const EditorResult& state) {
+std::optional<Size2> RuleWidget::ResizeComponent(const EditorResult&) {
     const auto totalWidth = ImGui::GetContentRegionAvail().x / 2.f;
 
     ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 10.f);

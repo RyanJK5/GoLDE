@@ -145,7 +145,7 @@ void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) {
     FrameBufferBinder binder{m_FrameBuffer};
 
     GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
-    if (args.GridSize.Width == 0 || args.GridSize.Height == 0) {
+    if (args.GridSize.Width == 0 && args.GridSize.Height == 0) {
         // Unbounded universes always render against a uniform black backdrop.
         GL_DEBUG(glClearColor(0.f, 0.f, 0.f, 1.f));
         GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
@@ -161,13 +161,28 @@ void GraphicsHandler::ClearBackground(const GraphicsHandlerArgs& args) {
     GL_DEBUG(glClear(GL_COLOR_BUFFER_BIT));
 
     Size2F gridScreenDimensions{
-        static_cast<float>(args.GridSize.Width) * args.CellSize.Width,
-        static_cast<float>(args.GridSize.Height) * args.CellSize.Height};
-    auto origin = Camera.WorldToScreenPos(Vec2D{0.0, 0.0}, args.ViewportBounds,
+        (args.GridSize.Width == 0)
+            ? args.ViewportBounds.Width
+            : (static_cast<float>(args.GridSize.Width) * args.CellSize.Width),
+        (args.GridSize.Height == 0)
+            ? args.ViewportBounds.Height
+            : (static_cast<float>(args.GridSize.Height) *
+               args.CellSize.Height)};
+    auto origin = Camera.WorldToScreenPos(Vec2D{}, args.ViewportBounds,
                                           gridScreenDimensions);
     auto lowerRight = Camera.WorldToScreenPos(
         Vec2D{gridScreenDimensions.Width, gridScreenDimensions.Height},
         args.ViewportBounds, gridScreenDimensions);
+
+    if (args.GridSize.Width == 0) {
+        origin.x = 0.0;
+        lowerRight.x = args.ViewportBounds.Width;
+    }
+    if (args.GridSize.Height == 0) {
+        origin.y = 0.0;
+        lowerRight.y = args.ViewportBounds.Height;
+    }
+
     GL_DEBUG(glScissor(static_cast<int32_t>(origin.x),
                        static_cast<int32_t>(origin.y),
                        static_cast<int32_t>(lowerRight.x - origin.x),
