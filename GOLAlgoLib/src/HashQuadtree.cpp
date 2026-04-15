@@ -55,6 +55,10 @@ size_t SlowHash::operator()(SlowKey key) const noexcept {
     return static_cast<size_t>(h);
 }
 
+HashQuadtree::HashQuadtree() {
+    ExpandUniverse(4); // So we can always serialize
+}
+
 HashQuadtree::HashQuadtree(std::span<const Vec2> data, Vec2 offset) {
     if (data.empty())
         return;
@@ -62,6 +66,7 @@ HashQuadtree::HashQuadtree(std::span<const Vec2> data, Vec2 offset) {
     m_Root = BuildTree(data);
     m_SeedOffset +=
         {static_cast<int64_t>(offset.X), static_cast<int64_t>(offset.Y)};
+    ExpandUniverse(4);
 }
 
 const LifeNode* HashQuadtree::Data() const { return m_Root; }
@@ -105,7 +110,7 @@ void HashQuadtree::Set(Vec2 targetPos, bool alive) {
     };
 
     while (expansionNeeded()) {
-        m_Root = ExpandUniverse(m_Root, m_Depth);
+        m_Root = ExpandNode(m_Root, m_Depth);
         m_Depth++;
     }
 
@@ -137,7 +142,7 @@ void HashQuadtree::Insert(const HashQuadtree& other, Vec2 offset) {
     };
 
     while (!containsSource()) {
-        m_Root = ExpandUniverse(m_Root, m_Depth);
+        m_Root = ExpandNode(m_Root, m_Depth);
         m_Depth++;
     }
 
@@ -774,7 +779,14 @@ void HashQuadtree::ClearCache() {
     s_Cache.SmallPopulationCache.clear();
 }
 
-const LifeNode* HashQuadtree::ExpandUniverse(const LifeNode* node,
+void HashQuadtree::ExpandUniverse(int32_t targetLevel) {
+    while (m_Depth < targetLevel) {
+        m_Root = ExpandNode(m_Root, m_Depth);
+        m_Depth++;
+    }
+}
+
+const LifeNode* HashQuadtree::ExpandNode(const LifeNode* node,
                                              int32_t level) const {
     if (node == FalseNode)
         return EmptyTree(level + 1);

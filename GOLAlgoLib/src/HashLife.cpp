@@ -619,7 +619,7 @@ int32_t HashLife::DoOneJump(HashQuadtree& data, int32_t advanceLevel,
     const auto* root = data.Data();
     auto depth = data.CalculateDepth();
     while (NeedsExpansion(root, depth) || depth - 2 < advanceLevel) {
-        root = data.ExpandUniverse(root, depth);
+        root = data.ExpandNode(root, depth);
         depth++;
     }
 

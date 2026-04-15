@@ -107,23 +107,25 @@ std::optional<VersionState> SelectionManager::SelectAll(GameGrid& grid) {
 }
 
 std::optional<VersionState> SelectionManager::Copy(GameGrid& grid) {
-    if (!m_Selected || !m_Selected->ShouldValidateCache()) {
+    if (!m_Selected) {
         return std::nullopt;
     }
 
+    const auto fileFormat = m_Selected->ShouldValidateCache() ? FileEncoder::FileFormat::RLE : FileEncoder::FileFormat::Macrocell;
     ImGui::SetClipboardText(
-        FileEncoder::EncodeRegion(*m_Selected, {{0, 0}, m_Selected->Size()})
+        FileEncoder::EncodeRegion(*m_Selected, {{0, 0}, m_Selected->Size()}, Vec2{}, fileFormat)
             .c_str());
     return Deselect(grid);
 }
 
 std::optional<VersionState> SelectionManager::Cut(const GameGrid& grid) {
-    if (!m_Selected || !m_Selected->ShouldValidateCache())
+    if (!m_Selected)
         return std::nullopt;
 
+    const auto fileFormat = m_Selected->ShouldValidateCache() ? FileEncoder::FileFormat::RLE : FileEncoder::FileFormat::Macrocell;
     ImGui::SetClipboardText(
         FileEncoder::EncodeRegion(
-            *m_Selected, {0, 0, m_Selected->Width(), m_Selected->Height()})
+            *m_Selected, {0, 0, m_Selected->Width(), m_Selected->Height()}, Vec2{}, fileFormat)
             .c_str());
     return Delete(grid);
 }
@@ -137,17 +139,23 @@ SelectionManager::Paste(const GameGrid& grid, std::optional<Vec2> gridPos,
     if (!gridPos)
         gridPos = m_AnchorSelection;
 
-    auto decodeResult =
-        FileEncoder::DecodeRegion(ImGui::GetClipboardText(), warnThreshold);
-    if (!decodeResult) {
-        return std::unexpected<FileEncoder::DecodeError>{decodeResult.error()};
+    constexpr static std::array formats{ FileEncoder::FileFormat::RLE, FileEncoder::FileFormat::Macrocell };
+    for (auto i = 0UZ; i < formats.size(); i++) {
+        auto decodeResult =
+            FileEncoder::DecodeRegion(ImGui::GetClipboardText(), warnThreshold, formats[i]);
+        if (decodeResult) {
+            if (!gridPos) {
+                gridPos = decodeResult->Offset;
+            }
+
+            m_Selected = std::move(decodeResult->Grid);
+            break;
+        }
+        if (i == formats.size() - 1UZ || decodeResult.error().ErrorType != FileEncoder::DecodeError::Type::MissingHeader) {
+            return std::unexpected<FileEncoder::DecodeError>{decodeResult.error()};
+        }
     }
 
-    if (!gridPos) {
-        gridPos = decodeResult->Offset;
-    }
-
-    m_Selected = std::move(decodeResult->Grid);
     m_AnchorSelection = gridPos;
     m_SentinelSelection = {gridPos->X + m_Selected->Width() - 1,
                            gridPos->Y + m_Selected->Height() - 1};

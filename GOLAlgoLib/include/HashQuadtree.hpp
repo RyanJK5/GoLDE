@@ -125,7 +125,7 @@ class HashQuadtree : public LifeDataStructure {
     };
 
   public:
-    HashQuadtree() = default;
+    HashQuadtree();
     HashQuadtree(std::span<const Vec2> data, Vec2 offset = {});
 
   public:
@@ -185,10 +185,8 @@ class HashQuadtree : public LifeDataStructure {
 
     static void ClearCache();
 
-    // AdvanceNode always returns a node that is one half the size.
-    // ExpandUniverse is necessary to ensure that no data is lost when HashLife
-    // is executed.
-    const LifeNode* ExpandUniverse(const LifeNode* node, int32_t level) const;
+    void ExpandUniverse(int32_t targetLevel);
+    const LifeNode* ExpandNode(const LifeNode* node, int32_t level) const;
 
     const LifeNode* Data() const;
     void OverwriteData(const LifeNode* root, int32_t level);

@@ -176,15 +176,12 @@ void EncodeNode(
 } // namespace
 
 std::string EncodeMacrocell(const LifeNode* node, int32_t level) {
-    if (level < 4)
-        return std::format("Cannot encode a level {} node", level);
-
-    std::string out;
+    std::string out{};
     // Reserve a modest initial buffer; will grow as needed.
     out.reserve(1024);
 
     // Header
-    out += "[M2] (golly 2.0)\n";
+    out += "[M2]\n";
     out += "#R B3/S23\n";
 
     // Tree: child-first traversal
@@ -204,6 +201,8 @@ std::string EncodeRegion(const GameGrid& grid, Rect region, Vec2 offset,
     case FileFormat::Macrocell:
         return EncodeMacrocell(grid.Data().Data(),
                                grid.Data().CalculateDepth());
+    default:
+        throw std::logic_error{"Unsupported file format"};
     }
 }
 
@@ -488,18 +487,12 @@ DecodeLeafNode(std::string_view line, const HashQuadtree& qt) {
 
 std::expected<DecodeResult, DecodeError>
 DecodeMacrocell(std::string_view fileContents) {
-    using E = DecodeError::Type;
-
-    auto err = [](E type, std::string msg) {
-        return std::unexpected(DecodeError{type, std::move(msg)});
-    };
-
     auto lines = SplitLines(fileContents);
     if (lines.empty())
-        return err(E::MissingHeader, "File is empty");
+        return std::unexpected{DecodeError{DecodeError::Type::MissingHeader, "File is empty"}};
     if (!lines[0].starts_with("[M2]"))
-        return err(E::IncorrectHeader,
-                   std::format("Expected [M2] header, got '{}'", lines[0]));
+        return std::unexpected{DecodeError{DecodeError::Type::IncorrectHeader,
+                   std::format("Expected [M2] header, got '{}'", lines[0])}};
 
     HashQuadtree qt({}, {0, 0});
 
@@ -515,25 +508,25 @@ DecodeMacrocell(std::string_view fileContents) {
     }
 
     if (lineIdx >= lines.size())
-        return err(E::NoData, "File contains a header but no tree data");
+        return std::unexpected{DecodeError{DecodeError::Type::NoData, "File contains a header but no tree data"}};
 
     // ---- Tree parsing ----
     std::vector<const LifeNode*> nodeTable;
 
-    auto resolveNode =
+    const auto resolveNode =
         [&](int32_t num,
             int32_t childLevel) -> std::expected<const LifeNode*, DecodeError> {
         if (num == 0)
             return qt.EmptyTree(childLevel);
         if (num < 0 || static_cast<size_t>(num) > nodeTable.size())
-            return std::unexpected(DecodeError{
-                E::NoTermination,
-                std::format("Reference to undefined node {}", num)});
+            return std::unexpected{DecodeError{
+                DecodeError::Type::NoTermination,
+                std::format("Reference to undefined node {}", num)}};
         return nodeTable[num - 1];
     };
 
-    int32_t rootLevel = -1;
-    const LifeNode* root = FalseNode;
+    auto rootLevel = -1;
+    const auto* root = FalseNode;
 
     for (; lineIdx < lines.size(); ++lineIdx) {
         auto line = lines[lineIdx];
@@ -547,7 +540,7 @@ DecodeMacrocell(std::string_view fileContents) {
         if (first == '.' || first == '*' || first == '$') {
             auto result = DecodeLeafNode(line, qt);
             if (!result)
-                return std::unexpected(std::move(result.error()));
+                return std::unexpected{std::move(result.error())};
             nodeTable.push_back(*result);
             rootLevel = 3;
             root = *result;
@@ -560,9 +553,9 @@ DecodeMacrocell(std::string_view fileContents) {
                 auto [ptr, ec] =
                     std::from_chars(sv.data(), sv.data() + sv.size(), out);
                 if (ec != std::errc{})
-                    return std::unexpected(DecodeError{
-                        E::IncorrectHeader,
-                        std::format("Failed to parse integer from '{}'", sv)});
+                    return std::unexpected{DecodeError{
+                        DecodeError::Type::IncorrectHeader,
+                        std::format("Failed to parse integer from '{}'", sv)}};
                 return sv.substr(ptr - sv.data());
             };
 
@@ -570,64 +563,61 @@ DecodeMacrocell(std::string_view fileContents) {
             if (auto r = parse(rem, level))
                 rem = *r;
             else
-                return std::unexpected(r.error());
+                return std::unexpected{r.error()};
             if (auto r = parse(rem, nwNum))
                 rem = *r;
             else
-                return std::unexpected(r.error());
+                return std::unexpected{r.error()};
             if (auto r = parse(rem, neNum))
                 rem = *r;
             else
-                return std::unexpected(r.error());
+                return std::unexpected{r.error()};
             if (auto r = parse(rem, swNum))
                 rem = *r;
             else
-                return std::unexpected(r.error());
+                return std::unexpected{r.error()};
             if (auto r = parse(rem, seNum))
                 rem = *r;
             else
-                return std::unexpected(r.error());
+                return std::unexpected{r.error()};
 
             if (level < 4)
-                return err(
-                    E::IncorrectHeader,
+                return std::unexpected{DecodeError{
+                    DecodeError::Type::IncorrectHeader,
                     std::format(
                         "Non-leaf node has invalid level {} (must be >= 4)",
-                        level));
+                        level)}};
 
             const int32_t childLevel = level - 1;
-            auto nw = resolveNode(nwNum, childLevel);
+            const auto nw = resolveNode(nwNum, childLevel);
             if (!nw)
-                return std::unexpected(nw.error());
-            auto ne = resolveNode(neNum, childLevel);
+                return std::unexpected{nw.error()};
+            const auto ne = resolveNode(neNum, childLevel);
             if (!ne)
-                return std::unexpected(ne.error());
-            auto sw = resolveNode(swNum, childLevel);
+                return std::unexpected{ne.error()};
+            const auto sw = resolveNode(swNum, childLevel);
             if (!sw)
-                return std::unexpected(sw.error());
-            auto se = resolveNode(seNum, childLevel);
+                return std::unexpected{sw.error()};
+            const auto se = resolveNode(seNum, childLevel);
             if (!se)
-                return std::unexpected(se.error());
+                return std::unexpected{se.error()};
 
-            const LifeNode* node = qt.FindOrCreate(*nw, *ne, *sw, *se);
+            const auto* node = qt.FindOrCreate(*nw, *ne, *sw, *se);
             nodeTable.push_back(node);
             rootLevel = level;
             root = node;
         } else {
-            return err(E::IncorrectHeader,
-                       std::format("Unexpected line: '{}'", line));
+            return std::unexpected{DecodeError{DecodeError::Type::IncorrectHeader,
+                       std::format("Unexpected line: '{}'", line)}};
         }
     }
 
     if (root == FalseNode || rootLevel < 0)
-        return err(E::NoData, "File contained no nodes");
-
-    const int64_t half = Pow2(rootLevel - 1);
-    const Vec2 offset{static_cast<int32_t>(-half),
-                      static_cast<int32_t>(1 - half)};
+        return std::unexpected{DecodeError{DecodeError::Type::NoData, "File contained no nodes"}};
 
     qt.OverwriteData(root, rootLevel);
-    return DecodeResult{GameGrid{std::move(qt), Size2{}}, offset};
+    const auto boundingBox = qt.FindBoundingBox();
+    return DecodeResult{GameGrid{std::move(qt), Size2{boundingBox.Width, boundingBox.Height}}, Vec2{}};
 }
 } // namespace
 
@@ -639,6 +629,8 @@ std::expected<DecodeResult, DecodeError> DecodeRegion(std::string_view src,
         return DecodeRLE(src, warnThreshold);
     case FileFormat::Macrocell:
         return DecodeMacrocell(src);
+    default:
+        throw std::logic_error{"Unsupported file format"};
     }
 }
 

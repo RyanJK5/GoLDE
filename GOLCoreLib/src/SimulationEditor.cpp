@@ -437,28 +437,11 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                 return m_Model.HandleRedo();
             },
             [this](const SaveCommand& cmd) {
-                if (m_Model.Grid().Population() > threshold) {
-                    m_SaveWarning.SetCallback(
-                        [this, path = cmd.FilePath](PopupWindowState state) {
-                            if (state != PopupWindowState::Success)
-                                return;
-                            SaveWithErrorHandling(path, true);
-                        });
-                    m_SaveWarning.Activate();
-                    m_SaveWarning.Message = std::format(
-                        std::locale{""},
-                        "This file has {:L} total cells. The saved file will "
-                        "be\n"
-                        "large and may take a long time to save. Are you sure\n"
-                        "you want to continue?",
-                        m_Model.Grid().Population());
-                    return m_Model.State();
-                }
                 SaveWithErrorHandling(cmd.FilePath, true);
                 return m_Model.State();
             },
             [this](const SaveAsNewCommand& cmd) {
-                if (m_Model.Grid().Population() > threshold) {
+                if (m_Model.Grid().Population() > threshold && cmd.FilePath.extension().string() == ".rle") {
                     m_SaveWarning.SetCallback(
                         [this, path = cmd.FilePath](PopupWindowState state) {
                             if (state != PopupWindowState::Success)
@@ -470,8 +453,9 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
                         std::locale{""},
                         "This file has {:L} total cells. The saved file will "
                         "be\n"
-                        "large and may take a long time to save. Are you sure\n"
-                        "you want to continue?",
+                        "large and may take a long time to save. The Macrocell (.mc)\n"
+                        "format may be more efficient. Are you sure you want to \n"
+                        "continue?",
                         m_Model.Grid().Population());
                     return m_Model.State();
                 }

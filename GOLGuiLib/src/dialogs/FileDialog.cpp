@@ -24,7 +24,8 @@ FileDialog::OpenFileDialog(std::span<const FilterItem> filters,
     NFD::UniquePathU8 outPath{};
     const auto result = NFD::OpenDialog(
         outPath, nfdFilters.empty() ? nullptr : nfdFilters.data(),
-        nfdFilters.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+        static_cast<nfdfiltersize_t>(nfdFilters.size()),
+        defaultPath.empty() ? nullptr : defaultPath.c_str());
 
     if (result == NFD_OKAY) {
         auto ret = std::filesystem::path{outPath.get()};
@@ -63,7 +64,7 @@ FileDialog::SaveFileDialog(std::span<const FilterItem> filters,
     NFD::UniquePathU8 outPath{};
     const auto result = NFD::SaveDialog(
         outPath, nfdFilters.empty() ? nullptr : nfdFilters.data(),
-        nfdFilters.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(),
+        static_cast<nfdfiltersize_t>(nfdFilters.size()), defaultPath.empty() ? nullptr : defaultPath.c_str(),
         nullptr);
 
     if (result == NFD_OKAY) {
