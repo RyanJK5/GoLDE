@@ -18,6 +18,7 @@
 #include <type_traits>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include "BigInt.hpp"
 #include "EditorModel.hpp"
@@ -438,20 +439,35 @@ void SimulationEditor::ApplyCommandResult(
             m_Model.GridHeight() * DefaultCellHeight / 2.f};
     }
 
-    if (commandResult.NoiseError) {
-        m_GenerateNoiseError.Activate();
-        m_GenerateNoiseError.Message = *commandResult.NoiseError;
-    }
-    if (commandResult.FileError) {
-        m_FileErrorWindow.Activate();
-        m_FileErrorWindow.Message = *commandResult.FileError;
-    }
-    if (commandResult.CopyError) {
-        m_CopyErrorWindow.Activate();
-        m_CopyErrorWindow.Message = *commandResult.CopyError;
-    }
-    if (commandResult.PasteError) {
-        HandlePasteError(*commandResult.PasteError);
+    if (commandResult.ErrorType != ExecuteCommandErrorType::None &&
+        commandResult.ErrorMessage) {
+        switch (commandResult.ErrorType) {
+            using enum ExecuteCommandErrorType;
+        case Noise:
+            m_GenerateNoiseError.Activate();
+            m_GenerateNoiseError.Message = *commandResult.ErrorMessage;
+            break;
+        case File:
+            m_FileErrorWindow.Activate();
+            m_FileErrorWindow.Message = *commandResult.ErrorMessage;
+            break;
+        case Copy:
+            m_CopyErrorWindow.Activate();
+            m_CopyErrorWindow.Message = *commandResult.ErrorMessage;
+            break;
+        case PasteTooManyCells:
+            m_PasteWarning.Activate();
+            m_PasteWarning.Message =
+                std::format("{}\nAre you sure you want to continue?",
+                            *commandResult.ErrorMessage);
+            break;
+        case Paste:
+            m_FileErrorWindow.Activate();
+            m_FileErrorWindow.Message = *commandResult.ErrorMessage;
+            break;
+        case None:
+            break;
+        }
     }
     if (commandResult.SaveAsWarning) {
         const auto saveAsRequest = *commandResult.SaveAsWarning;
@@ -476,21 +492,6 @@ void SimulationEditor::ApplyCommandResult(
                         "to \n"
                         "continue?",
                         saveAsRequest.Population);
-    }
-}
-
-void SimulationEditor::HandlePasteError(
-    const FileEncoder::DecodeError& result) {
-    switch (result.ErrorType) {
-        using enum FileEncoder::DecodeError::Type;
-    case TooManyCells:
-        m_PasteWarning.Activate();
-        m_PasteWarning.Message = std::format(
-            "{}\nAre you sure you want to continue?", result.Message);
-        break;
-    default:
-        m_FileErrorWindow.Activate();
-        m_FileErrorWindow.Message = result.Message;
     }
 }
 
@@ -526,13 +527,14 @@ void SimulationEditor::UpdateMouseState(Vec2 gridPos) {
             m_EditorMode == EditorMode::Select) {
             m_EditorMode = *m_Model.CellAt(gridPos) ? EditorMode::Delete
                                                     : EditorMode::Insert;
-            m_Model.BeginPaintChange();
+            m_BeginPaintStroke = true;
             m_LeftDeltaLast = {};
         }
 
         FillCells();
         return;
     }
+    m_BeginPaintStroke = false;
     m_EditorMode = EditorMode::None;
 }
 
@@ -555,8 +557,18 @@ void SimulationEditor::FillCells() {
                           currentGridPos->Y - lastGridPos->Y};
     int32_t steps = std::max(std::abs(gridDelta.X), std::abs(gridDelta.Y));
 
+    std::vector<Vec2> points;
+    points.reserve(static_cast<size_t>(steps) + 1U);
+
     if (steps == 0) {
-        m_Model.PaintCell(*currentGridPos, m_EditorMode == EditorMode::Insert);
+        points.push_back(*currentGridPos);
+        ExecuteEditorCommand(
+            PaintStrokeCommand{.Points = std::move(points),
+                               .Value = m_EditorMode == EditorMode::Insert,
+                               .BeginStroke = m_BeginPaintStroke},
+            {.CursorPos = *currentGridPos,
+             .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
+        m_BeginPaintStroke = false;
         return;
     }
 
@@ -567,7 +579,17 @@ void SimulationEditor::FillCells() {
         if (!m_Model.InBounds(gridPos))
             continue;
 
-        m_Model.PaintCell(gridPos, m_EditorMode == EditorMode::Insert);
+        points.push_back(gridPos);
+    }
+
+    if (!points.empty()) {
+        ExecuteEditorCommand(
+            PaintStrokeCommand{.Points = std::move(points),
+                               .Value = m_EditorMode == EditorMode::Insert,
+                               .BeginStroke = m_BeginPaintStroke},
+            {.CursorPos = *currentGridPos,
+             .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
+        m_BeginPaintStroke = false;
     }
 }
 

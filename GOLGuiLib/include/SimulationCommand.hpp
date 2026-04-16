@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <variant>
+#include <vector>
 
 #include "GameEnums.hpp"
 #include "Graphics2D.hpp"
@@ -69,13 +70,19 @@ struct RuleCommand {
     std::string RuleString;
 };
 
+struct PaintStrokeCommand {
+    std::vector<Vec2> Points;
+    bool Value = false;
+    bool BeginStroke = false;
+};
+
 using SimulationCommand =
     std::variant<StartCommand, PauseCommand, ResumeCommand, RestartCommand,
                  ResetCommand, ClearCommand, StepCommand, GenerateNoiseCommand,
                  UndoCommand, RedoCommand, SaveCommand, SaveAsNewCommand,
                  NewFileCommand, LoadCommand, CloseCommand, SelectionCommand,
                  SelectionBoundsCommand, CameraPositionCommand,
-                 CameraZoomCommand, RuleCommand>;
+                 CameraZoomCommand, RuleCommand, PaintStrokeCommand>;
 
 // Convert individual action enum values to SimulationCommand.
 // Used by Widget::UpdateResult for simple (no-payload) buttons.

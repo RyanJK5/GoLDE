@@ -58,7 +58,6 @@ class SimulationEditor {
     SimulationState ExecuteEditorCommand(const SimulationCommand& command,
                                          const ExecuteCommandContext& context);
     void ApplyCommandResult(const ExecuteCommandResult& result);
-    void HandlePasteError(const FileEncoder::DecodeError& result);
 
     void UpdateViewport();
 
@@ -90,6 +89,7 @@ class SimulationEditor {
 
     Vec2F m_LeftDeltaLast;
     Vec2F m_RightDeltaLast;
+    bool m_BeginPaintStroke = false;
 
     EditorMode m_EditorMode = EditorMode::None;
 

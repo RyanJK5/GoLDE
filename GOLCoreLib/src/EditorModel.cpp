@@ -326,6 +326,7 @@ bool EditorModel::IsMutatingCommand(const SimulationCommand& cmd) const {
                    [](const RedoCommand&) { return true; },
                    [](const LoadCommand&) { return true; },
                    [](const RuleCommand&) { return true; },
+                   [](const PaintStrokeCommand&) { return true; },
                    [](const SelectionCommand&) { return true; }},
         cmd);
 }
@@ -389,8 +390,10 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
                 if (!result) {
                     return ExecuteCommandResult{
                         .State = m_State,
-                        .NoiseError = "The region you have selected is too "
-                                      "large to generate noise.\n"};
+                        .ErrorType = ExecuteCommandErrorType::Noise,
+                        .ErrorMessage =
+                            "The region you have selected is too large to "
+                            "generate noise.\n"};
                 }
                 return ExecuteCommandResult{.State = m_State};
             },
@@ -410,8 +413,10 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
                 if (!SaveToFile(command.FilePath, true)) {
                     return ExecuteCommandResult{
                         .State = m_State,
-                        .FileError = std::format("Failed to save file to \n{}",
-                                                 command.FilePath.string())};
+                        .ErrorType = ExecuteCommandErrorType::File,
+                        .ErrorMessage =
+                            std::format("Failed to save file to \n{}",
+                                        command.FilePath.string())};
                 }
                 return ExecuteCommandResult{.State = m_State};
             },
@@ -428,8 +433,10 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
                 if (!SaveToFile(command.FilePath, false)) {
                     return ExecuteCommandResult{
                         .State = m_State,
-                        .FileError = std::format("Failed to save file to \n{}",
-                                                 command.FilePath.string())};
+                        .ErrorType = ExecuteCommandErrorType::File,
+                        .ErrorMessage =
+                            std::format("Failed to save file to \n{}",
+                                        command.FilePath.string())};
                 }
                 return ExecuteCommandResult{.State = m_State};
             },
@@ -438,7 +445,8 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
                 if (error) {
                     return ExecuteCommandResult{
                         .State = m_State,
-                        .FileError =
+                        .ErrorType = ExecuteCommandErrorType::File,
+                        .ErrorMessage =
                             std::format("Failed to load file:\n{}", *error)};
                 }
                 MarkSaved();
@@ -468,8 +476,15 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
 
                     auto result = PasteSelection(context.CursorPos);
                     if (!result) {
-                        return ExecuteCommandResult{
-                            .State = m_State, .PasteError = result.error()};
+                        const auto errorType =
+                            result.error().ErrorType ==
+                                    FileEncoder::DecodeError::Type::TooManyCells
+                                ? ExecuteCommandErrorType::PasteTooManyCells
+                                : ExecuteCommandErrorType::Paste;
+                        return ExecuteCommandResult{.State = m_State,
+                                                    .ErrorType = errorType,
+                                                    .ErrorMessage =
+                                                        result.error().Message};
                     }
                     return ExecuteCommandResult{.State = m_State};
                 }
@@ -477,11 +492,30 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
                 if (!HandleSelectionAction(command.Action, command.NudgeSize)) {
                     return ExecuteCommandResult{
                         .State = m_State,
-                        .CopyError =
+                        .ErrorType = ExecuteCommandErrorType::Copy,
+                        .ErrorMessage =
                             std::format(std::locale{""},
                                         "Tried editing too many cells ({:L})",
                                         SelectedPopulation())};
                 }
+                return ExecuteCommandResult{.State = m_State};
+            },
+            [this](const PaintStrokeCommand& command) {
+                if (command.Points.empty()) {
+                    return ExecuteCommandResult{.State = m_State};
+                }
+
+                if (command.BeginStroke) {
+                    BeginPaintChange();
+                }
+
+                for (const auto point : command.Points) {
+                    if (!InBounds(point)) {
+                        continue;
+                    }
+                    PaintCell(point, command.Value);
+                }
+
                 return ExecuteCommandResult{.State = m_State};
             }},
         cmd);

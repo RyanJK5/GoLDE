@@ -42,15 +42,22 @@ struct SaveAsWarningRequest {
     BigInt Population{};
 };
 
+enum class ExecuteCommandErrorType {
+    None,
+    File,
+    Copy,
+    Noise,
+    Paste,
+    PasteTooManyCells
+};
+
 struct ExecuteCommandResult {
     SimulationState State = SimulationState::Paint;
     std::optional<Vec2> CameraPositionCell{};
     std::optional<float> CameraZoom{};
     bool RecenterCameraToGridCenter = false;
-    std::optional<std::string> FileError{};
-    std::optional<std::string> CopyError{};
-    std::optional<std::string> NoiseError{};
-    std::optional<FileEncoder::DecodeError> PasteError{};
+    ExecuteCommandErrorType ErrorType = ExecuteCommandErrorType::None;
+    std::optional<std::string> ErrorMessage{};
     std::optional<SaveAsWarningRequest> SaveAsWarning{};
 };
 
