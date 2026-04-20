@@ -85,36 +85,40 @@ GraphicsHandler::GraphicsHandler(const std::filesystem::path& shaderDirectory,
 void GraphicsHandler::InitGridBuffer() {
     GL_DEBUG(glBindVertexArray(m_GridVAO.ID()));
 
-    constexpr static std::array quadVertices{0.f, 0.f, 0.f, 1.f,
-                                             1.f, 1.f, 1.f, 0.f};
-
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_CellBuffer.ID()));
-    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices),
-                          quadVertices.data(), GL_STATIC_DRAW));
-    GL_DEBUG(glEnableVertexAttribArray(0));
-    GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2,
-                                   nullptr));
-
-    constexpr static std::array<uint16_t, 6> quadIndices{0, 1, 2, 2, 3, 0};
-
-    GL_DEBUG(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_CellIndexBuffer.ID()));
-    GL_DEBUG(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices),
-                          quadIndices.data(), GL_STATIC_DRAW));
-
-    GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-    GL_DEBUG(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
+    GL_DEBUG(glEnableVertexAttribArray(0));
+    GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
                                    nullptr));
     GL_DEBUG(glEnableVertexAttribArray(1));
-    GL_DEBUG(glVertexAttribDivisor(1, 1));
-
     GL_DEBUG(glVertexAttribPointer(
-        2, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 3,
+        1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
         reinterpret_cast<const void*>(sizeof(float) * 2)));
-    GL_DEBUG(glEnableVertexAttribArray(2));
-    GL_DEBUG(glVertexAttribDivisor(2, 1));
 
     GL_DEBUG(glBindVertexArray(0));
+}
+
+void GraphicsHandler::EnsureGridStateTexture(Size2 size) {
+    if (size.Width <= 0 || size.Height <= 0) {
+        return;
+    }
+
+    if (size.Width == m_GridStateTextureSize.Width &&
+        size.Height == m_GridStateTextureSize.Height) {
+        return;
+    }
+
+    GL_DEBUG(glBindTexture(GL_TEXTURE_2D, m_GridStateTexture.ID()));
+    GL_DEBUG(glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, size.Width, size.Height, 0,
+                          GL_RED, GL_UNSIGNED_BYTE, nullptr));
+    GL_DEBUG(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    GL_DEBUG(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GL_DEBUG(
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GL_DEBUG(
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+    m_GridStateTextureSize = size;
 }
 
 void GraphicsHandler::RescaleFrameBuffer(Rect windowBounds,
@@ -253,9 +257,19 @@ GraphicsHandler::CalculateGridLineInfo(Vec2,
 
 void GraphicsHandler::DrawGridLines(Vec2 offset,
                                     const GraphicsHandlerArgs& args) {
+    constexpr static auto MinPixelsPerCellForGridLines = 4.f;
+    const auto pixelCellWidth = args.CellSize.Width * Camera.Zoom;
+    const auto pixelCellHeight = args.CellSize.Height * Camera.Zoom;
+
+    if (!std::isfinite(pixelCellWidth) || !std::isfinite(pixelCellHeight) ||
+        pixelCellWidth < MinPixelsPerCellForGridLines ||
+        pixelCellHeight < MinPixelsPerCellForGridLines) {
+        return;
+    }
+
     const auto gridInfo = CalculateGridLineInfo(offset, args);
 
-    auto positions = std::vector<float>{};
+    std::vector<float> positions{};
     for (int32_t i = 0; i <= gridInfo.GridSize.Height; i++) {
         positions.push_back(
             static_cast<float>(gridInfo.UpperLeft.X - Camera.Center.x));

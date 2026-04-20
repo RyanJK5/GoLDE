@@ -62,10 +62,6 @@ struct HashLifeCache {
                                  LifeNodeEqual>
         PopulationCache{};
 
-    ankerl::unordered_dense::map<const LifeNode*, int64_t, LifeNodeHash,
-                                 LifeNodeEqual>
-        SmallPopulationCache{};
-
     // Level-indexed cache for empty nodes. Index i holds the empty node for
     // size 2^i. At most 64 entries needed (levels 0..63).
     std::vector<const LifeNode*> EmptyNodeCache{};
@@ -148,10 +144,10 @@ class HashQuadtree : public LifeDataStructure {
 
     // Applies func to all cells within the given bounds. More efficient than
     // iterators because recursion can be used.
-    template <std::invocable<Vec2, int64_t> Func>
+    template <std::invocable<Vec2> Func>
     void ForEachCell(const Func& func, Rect bounds, int32_t minLevel) const;
 
-    template <std::invocable<const BigVec2&, int64_t> Func>
+    template <std::invocable<const BigVec2&> Func>
     void ForEachCell(const Func& func, const BigRect& bounds,
                      int32_t minLevel) const;
 
@@ -160,7 +156,7 @@ class HashQuadtree : public LifeDataStructure {
     // Returns the length/width of the tree's root node.
     int64_t CalculateTreeSize() const;
 
-    bool operator==(const HashQuadtree& other) const;
+    bool operator==(const HashQuadtree& ther) const;
     bool operator!=(const HashQuadtree& other) const;
 
     void Set(Vec2 pos, bool alive) override;
@@ -210,11 +206,11 @@ class HashQuadtree : public LifeDataStructure {
     const LifeNode* ExtractImpl(const LifeNode* node, Vec2L pos, Rect region,
                                 int32_t level) const;
 
-    template <std::invocable<Vec2, int64_t> Func>
+    template <std::invocable<Vec2> Func>
     void ForEachImpl(const Func& func, const LifeNode* node, Vec2L pos,
                      int32_t level, int32_t minLevel, Rect bounds) const;
 
-    template <std::invocable<const BigVec2&, int64_t> Func>
+    template <std::invocable<const BigVec2&> Func>
     void ForEachBigImpl(const Func& func, const LifeNode* node, int32_t level,
                         int32_t minLevel, const BigInt& left, const BigInt& top,
                         const BigInt& right, const BigInt& bottom,
@@ -223,7 +219,6 @@ class HashQuadtree : public LifeDataStructure {
                         const BigInt& boundsBottom) const;
 
     BigInt PopulationOf(const LifeNode* node) const;
-    int64_t PopulationOf(const LifeNode* node, bool) const;
 
     // Helper function for converting a LifeHashSet into a quadtree.
     const LifeNode* BuildTreeRegion(std::span<Vec2L> cells, Vec2L pos,
@@ -274,7 +269,7 @@ constexpr int32_t Index2D(int32_t x, int32_t y) {
     return y * Size + x;
 }
 
-template <std::invocable<Vec2, int64_t> Func>
+template <std::invocable<Vec2> Func>
 void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
                                Vec2L pos, int32_t level, int32_t minLevel,
                                Rect bounds) const {
@@ -288,7 +283,7 @@ void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
         if (containsCells && IsWithinBounds(bounds, pos)) {
             Vec2 intPos{static_cast<int32_t>(pos.X),
                         static_cast<int32_t>(pos.Y)};
-            func(intPos, PopulationOf(node, true));
+            func(intPos);
         }
         return;
     }
@@ -305,7 +300,7 @@ void HashQuadtree::ForEachImpl(const Func& func, const LifeNode* node,
                 childLevel, minLevel, bounds);
 }
 
-template <std::invocable<const BigVec2&, int64_t> Func>
+template <std::invocable<const BigVec2&> Func>
 void HashQuadtree::ForEachCell(const Func& func, const BigRect& bounds,
                                int32_t minLevel) const {
     if (m_Root == FalseNode) {
@@ -329,7 +324,7 @@ void HashQuadtree::ForEachCell(const Func& func, const BigRect& bounds,
                           boundsBottom);
 }
 
-template <std::invocable<const BigVec2&, int64_t> Func>
+template <std::invocable<const BigVec2&> Func>
 void HashQuadtree::ForEachBigImpl(
     const Func& func, const LifeNode* node, int32_t level, int32_t minLevel,
     const BigInt& left, const BigInt& top, const BigInt& right,
@@ -344,7 +339,7 @@ void HashQuadtree::ForEachBigImpl(
     if (level == minLevel) {
         if (left >= boundsLeft && left < boundsRight && top >= boundsTop &&
             top < boundsBottom) {
-            func(BigVec2{left, top}, PopulationOf(node, true));
+            func(BigVec2{left, top});
         }
         return;
     }
@@ -372,7 +367,7 @@ void HashQuadtree::ForEachBigImpl(
                    boundsBottom);
 }
 
-template <std::invocable<Vec2, int64_t> Func>
+template <std::invocable<Vec2> Func>
 void HashQuadtree::ForEachCell(const Func& func, Rect bounds,
                                int32_t minLevel) const {
     if (m_Root == FalseNode) {

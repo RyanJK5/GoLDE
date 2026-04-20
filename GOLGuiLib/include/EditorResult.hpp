@@ -10,6 +10,7 @@
 namespace gol {
 struct SimulationStatus {
     SimulationState State = SimulationState::Paint;
+    bool OutOfBounds = false;
 };
 
 struct EditingStatus {

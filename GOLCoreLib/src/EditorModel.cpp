@@ -29,6 +29,10 @@ bool EditorModel::operator==(const EditorModel& other) const {
     return m_EditorID == other.m_EditorID;
 }
 
+bool EditorModel::IsSimulationOutOfBounds() const {
+    return m_Grid.BoundingBox() == Rect{};
+}
+
 SimulationState EditorModel::StartSimulation() {
     m_Worker->Start(m_Grid);
     return SimulationState::Simulation;
@@ -353,12 +357,9 @@ bool EditorModel::TryStartCommand(const SimulationCommand& cmd,
         return false;
     }
 
-    auto commandCopy = cmd;
-    auto contextCopy = context;
     std::scoped_lock lock{m_CommandMutex};
     m_InFlightCommand = std::async(
-        std::launch::async, [this, command = std::move(commandCopy),
-                             commandContext = std::move(contextCopy)]() {
+        std::launch::async, [this, command = cmd, commandContext = context]() {
             HashQuadtree::SetCacheIndex(m_EditorID);
             return ExecuteCommandImmediate(command, commandContext);
         });
@@ -513,15 +514,12 @@ EditorModel::ExecuteCommandImmediate(const SimulationCommand& cmd,
             },
             [this, &context](const SelectionCommand& command) {
                 if (command.Action == SelectionAction::Paste) {
-                    const auto clipboardText =
-                        context.ClipboardText.value_or("");
                     if (context.ForcePasteSelection) {
-                        ForcePaste(context.CursorPos, clipboardText);
+                        ForcePaste(context.CursorPos);
                         return ExecuteCommandResult{.State = m_State};
                     }
 
-                    auto result =
-                        PasteSelection(context.CursorPos, clipboardText);
+                    auto result = PasteSelection(context.CursorPos);
                     if (!result) {
                         const auto errorType =
                             result.error().ErrorType ==

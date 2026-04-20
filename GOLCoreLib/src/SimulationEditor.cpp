@@ -132,7 +132,7 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
         const auto dispatch = m_Model.CanDispatchEdit();
         if (dispatch.Accepted) {
             ImGui::SetClipboardText(presetArgs.ClipboardText.c_str());
-            m_Model.InsertFromClipboard(Vec2{0, 0}, presetArgs.ClipboardText);
+            m_Model.InsertFromClipboard(Vec2{0, 0});
         }
     }
 
@@ -164,7 +164,8 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
     }());
 
     return {
-        .Simulation = {.State = m_Model.State()},
+        .Simulation = {.State = m_Model.State(),
+                       .OutOfBounds = m_Model.IsSimulationOutOfBounds()},
         .Editing = {.SelectionActive = m_Model.SelectionActive(),
                     .UndosAvailable = m_Model.UndosAvailable(),
                     .RedosAvailable = m_Model.RedosAvailable()},
@@ -240,10 +241,6 @@ SimulationState SimulationEditor::PauseUpdate(const GraphicsHandlerArgs& args) {
     return m_Model.State();
 }
 
-double lastTime = 0;
-int fps = 0;
-int frameCounter = 0;
-
 SimulationEditor::DisplayResult
 SimulationEditor::DisplaySimulation(bool grabFocus) {
     auto label = std::format(
@@ -318,6 +315,7 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
         "%s", std::format(std::locale{""}, "Population: {:L}", totalPopulation)
                   .c_str());
 
+#ifdef _DEBUG
     auto currentTime = glfwGetTime();
     frameCounter++;
     if (currentTime - lastTime > 1.0) {
@@ -326,6 +324,7 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
         lastTime += 1.0;
     }
     ImGui::Text("%d FPS", fps);
+#endif
 
     const auto mousePos = Vec2F{ImGui::GetMousePos()};
     const auto viewportBounds = ViewportBounds();
@@ -425,15 +424,6 @@ SimulationEditor::UpdateState(const SimulationControlResult& result) {
     ExecuteCommandContext context{
         .CursorPos = CursorGridPos(),
         .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)};
-    if (const auto* selectionCommand =
-            std::get_if<SelectionCommand>(&*result.Command);
-        selectionCommand &&
-        selectionCommand->Action == SelectionAction::Paste) {
-        if (const char* clipboardText = ImGui::GetClipboardText();
-            clipboardText != nullptr) {
-            context.ClipboardText = clipboardText;
-        }
-    }
 
     return ExecuteEditorCommand(*result.Command, context);
 }
@@ -540,11 +530,6 @@ void SimulationEditor::PasteWarnUpdated(PopupWindowState state) {
                                   .PrimaryMouseDown =
                                       ImGui::IsMouseDown(ImGuiMouseButton_Left),
                                   .ForcePasteSelection = true};
-    if (const char* clipboardText = ImGui::GetClipboardText();
-        clipboardText != nullptr) {
-        context.ClipboardText = clipboardText;
-    }
-
     ExecuteEditorCommand(SelectionCommand{.Action = SelectionAction::Paste},
                          context);
 }
@@ -554,7 +539,27 @@ void SimulationEditor::UpdateMouseState(Vec2 gridPos) {
         ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId))
         return;
 
-    if (!m_Model.CanDispatchEdit().Accepted) {
+    const auto paintingInput = ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+                               !ImGui::IsKeyDown(ImGuiKey_LeftShift) &&
+                               !ImGui::IsKeyDown(ImGuiKey_RightShift);
+
+    if (m_Graphics.Camera.Zoom < 0.001f) {
+        return;
+    }
+
+    const auto dispatch = m_Model.CanDispatchEdit();
+    if (!dispatch.Accepted) {
+        if (dispatch.RejectedReason == EditRejectReason::Busy &&
+            paintingInput &&
+            (m_EditorMode == EditorMode::Insert ||
+             m_EditorMode == EditorMode::Delete)) {
+            FillCells(gridPos, false);
+            return;
+        }
+
+        m_BeginPaintStroke = false;
+        m_LastPaintGridPos = std::nullopt;
+        m_BufferedPaintPoints.clear();
         m_EditorMode = EditorMode::None;
         return;
     }
@@ -564,77 +569,82 @@ void SimulationEditor::UpdateMouseState(Vec2 gridPos) {
         return;
     }
 
-    if (ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-        !ImGui::IsKeyDown(ImGuiKey_LeftShift) &&
-        !ImGui::IsKeyDown(ImGuiKey_RightShift)) {
+    if (paintingInput) {
         if (m_EditorMode == EditorMode::None ||
             m_EditorMode == EditorMode::Select) {
             m_EditorMode = *m_Model.CellAt(gridPos) ? EditorMode::Delete
                                                     : EditorMode::Insert;
             m_BeginPaintStroke = true;
-            m_LeftDeltaLast = {};
+            m_LastPaintGridPos = gridPos;
+            m_BufferedPaintPoints.clear();
         }
 
-        FillCells();
+        FillCells(gridPos, true);
         return;
     }
+
+    if (!m_BufferedPaintPoints.empty() &&
+        (m_EditorMode == EditorMode::Insert ||
+         m_EditorMode == EditorMode::Delete)) {
+        ExecuteEditorCommand(
+            PaintStrokeCommand{.Points = std::move(m_BufferedPaintPoints),
+                               .Value = m_EditorMode == EditorMode::Insert,
+                               .BeginStroke = m_BeginPaintStroke},
+            {.CursorPos = gridPos,
+             .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
+        m_BeginPaintStroke = false;
+        m_BufferedPaintPoints.clear();
+    }
+
     m_BeginPaintStroke = false;
+    m_LastPaintGridPos = std::nullopt;
+    m_BufferedPaintPoints.clear();
     m_EditorMode = EditorMode::None;
 }
 
-void SimulationEditor::FillCells() {
-    const auto mousePos = Vec2F{ImGui::GetMousePos()};
-    const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+void SimulationEditor::FillCells(Vec2 gridPos, bool canDispatch) {
+    if (!m_LastPaintGridPos) {
+        m_LastPaintGridPos = gridPos;
+    }
 
-    const auto realDelta =
-        Vec2F{delta.x - m_LeftDeltaLast.X, delta.y - m_LeftDeltaLast.Y};
-    const auto lastPos =
-        Vec2F{mousePos.X - realDelta.X, mousePos.Y - realDelta.Y};
-
-    auto currentGridPos = ConvertToGridPos(mousePos);
-    auto lastGridPos = ConvertToGridPos(lastPos);
-
-    if (!currentGridPos || !lastGridPos)
-        return;
-
-    auto gridDelta = Vec2{currentGridPos->X - lastGridPos->X,
-                          currentGridPos->Y - lastGridPos->Y};
+    const auto lastGridPos = *m_LastPaintGridPos;
+    auto gridDelta = Vec2{gridPos.X - lastGridPos.X, gridPos.Y - lastGridPos.Y};
     int32_t steps = std::max(std::abs(gridDelta.X), std::abs(gridDelta.Y));
 
-    std::vector<Vec2> points;
-    points.reserve(static_cast<size_t>(steps) + 1U);
-
     if (steps == 0) {
-        points.push_back(*currentGridPos);
-        ExecuteEditorCommand(
-            PaintStrokeCommand{.Points = std::move(points),
-                               .Value = m_EditorMode == EditorMode::Insert,
-                               .BeginStroke = m_BeginPaintStroke},
-            {.CursorPos = *currentGridPos,
-             .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
-        m_BeginPaintStroke = false;
+        if (m_BufferedPaintPoints.empty() ||
+            m_BufferedPaintPoints.back() != gridPos) {
+            m_BufferedPaintPoints.push_back(gridPos);
+        }
+    } else {
+        for (int32_t i = 0; i <= steps; i++) {
+            Vec2 point = {lastGridPos.X + (gridDelta.X * i) / steps,
+                          lastGridPos.Y + (gridDelta.Y * i) / steps};
+
+            if (!m_Model.InBounds(point)) {
+                continue;
+            }
+            if (m_BufferedPaintPoints.empty() ||
+                m_BufferedPaintPoints.back() != point) {
+                m_BufferedPaintPoints.push_back(point);
+            }
+        }
+    }
+
+    m_LastPaintGridPos = gridPos;
+
+    if (!canDispatch || m_BufferedPaintPoints.empty()) {
         return;
     }
 
-    for (int32_t i = 0; i <= steps; i++) {
-        Vec2 gridPos = {lastGridPos->X + (gridDelta.X * i) / steps,
-                        lastGridPos->Y + (gridDelta.Y * i) / steps};
-
-        if (!m_Model.InBounds(gridPos))
-            continue;
-
-        points.push_back(gridPos);
-    }
-
-    if (!points.empty()) {
-        ExecuteEditorCommand(
-            PaintStrokeCommand{.Points = std::move(points),
-                               .Value = m_EditorMode == EditorMode::Insert,
-                               .BeginStroke = m_BeginPaintStroke},
-            {.CursorPos = *currentGridPos,
-             .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
-        m_BeginPaintStroke = false;
-    }
+    ExecuteEditorCommand(
+        PaintStrokeCommand{.Points = std::move(m_BufferedPaintPoints),
+                           .Value = m_EditorMode == EditorMode::Insert,
+                           .BeginStroke = m_BeginPaintStroke},
+        {.CursorPos = gridPos,
+         .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
+    m_BeginPaintStroke = false;
+    m_BufferedPaintPoints.clear();
 }
 
 void SimulationEditor::UpdateDragState() {

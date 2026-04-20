@@ -177,6 +177,10 @@ void ShaderManager::AttachUniformFloat(std::string_view label, float value) {
     GL_DEBUG(glUniform1f(UniformLocation(label), value));
 }
 
+void ShaderManager::AttachUniformInt(std::string_view label, int32_t value) {
+    GL_DEBUG(glUniform1i(UniformLocation(label), value));
+}
+
 int32_t ShaderManager::UniformLocation(std::string_view label) {
     if (const auto it = m_ControlBlock->Uniforms.find(label);
         it != m_ControlBlock->Uniforms.end())

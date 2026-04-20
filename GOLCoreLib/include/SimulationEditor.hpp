@@ -5,6 +5,7 @@
 #include <future>
 #include <glm/glm.hpp>
 #include <optional>
+#include <vector>
 
 #include "EditorModel.hpp"
 #include "EditorResult.hpp"
@@ -68,7 +69,7 @@ class SimulationEditor {
     std::optional<Vec2> ConvertToGridPos(Vec2F screenPos);
 
     void UpdateMouseState(Vec2 gridPos);
-    void FillCells();
+    void FillCells(Vec2 gridPos, bool canDispatch);
     void UpdateDragState();
 
     void PasteWarnUpdated(PopupWindowState state);
@@ -92,12 +93,20 @@ class SimulationEditor {
     Vec2F m_LeftDeltaLast;
     Vec2F m_RightDeltaLast;
     bool m_BeginPaintStroke = false;
+    std::optional<Vec2> m_LastPaintGridPos;
+    std::vector<Vec2> m_BufferedPaintPoints;
     std::optional<std::future<ExecuteCommandResult>> m_PendingCommandResult;
 
     EditorMode m_EditorMode = EditorMode::None;
 
     bool m_TakeKeyboardInput = false;
     bool m_TakeMouseInput = false;
+
+#ifdef _DEBUG
+    double lastTime = 0;
+    int32_t fps = 0;
+    int32_t frameCounter = 0;
+#endif
 };
 } // namespace gol
 

@@ -526,7 +526,7 @@ static int64_t FindExtentImpl(const LifeNode* node, Vec2L pos, int32_t level,
 }
 
 Rect HashQuadtree::FindBoundingBox() const {
-    if (m_Root == FalseNode || m_Root->IsEmpty)
+    if (m_Root == FalseNode || m_Root->IsEmpty || m_Depth > ViewportMaxLevel)
         return {0, 0, 0, 0};
 
     const auto [node, offset] = GetCenteredNode(ViewportMaxLevel);
@@ -609,27 +609,6 @@ BigInt HashQuadtree::PopulationOf(const LifeNode* node) const {
     return s_Cache[s_CacheIndex].PopulationCache[node] =
                PopulationOf(node->NorthWest) + PopulationOf(node->NorthEast) +
                PopulationOf(node->SouthWest) + PopulationOf(node->SouthEast);
-}
-
-int64_t HashQuadtree::PopulationOf(const LifeNode* node, bool) const {
-    if (node == FalseNode) {
-        return int64_t{0};
-    }
-    if (node == TrueNode) {
-        return int64_t{1};
-    }
-
-    if (auto it = s_Cache[s_CacheIndex].SmallPopulationCache.find(node);
-        it != s_Cache[s_CacheIndex].SmallPopulationCache.end()) {
-        return it->second;
-    }
-
-    // 4. Insert and return a copy
-    return s_Cache[s_CacheIndex].SmallPopulationCache[node] =
-               PopulationOf(node->NorthWest, false) +
-               PopulationOf(node->NorthEast, false) +
-               PopulationOf(node->SouthWest, false) +
-               PopulationOf(node->SouthEast, false);
 }
 
 HashQuadtree::CenteredNodeResult
@@ -779,7 +758,6 @@ void HashQuadtree::CacheResult(const LifeNode* key,
 void HashQuadtree::ClearCache() {
     s_Cache[s_CacheIndex].NodeMap.clear();
     s_Cache[s_CacheIndex].PopulationCache.clear();
-    s_Cache[s_CacheIndex].SmallPopulationCache.clear();
 }
 
 void HashQuadtree::ExpandUniverse(int32_t targetLevel) {

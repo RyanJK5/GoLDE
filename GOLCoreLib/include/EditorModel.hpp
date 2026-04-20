@@ -103,13 +103,11 @@ class EditorModel {
 
     // Paste operations
     std::expected<void, FileEncoder::DecodeError>
-    PasteSelection(std::optional<Vec2> cursorPos,
-                   std::string_view clipboardText);
-    void ForcePaste(std::optional<Vec2> cursorPos,
-                    std::string_view clipboardText);
+    PasteSelection(std::optional<Vec2> cursorPos);
+    void ForcePaste(std::optional<Vec2> cursorPos);
 
     // Deselect and paste from clipboard at the given position
-    void InsertFromClipboard(Vec2 position, std::string_view clipboardText);
+    void InsertFromClipboard(Vec2 position);
 
     SimulationState SetSelectionBounds(Rect bounds);
 
@@ -178,6 +176,8 @@ class EditorModel {
     }
 
     bool operator==(const EditorModel& other) const;
+
+    bool IsSimulationOutOfBounds() const;
 
   private:
     ExecuteCommandResult

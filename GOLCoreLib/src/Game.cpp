@@ -59,7 +59,7 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
 
     glfwMakeContextCurrent(m_Underlying);
     GL_DEBUG(glLineWidth(4));
-    GL_DEBUG(glfwSwapInterval(1));
+    GL_DEBUG(glfwSwapInterval(0));
 
     GL_DEBUG(auto result = glewInit());
     if (result != GLEW_OK)

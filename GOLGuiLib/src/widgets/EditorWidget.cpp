@@ -156,7 +156,8 @@ std::string SelectAllButton::Label(const EditorResult&) const {
 }
 
 bool SelectAllButton::Enabled(const EditorResult& state) const {
-    return Actions::Editable(state.Simulation.State);
+    return Actions::Editable(state.Simulation.State) &&
+           !state.Simulation.OutOfBounds;
 }
 
 UndoButton::UndoButton(std::span<const ImGuiKeyChord> shortcuts)
