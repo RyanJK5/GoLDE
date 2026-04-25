@@ -18,7 +18,8 @@ namespace gol {
 namespace {
 bool ShouldExecuteInline(const SimulationCommand& cmd) {
     if (std::holds_alternative<UndoCommand>(cmd) ||
-        std::holds_alternative<RedoCommand>(cmd)) {
+        std::holds_alternative<RedoCommand>(cmd) ||
+        std::holds_alternative<RuleCommand>(cmd)) {
         return true;
     }
 

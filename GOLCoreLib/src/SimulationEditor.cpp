@@ -144,6 +144,14 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
         ((activeOverride && *activeOverride) || displayResult.Selected))
         m_Model.SetState(UpdateState(controlArgs));
 
+    // Reconcile model state with worker availability so render dispatch
+    // doesn't enter SimulationUpdate after the worker has already stopped.
+    if ((m_Model.State() == SimulationState::Simulation ||
+         m_Model.State() == SimulationState::Stepping) &&
+        !m_Model.SimulationSnapshot()) {
+        m_Model.SetState(SimulationState::Paused);
+    }
+
     m_Model.SetState([this, &graphicsArgs]() {
         switch (m_Model.State()) {
             using enum SimulationState;
@@ -183,7 +191,6 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
 SimulationState
 SimulationEditor::SimulationUpdate(const GraphicsHandlerArgs& args) {
     const auto snapshot = m_Model.SimulationSnapshot();
-
     m_Graphics.DrawGrid({0, 0}, snapshot->Data(), args);
     return SimulationState::Simulation;
 }
