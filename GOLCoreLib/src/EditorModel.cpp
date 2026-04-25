@@ -135,10 +135,10 @@ SimulationState EditorModel::HandleRuleChange(std::string_view ruleStr) {
     m_Worker->BufferRule(std::make_unique<LifeRule>(rule));
 
     if (!rule.Bounds() && m_Grid.Width() == 0 && m_Grid.Height() == 0)
-        return SimulationState::Paint;
+        return m_State;
     if (rule.Bounds()->Width == m_Grid.Width() &&
         rule.Bounds()->Height == m_Grid.Height())
-        return SimulationState::Paint;
+        return m_State;
 
     m_Grid = GameGrid{std::move(m_Grid),
                       rule.Bounds() ? rule.Bounds()->Size() : Size2{}};
@@ -153,7 +153,7 @@ SimulationState EditorModel::HandleRuleChange(std::string_view ruleStr) {
             m_VersionManager.TryPushChange(m_SelectionManager.Deselect(m_Grid),
                                            m_State);
     }
-    return SimulationState::Paint;
+    return m_State;
 }
 
 bool EditorModel::HandleGenerateNoise(float density, uint32_t warnThreshold) {
