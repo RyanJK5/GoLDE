@@ -623,9 +623,8 @@ DecodeMacrocell(std::string_view fileContents) {
 
     qt.OverwriteData(root, rootLevel);
     const auto boundingBox = qt.FindBoundingBox();
-    return DecodeResult{
-        GameGrid{std::move(qt), Size2{boundingBox.Width, boundingBox.Height}},
-        Vec2{}};
+    qt.OverwriteData(root, rootLevel, -boundingBox.Pos());
+    return DecodeResult{GameGrid{std::move(qt), boundingBox.Size()}, Vec2{}};
 }
 } // namespace
 
