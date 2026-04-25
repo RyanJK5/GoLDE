@@ -278,6 +278,10 @@ SimulationState EditorModel::SetSelectionBounds(Rect bounds) {
 }
 
 bool EditorModel::UpdateSelectionAreaTracked(Vec2 gridPos) {
+    if (IsEditBusy()) {
+        return false;
+    }
+
     auto result = m_SelectionManager.UpdateSelectionArea(m_Grid, gridPos);
     m_VersionManager.TryPushChange(result.Change, m_State);
     return result.BeginSelection;
