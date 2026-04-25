@@ -594,7 +594,9 @@ int64_t HashQuadtree::CalculateTreeSize() const {
     return Pow2(m_Depth);
 }
 
-bool HashQuadtree::empty() const { return m_Root->IsEmpty; }
+bool HashQuadtree::empty() const {
+    return m_Root == FalseNode || m_Root->IsEmpty;
+}
 
 BigInt HashQuadtree::PopulationOf(const LifeNode* node) const {
     if (node == FalseNode) {

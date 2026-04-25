@@ -134,14 +134,9 @@ SimulationState EditorModel::HandleRuleChange(std::string_view ruleStr) {
     const auto rule = *LifeRule::Make(ruleStr);
     m_Worker->BufferRule(std::make_unique<LifeRule>(rule));
 
-    if (!rule.Bounds() && m_Grid.Width() == 0 && m_Grid.Height() == 0)
-        return m_State;
-    if (rule.Bounds()->Width == m_Grid.Width() &&
-        rule.Bounds()->Height == m_Grid.Height())
-        return m_State;
-
     m_Grid = GameGrid{std::move(m_Grid),
                       rule.Bounds() ? rule.Bounds()->Size() : Size2{}};
+    m_Grid.SetRule(rule);
 
     m_VersionManager.TryPushChange(VersionState{.Universe = m_Grid}, m_State);
     if (m_SelectionManager.CanDrawSelection()) {
