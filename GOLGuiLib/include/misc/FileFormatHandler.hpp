@@ -30,6 +30,7 @@ struct DecodeError {
         CantOpenFile,
         MissingHeader,
         IncorrectHeader,
+        InvalidRule,
         NoData,
         NoTermination,
         TooManyCells

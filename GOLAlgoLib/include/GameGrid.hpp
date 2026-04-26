@@ -120,7 +120,6 @@ class GameGrid {
     void SetRule(const LifeRule& rule);
     void SetRule(const LifeRule& rule, std::string_view ruleString);
 
-    const LifeRule& GetRule() const;
     std::string_view GetRuleString() const;
 
     bool ShouldValidateCache() const;

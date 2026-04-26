@@ -14,6 +14,7 @@
 #include "FileFormatHandler.hpp"
 #include "GameGrid.hpp"
 #include "Graphics2D.hpp"
+#include "LifeRule.hpp"
 
 namespace gol::FileEncoder {
 static std::string EncodeRLE(const GameGrid& grid, Rect region, Vec2 offset) {
@@ -22,8 +23,8 @@ static std::string EncodeRLE(const GameGrid& grid, Rect region, Vec2 offset) {
     if (offset.X != 0 || offset.Y != 0)
         out += std::format("#CXRLE Pos = {}, {}\n", offset.X, offset.Y);
 
-    out += std::format("x = {}, y = {}, rule = B3/S23\n", region.Width,
-                       region.Height);
+    out += std::format("x = {}, y = {}, rule = {}\n", region.Width,
+                       region.Height, grid.GetRuleString());
 
     constexpr static auto lineWidth = 70UZ;
     std::string body{};
@@ -175,14 +176,15 @@ void EncodeNode(
 
 } // namespace
 
-std::string EncodeMacrocell(const LifeNode* node, int32_t level) {
+std::string EncodeMacrocell(const LifeNode* node, int32_t level,
+                            std::string_view ruleString) {
     std::string out{};
     // Reserve a modest initial buffer; will grow as needed.
     out.reserve(1024);
 
     // Header
     out += "[M2]\n";
-    out += "#R B3/S23\n";
+    out += std::format("#R {}\n", ruleString);
 
     // Tree: child-first traversal
     ankerl::unordered_dense::map<const LifeNode*, int32_t, LifeNodeHash,
@@ -199,8 +201,8 @@ std::string EncodeRegion(const GameGrid& grid, Rect region, Vec2 offset,
     case FileFormat::RLE:
         return EncodeRLE(grid, region, offset);
     case FileFormat::Macrocell:
-        return EncodeMacrocell(grid.Data().Data(),
-                               grid.Data().CalculateDepth());
+        return EncodeMacrocell(grid.Data().Data(), grid.Data().CalculateDepth(),
+                               grid.GetRuleString());
     default:
         throw std::logic_error{"Unsupported file format"};
     }
@@ -293,32 +295,64 @@ DecodeRLE(std::string_view src, uint32_t warnThreshold) {
 
     // 2. Parse the header line:  x = W, y = H[, rule = ...]
     int32_t patternWidth = 0, patternHeight = 0;
+    std::string ruleString{"B3/S23"};
     {
-        const auto xEq = rleBody.find("x =");
-        const auto yEq = rleBody.find("y =");
+        const auto headerNewline = rleBody.find('\n');
+        const std::string_view headerLine{
+            rleBody.data(), headerNewline == std::string::npos ? rleBody.size()
+                                                               : headerNewline};
+
+        const auto xEq = headerLine.find("x =");
+        const auto yEq = headerLine.find("y =");
         if (xEq == std::string::npos || yEq == std::string::npos) {
             return std::unexpected{DecodeError{
                 .ErrorType = DecodeError::Type::MissingHeader,
                 .Message = "Missing RLE header (x = ..., y = ...)."}};
         }
 
-        const char* xPtr = rleBody.data() + xEq + 3;
-        const char* yPtr = rleBody.data() + yEq + 3;
+        const char* xPtr = headerLine.data() + xEq + 3;
+        const char* yPtr = headerLine.data() + yEq + 3;
         while (*xPtr == ' ')
             ++xPtr;
         while (*yPtr == ' ')
             ++yPtr;
 
         const auto [pW, ecW] = std::from_chars(
-            xPtr, rleBody.data() + rleBody.size(), patternWidth);
+            xPtr, headerLine.data() + headerLine.size(), patternWidth);
         const auto [pH, ecH] = std::from_chars(
-            yPtr, rleBody.data() + rleBody.size(), patternHeight);
+            yPtr, headerLine.data() + headerLine.size(), patternHeight);
 
         if (ecW != std::errc{} || ecH != std::errc{}) {
             return std::unexpected{
                 DecodeError{.ErrorType = DecodeError::Type::IncorrectHeader,
                             .Message = "Malformed header dimensions."}};
         }
+
+        const auto ruleEq = headerLine.find("rule =");
+        if (ruleEq != std::string::npos) {
+            auto parsedRule = headerLine.substr(ruleEq + 6);
+            const auto firstNonWhitespace = parsedRule.find_first_not_of(" \t");
+            parsedRule = firstNonWhitespace == std::string::npos
+                             ? std::string_view{}
+                             : parsedRule.substr(firstNonWhitespace);
+
+            const auto trailingWhitespace =
+                parsedRule.find_last_not_of(" \t\r");
+            parsedRule = trailingWhitespace == std::string::npos
+                             ? std::string_view{}
+                             : parsedRule.substr(0, trailingWhitespace + 1);
+
+            if (!parsedRule.empty()) {
+                ruleString = std::string{parsedRule};
+            }
+        }
+    }
+
+    if (const auto validRule = LifeRule::IsValidRule(ruleString); !validRule) {
+        return std::unexpected{
+            DecodeError{.ErrorType = DecodeError::Type::InvalidRule,
+                        .Message = std::format("Invalid rule '{}': {}",
+                                               ruleString, validRule.error())}};
     }
 
     // 3. Locate the RLE data — everything after the first newline that
@@ -420,6 +454,7 @@ DecodeRLE(std::string_view src, uint32_t warnThreshold) {
 
     const auto offset = hasExplicitOffset ? explicitOffset : Vec2{0, 0};
 
+    result.SetRule(*LifeRule::Make(ruleString), ruleString);
     return DecodeResult{std::move(result), offset};
 }
 
@@ -497,6 +532,7 @@ DecodeMacrocell(std::string_view fileContents) {
             std::format("Expected [M2] header, got '{}'", lines[0])}};
 
     HashQuadtree qt({}, {0, 0});
+    std::string ruleString{"B3/S23"};
 
     // ---- Header parsing ----
     size_t lineIdx = 1;
@@ -506,7 +542,30 @@ DecodeMacrocell(std::string_view fileContents) {
             continue;
         if (!line.starts_with('#'))
             break;
-        // #R and #G recognised but not acted on for now.
+
+        if (line.starts_with("#R")) {
+            auto rulePart = line.substr(2);
+            const auto firstNonWhitespace = rulePart.find_first_not_of(" \t");
+            rulePart = firstNonWhitespace == std::string::npos
+                           ? std::string_view{}
+                           : rulePart.substr(firstNonWhitespace);
+
+            const auto trailingWhitespace = rulePart.find_last_not_of(" \t\r");
+            rulePart = trailingWhitespace == std::string::npos
+                           ? std::string_view{}
+                           : rulePart.substr(0, trailingWhitespace + 1);
+
+            if (!rulePart.empty()) {
+                ruleString = std::string{rulePart};
+            }
+        }
+    }
+
+    if (const auto validRule = LifeRule::IsValidRule(ruleString); !validRule) {
+        return std::unexpected{
+            DecodeError{.ErrorType = DecodeError::Type::InvalidRule,
+                        .Message = std::format("Invalid rule '{}': {}",
+                                               ruleString, validRule.error())}};
     }
 
     if (lineIdx >= lines.size())
@@ -624,7 +683,10 @@ DecodeMacrocell(std::string_view fileContents) {
     qt.OverwriteData(root, rootLevel);
     const auto boundingBox = qt.FindBoundingBox();
     qt.OverwriteData(root, rootLevel, -boundingBox.Pos());
-    return DecodeResult{GameGrid{std::move(qt), boundingBox.Size()}, Vec2{}};
+    GameGrid decodedGrid{std::move(qt), boundingBox.Size()};
+    decodedGrid.SetRule(*LifeRule::Make(ruleString), ruleString);
+
+    return DecodeResult{std::move(decodedGrid), Vec2{}};
 }
 } // namespace
 
