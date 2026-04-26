@@ -195,6 +195,10 @@ std::string EncodeMacrocell(const LifeNode* node, int32_t level,
     return out;
 }
 
+bool IsFormatSupported(std::string_view format) {
+    return format == ".rle" || format == ".mc";
+}
+
 std::string EncodeRegion(const GameGrid& grid, Rect region, Vec2 offset,
                          FileFormat fileFormat) {
     switch (fileFormat) {

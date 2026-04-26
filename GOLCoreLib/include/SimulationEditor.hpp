@@ -73,6 +73,7 @@ class SimulationEditor {
     void UpdateDragState();
 
     void PasteWarnUpdated(PopupWindowState state);
+    void LoadRuleWarnUpdated(PopupWindowState state);
 
   private:
     static constexpr double DefaultTickDelayMs = 0.;
@@ -86,7 +87,10 @@ class SimulationEditor {
     ErrorWindow m_CopyErrorWindow;
     ErrorWindow m_GenerateNoiseError;
     WarnWindow m_PasteWarning;
+    WarnWindow m_LoadRuleWarning;
     WarnWindow m_SaveWarning;
+
+    std::optional<LoadRuleWarningRequest> m_PendingLoadRuleWarning;
 
     RectF m_WindowBounds;
 

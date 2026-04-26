@@ -75,6 +75,8 @@ class SelectionManager {
     bool GridAlive() const;
     const HashQuadtree& GridData() const;
     const BigInt& SelectedPopulation() const;
+    std::optional<std::string_view> SelectionRuleString() const;
+    void SetSelectionRule(std::string_view ruleString);
 
     bool CanDrawSelection() const;
     bool CanDrawLargeSelection() const;

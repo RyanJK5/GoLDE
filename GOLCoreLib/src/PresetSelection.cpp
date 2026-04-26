@@ -111,8 +111,7 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
                 static_cast<ImTextureID>(m_Library[i].Graphics.TextureID()),
                 {windowBounds.Width, windowBounds.Height}, ImVec2{0, 1},
                 ImVec2{1, 0});
-            ImGui::SetItemTooltip(
-                "%s", std::format("{}.rle", m_Library[i].FileName).c_str());
+            ImGui::SetItemTooltip("%s", m_Library[i].FileName.c_str());
 
             ImGui::SetCursorPos(cursorPos);
 
@@ -139,7 +138,7 @@ void PresetSelection::ReadFiles(const std::filesystem::path& path) {
     m_MaxGridDimensions = Size2F{};
     for (const auto& file :
          std::filesystem::recursive_directory_iterator(path)) {
-        if (file.path().extension() != ".rle")
+        if (!FileEncoder::IsFormatSupported(file.path().extension().string()))
             continue;
 
         auto result = FileEncoder::ReadRegion(file.path());
@@ -156,10 +155,8 @@ void PresetSelection::ReadFiles(const std::filesystem::path& path) {
             std::max(m_MaxGridDimensions.Height,
                      static_cast<float>(result->Grid.Height()));
 
-        std::string name = file.path().filename().string();
-        name = name.substr(0, name.find_last_of('.'));
-        m_Library.emplace_back(std::move(result->Grid), std::move(name),
-                               m_WindowSize);
+        m_Library.emplace_back(std::move(result->Grid),
+                               file.path().filename().string(), m_WindowSize);
     }
 }
 } // namespace gol

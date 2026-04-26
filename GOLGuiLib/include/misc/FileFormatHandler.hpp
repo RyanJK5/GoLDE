@@ -40,6 +40,8 @@ struct DecodeError {
     std::string Message;
 };
 
+bool IsFormatSupported(std::string_view format);
+
 std::string EncodeRegion(const GameGrid& grid, Rect region,
                          Vec2 offset = {0, 0},
                          FileFormat fileFormat = FileFormat::RLE);

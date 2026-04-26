@@ -46,6 +46,11 @@ struct SaveAsWarningRequest {
     BigInt Population{};
 };
 
+struct LoadRuleWarningRequest {
+    std::string OriginalRuleString;
+    std::string LoadedRuleString;
+};
+
 enum class ExecuteCommandErrorType {
     None,
     File,
@@ -63,6 +68,7 @@ struct ExecuteCommandResult {
     ExecuteCommandErrorType ErrorType = ExecuteCommandErrorType::None;
     std::optional<std::string> ErrorMessage{};
     std::optional<SaveAsWarningRequest> SaveAsWarning{};
+    std::optional<LoadRuleWarningRequest> LoadRuleWarning{};
     std::optional<std::string> ClipboardText{};
 };
 
@@ -189,6 +195,11 @@ class EditorModel {
     ExecuteCommandResult
     ExecuteCommandImmediate(const SimulationCommand& cmd,
                             const ExecuteCommandContext& context);
+
+    std::optional<ExecuteCommandResult>
+    HandleIncomingRule(std::optional<std::string_view> incomingRule,
+                       bool hadExistingUniverseData,
+                       bool preserveSavedStateOnApply);
 
     void TryPushVersionChange(const std::optional<VersionState>& change);
     void TryPushVersionChange(const VersionState& change);

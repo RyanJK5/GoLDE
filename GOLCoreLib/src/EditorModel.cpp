@@ -154,10 +154,13 @@ SimulationState EditorModel::HandleRuleChange(std::string_view ruleStr) {
     const auto oldSize = m_Grid.Size();
     if ((oldSize == Size2{} && !rule.Bounds()) ||
         (rule.Bounds() && oldSize != rule.Bounds()->Size())) {
+
+        m_Grid.SetRule(rule, ruleStr);
         m_Grid = GameGrid{std::move(m_Grid),
                           rule.Bounds() ? rule.Bounds()->Size() : Size2{}};
     }
-    m_Grid.SetRule(rule, ruleStr);
+
+    m_SelectionManager.SetSelectionRule(ruleStr);
 
     TryPushVersionChange(VersionState{.Universe = m_Grid});
 
@@ -441,6 +444,40 @@ EditorModel::ExecuteCommand(const SimulationCommand& cmd,
     return ExecuteCommandImmediate(cmd, context);
 }
 
+std::optional<ExecuteCommandResult>
+EditorModel::HandleIncomingRule(std::optional<std::string_view> incomingRule,
+                                bool hadExistingUniverseData,
+                                bool preserveSavedStateOnApply) {
+    if (!incomingRule) {
+        return std::nullopt;
+    }
+
+    const std::string originalRule{m_Grid.GetRuleString()};
+    if (*incomingRule == originalRule) {
+        return std::nullopt;
+    }
+
+    if (hadExistingUniverseData) {
+        return ExecuteCommandResult{
+            .State = m_State,
+            .LoadRuleWarning = LoadRuleWarningRequest{
+                .OriginalRuleString = originalRule,
+                .LoadedRuleString = std::string{*incomingRule}}};
+    }
+
+    const auto oldWidth = GridWidth();
+    const auto oldHeight = GridHeight();
+    const auto state = HandleRuleChange(*incomingRule);
+    if (preserveSavedStateOnApply) {
+        m_VersionManager.Save();
+    }
+
+    return ExecuteCommandResult{.State = state,
+                                .RecenterCameraToGridCenter =
+                                    GridWidth() != oldWidth ||
+                                    GridHeight() != oldHeight};
+}
+
 ExecuteCommandResult
 EditorModel::ExecuteCommandImmediate(const SimulationCommand& cmd,
                                      const ExecuteCommandContext& context) {
@@ -537,6 +574,8 @@ EditorModel::ExecuteCommandImmediate(const SimulationCommand& cmd,
                 return ExecuteCommandResult{.State = m_State};
             },
             [this](const LoadCommand& command) {
+                const bool hadExistingUniverseData =
+                    !m_Grid.Dead() || !SelectedPopulation().is_zero();
                 auto error = LoadFile(command.FilePath);
                 if (error) {
                     return ExecuteCommandResult{
@@ -546,6 +585,13 @@ EditorModel::ExecuteCommandImmediate(const SimulationCommand& cmd,
                             std::format("Failed to load file:\n{}", *error)};
                 }
                 MarkSaved();
+
+                if (auto incomingRuleResult = HandleIncomingRule(
+                        m_SelectionManager.SelectionRuleString(),
+                        hadExistingUniverseData, true)) {
+                    return *incomingRuleResult;
+                }
+
                 return ExecuteCommandResult{.State = m_State};
             },
             [this](const NewFileCommand&) {
@@ -565,6 +611,8 @@ EditorModel::ExecuteCommandImmediate(const SimulationCommand& cmd,
             },
             [this, &context](const SelectionCommand& command) {
                 if (command.Action == SelectionAction::Paste) {
+                    const bool hadExistingUniverseData =
+                        !m_Grid.Dead() || !SelectedPopulation().is_zero();
                     if (context.ForcePasteSelection) {
                         ForcePaste(context.CursorPos, command.ClipboardText);
                         return ExecuteCommandResult{.State = m_State};
@@ -583,6 +631,13 @@ EditorModel::ExecuteCommandImmediate(const SimulationCommand& cmd,
                                                     .ErrorMessage =
                                                         result.error().Message};
                     }
+
+                    if (auto incomingRuleResult = HandleIncomingRule(
+                            m_SelectionManager.SelectionRuleString(),
+                            hadExistingUniverseData, false)) {
+                        return *incomingRuleResult;
+                    }
+
                     return ExecuteCommandResult{.State = m_State};
                 }
 

@@ -188,7 +188,11 @@ bool GameGrid::Set(int32_t x, int32_t y, bool active) {
 }
 
 GameGrid GameGrid::SubRegion(Rect region) const {
-    return GameGrid{m_HashLifeData.Extract(region), region.Size()};
+    auto subRegion = GameGrid{m_HashLifeData.Extract(region), region.Size()};
+    if (const auto rule = LifeRule::Make(m_RuleString); rule) {
+        subRegion.SetRule(*rule, m_RuleString);
+    }
+    return subRegion;
 }
 
 void GameGrid::ClearRegion(Rect region) {

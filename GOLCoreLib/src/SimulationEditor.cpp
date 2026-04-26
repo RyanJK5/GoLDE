@@ -91,6 +91,9 @@ SimulationEditor::SimulationEditor(uint32_t id,
       m_PasteWarning(
           "Paste Warning",
           std::bind_front(&SimulationEditor::PasteWarnUpdated, this)),
+      m_LoadRuleWarning(
+          "Rule Mismatch",
+          std::bind_front(&SimulationEditor::LoadRuleWarnUpdated, this)),
       m_GenerateNoiseError("Noise Generation Error", [](auto) {}),
       m_SaveWarning("Save Warning", [](auto) {}) {}
 
@@ -123,6 +126,7 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
     m_Graphics.ClearBackground(graphicsArgs);
 
     m_PasteWarning.Update();
+    m_LoadRuleWarning.Update();
     m_CopyErrorWindow.Update();
     m_GenerateNoiseError.Update();
     m_FileErrorWindow.Update();
@@ -132,7 +136,10 @@ SimulationEditor::Update(std::optional<bool> activeOverride,
         const auto dispatch = m_Model.CanDispatchEdit();
         if (dispatch.Accepted) {
             ImGui::SetClipboardText(presetArgs.ClipboardText.c_str());
-            m_Model.InsertFromClipboard(Vec2{0, 0}, ImGui::GetClipboardText());
+            ExecuteEditorCommand(
+                SelectionCommand{.ClipboardText = presetArgs.ClipboardText,
+                                 .Action = SelectionAction::Paste},
+                {.CursorPos = Vec2{0, 0}});
         }
     }
 
@@ -524,6 +531,18 @@ void SimulationEditor::ApplyCommandResult(
                         "continue?",
                         saveAsRequest.Population);
     }
+
+    if (commandResult.LoadRuleWarning) {
+        m_PendingLoadRuleWarning = commandResult.LoadRuleWarning;
+        m_LoadRuleWarning.Message = std::format(
+            "The incoming rule does not match the current universe rule.\n\n"
+            "    Current rule:  {}\n"
+            "    Incoming rule: {}\n\n"
+            "Would you like to use the incoming rule?",
+            m_PendingLoadRuleWarning->OriginalRuleString,
+            m_PendingLoadRuleWarning->LoadedRuleString);
+        m_LoadRuleWarning.Activate();
+    }
 }
 
 void SimulationEditor::PollPendingCommandResult() {
@@ -545,6 +564,22 @@ void SimulationEditor::PasteWarnUpdated(PopupWindowState state) {
         SelectionCommand{.ClipboardText = ImGui::GetClipboardText(),
                          .Action = SelectionAction::Paste},
         context);
+}
+
+void SimulationEditor::LoadRuleWarnUpdated(PopupWindowState state) {
+    if (!m_PendingLoadRuleWarning) {
+        return;
+    }
+
+    const auto ruleToApply = state == PopupWindowState::Success
+                                 ? m_PendingLoadRuleWarning->LoadedRuleString
+                                 : m_PendingLoadRuleWarning->OriginalRuleString;
+    m_PendingLoadRuleWarning.reset();
+
+    ExecuteEditorCommand(
+        RuleCommand{.RuleString = ruleToApply},
+        {.CursorPos = CursorGridPos(),
+         .PrimaryMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left)});
 }
 
 void SimulationEditor::UpdateMouseState(Vec2 gridPos) {

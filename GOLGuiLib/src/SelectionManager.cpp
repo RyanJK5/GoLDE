@@ -399,6 +399,26 @@ const BigInt& SelectionManager::SelectedPopulation() const {
     return m_Selected ? m_Selected->Population() : BigZero;
 }
 
+std::optional<std::string_view> SelectionManager::SelectionRuleString() const {
+    if (!m_Selected) {
+        return std::nullopt;
+    }
+    return m_Selected->GetRuleString();
+}
+
+void SelectionManager::SetSelectionRule(std::string_view ruleString) {
+    if (!m_Selected) {
+        return;
+    }
+
+    const auto rule = LifeRule::Make(ruleString);
+    if (!rule) {
+        return;
+    }
+
+    m_Selected->SetRule(*rule, ruleString);
+}
+
 bool SelectionManager::CanDrawSelection() const {
     return m_AnchorSelection && m_SentinelSelection;
 }
