@@ -1,6 +1,10 @@
 set(SOURCES
     src/EncodeTest.cpp
     src/HashQuadtreeTest.cpp
+    src/LifeRuleTest.cpp
+    src/TopologyTest.cpp
+    src/DummyAlgorithmTest.cpp
+    src/PatternRegressionTest.cpp
     src/TestMain.cpp
 )
 

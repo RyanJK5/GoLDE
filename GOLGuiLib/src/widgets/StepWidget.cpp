@@ -125,9 +125,6 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
         ImGui::PopStyleVar();
     }
 
-    if (m_StepCount < 1)
-        m_StepCount = 1;
-
     auto result = m_Button.Update(state);
 
     auto retValue = WidgetResult{
