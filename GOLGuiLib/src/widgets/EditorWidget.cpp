@@ -225,7 +225,7 @@ WidgetResult EditorWidget::UpdateImpl(const EditorResult& state) {
 
     UpdateResult(result, m_UndoButton.Update(state));
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     UpdateResult(result, m_RedoButton.Update(state));
     ImGui::PopStyleVar();
 

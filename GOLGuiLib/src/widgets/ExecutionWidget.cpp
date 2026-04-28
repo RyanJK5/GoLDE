@@ -88,7 +88,7 @@ WidgetResult ExecutionWidget::UpdateImpl(const EditorResult& state) {
     UpdateResult(result, m_ResetButton.Update(state));
     UpdateResult(result, m_RestartButton.Update(state));
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     UpdateResult(result, m_ClearButton.Update(state));
     ImGui::Separator();
     ImGui::PopStyleVar();

@@ -134,7 +134,7 @@ WidgetResult StepWidget::UpdateImpl(const EditorResult& state) {
 
     retValue.FromShortcut = retValue.FromShortcut || result.FromShortcut;
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     {
         const bool hideHyperSpeedOption =
             state.Simulation.State == SimulationState::Simulation;

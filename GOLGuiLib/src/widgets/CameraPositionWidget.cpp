@@ -19,7 +19,7 @@ WidgetResult CameraPositionWidget::UpdateImpl(const EditorResult& info) {
 
     ImGui::SameLine();
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     auto ret = [&] {
         if (ImGui::Button("Travel", {ImGui::GetContentRegionAvail().x, 0})) {
             return WidgetResult{.Command = CameraPositionCommand{m_Position}};
@@ -32,7 +32,7 @@ WidgetResult CameraPositionWidget::UpdateImpl(const EditorResult& info) {
 
     ImGui::Text("Camera Scale");
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
 
     const auto inputPixelsPerCell = BasePixelsPerCellAtZoom1 * info.Zoom;
     auto pixelsPerCell = inputPixelsPerCell;

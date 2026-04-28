@@ -61,7 +61,7 @@ RuleWidget::RuleInfoChange RuleWidget::ResizeComponent(const EditorResult&) {
     }();
 
     ImGui::PopStyleVar();
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
 
     ImGui::SetCursorPosX(ImGui::GetStyle().FramePadding.x * 3);
 

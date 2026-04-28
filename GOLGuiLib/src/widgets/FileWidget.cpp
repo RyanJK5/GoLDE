@@ -100,7 +100,7 @@ WidgetResult FileWidget::UpdateImpl(const EditorResult& state) {
     tryButton(m_UpdateFileButton);
     tryButton(m_SaveButton);
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     tryButton(m_LoadButton);
     ImGui::Separator();
     ImGui::PopStyleVar();

@@ -18,7 +18,7 @@ void PopupWindow::Update() {
                            ImGuiWindowFlags_AlwaysAutoResize |
                                ImGuiWindowFlags_NoResize);
 
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, 30.f);
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     ImGui::Text("%s", Message.c_str());
     ImGui::PopStyleVar();
 

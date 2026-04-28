@@ -185,17 +185,23 @@ void Game::InitImGUI(const std::filesystem::path& stylePath) {
 #endif
     io.IniFilename = nullptr;
 
+    int width, height;
+    glfwGetWindowSize(m_Window.Get(), &width, &height);
+    m_FontSize = std::max(14.0f, 30.0f * static_cast<float>(height) / 2160.0f);
+
     auto path = std::filesystem::path("resources") / "font" / "arial.ttf";
-    m_Font = io.Fonts->AddFontFromFileTTF(path.string().c_str(), 30.0f);
+    m_Font = io.Fonts->AddFontFromFileTTF(path.string().c_str(), m_FontSize);
 
     auto iconPath =
         std::filesystem::path("resources") / "font" / "fontawesome7.otf";
     auto config = ImFontConfig{};
     config.MergeMode = true;
-    io.Fonts->AddFontFromFileTTF(iconPath.string().c_str(), 30.0f, &config);
+    io.Fonts->AddFontFromFileTTF(iconPath.string().c_str(), m_FontSize,
+                                 &config);
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.WindowMenuButtonPosition = ImGuiDir_None;
+    style.ScaleAllSizes(m_FontSize / 30.0f);
 
     for (auto&& [imguiCol, styleCol] : styleInfo.AttributeColors)
         style.Colors[imguiCol] = styleInfo.StyleColors.at(styleCol);
@@ -231,7 +237,7 @@ void Game::BeginFrame() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::PushFont(m_Font, 30.0f);
+    ImGui::PushFont(m_Font, m_FontSize);
     CreateDockspace();
 }
 

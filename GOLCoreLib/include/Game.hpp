@@ -101,6 +101,7 @@ class Game {
     SimulationControl m_Control;
     PresetSelection m_PresetSelection;
     ImFont* m_Font = nullptr; // Standard font for all children
+    float m_FontSize = 30.0f; // Scaled font size based on screen
 
     // Check for establishing the dockspace on startup
     bool m_Startup = true;

@@ -302,8 +302,8 @@ SimulationEditor::DisplaySimulation(bool grabFocus) {
           m_Model.State() == SimulationState::Stepping) &&
          m_Model.SimulationLag() >= std::chrono::seconds{3}) ||
         m_Model.IsEditBusy()) {
-        constexpr static auto radius = 30.f;
-        constexpr static auto thickness = 12.f;
+        const auto radius = ImGui::GetFontSize();
+        const auto thickness = radius * 0.4f;
         ImGui::SetCursorPosX(ImGui::GetContentRegionMax().x - radius * 2 -
                              thickness);
         ImGui::SetCursorPosY(ImGui::GetContentRegionMax().y - radius * 2 -
