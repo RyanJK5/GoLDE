@@ -95,6 +95,13 @@ void GraphicsHandler::InitGridBuffer() {
         1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
         reinterpret_cast<const void*>(sizeof(float) * 2)));
 
+    GL_DEBUG(glBindVertexArray(m_GridLineVAO.ID()));
+    GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridLineBuffer.ID()));
+    GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+    GL_DEBUG(glEnableVertexAttribArray(0));
+    GL_DEBUG(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2,
+                                   nullptr));
+
     GL_DEBUG(glBindVertexArray(m_SelectionVAO.ID()));
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_SelectionBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
@@ -299,12 +306,10 @@ void GraphicsHandler::DrawGridLines(Vec2 offset,
             static_cast<float>(gridInfo.LowerRight.Y - Camera.Center.y));
     }
 
+    GL_DEBUG(glBindVertexArray(m_GridLineVAO.ID()));
     GL_DEBUG(glBindBuffer(GL_ARRAY_BUFFER, m_GridLineBuffer.ID()));
     GL_DEBUG(glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float),
                           positions.data(), GL_DYNAMIC_DRAW));
-    GL_DEBUG(glEnableVertexAttribArray(0));
-    GL_DEBUG(
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));
     GL_DEBUG(
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(positions.size() / 2)));
 }
