@@ -24,11 +24,9 @@ struct PresetDisplay {
 
 class PresetSelection {
   public:
-    static constexpr Size2 TemplateDimensions = {300, 300};
-
-  public:
     PresetSelection(const std::filesystem::path& defaultPath,
-                    Size2 templateSize = TemplateDimensions);
+                    Size2 initialBufferSize = {
+                        300, 300}); // Dynamically resized during layout
 
     PresetSelectionResult Update(const EditorResult& info);
 

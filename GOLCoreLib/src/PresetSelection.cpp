@@ -66,18 +66,31 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
     auto cursorPos = ImGui::GetCursorPos();
     auto numAvailable = 0;
 
-    const auto windowBounds =
-        RectF{Vec2F{cursorPos},
-              Size2F{static_cast<float>(TemplateDimensions.Width),
-                     static_cast<float>(TemplateDimensions.Height)}};
-    const auto smallestCellSize =
-        std::min(windowBounds.Width / m_MaxGridDimensions.Width,
-                 windowBounds.Height / m_MaxGridDimensions.Height);
     const auto spacing = ImGui::GetStyle().ItemSpacing;
-    const auto numPerRow = std::max(
-        1, static_cast<int32_t>(std::floor(
-               ImGui::GetContentRegionMax().x /
-               (smallestCellSize * m_MaxGridDimensions.Width + spacing.x))));
+    const float layoutWidth = std::max(1.f, ImGui::GetContentRegionAvail().x);
+    const float layoutHeight = std::max(1.f, ImGui::GetContentRegionAvail().y);
+
+    size_t activeItems = 0;
+    for (const auto& item : m_Library) {
+        if (item.FileName.contains(m_SearchText))
+            activeItems++;
+    }
+
+    // Semi-dynamic grid: adjust columns based on aspect ratio to best fit all
+    // squares into the bounds
+    int numPerRow = 1;
+    if (activeItems > 0) {
+        numPerRow =
+            std::max(1, static_cast<int>(std::round(std::sqrt(
+                            activeItems * (layoutWidth / layoutHeight)))));
+    }
+
+    // Calculate item width to optimally fit exactly `numPerRow` columns
+    const float templateWidth =
+        std::max(10.f, (layoutWidth - spacing.x * (numPerRow - 1)) / numPerRow);
+
+    const auto windowBounds =
+        RectF{Vec2F{cursorPos}, Size2F{templateWidth, templateWidth}};
 
     {
         DisabledScope disableIf{!enabled};
