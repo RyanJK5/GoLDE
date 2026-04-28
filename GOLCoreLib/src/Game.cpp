@@ -288,15 +288,9 @@ void Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize) {
     ImGui::DockBuilderSetNodeSize(dockspaceID, windowSize);
 
     ImGuiID leftID{}, rightID{};
-
-    // Scale panel sizes relative to the window size so they look appropriate
-    // consistently across fullscreen resolutions.
-    float leftRatio = std::clamp(540.0f / windowSize.x, 0.15f, 0.35f);
-    float downRatio = std::clamp(350.0f / windowSize.y, 0.15f, 0.35f);
-
-    ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, leftRatio, &leftID,
+    ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.15f, &leftID,
                                 &rightID);
-    auto downID = ImGui::DockBuilderSplitNode(rightID, ImGuiDir_Down, downRatio,
+    auto downID = ImGui::DockBuilderSplitNode(rightID, ImGuiDir_Down, 0.15f,
                                               nullptr, &rightID);
 
     ImGui::DockBuilderDockWindow("Presets", downID);
