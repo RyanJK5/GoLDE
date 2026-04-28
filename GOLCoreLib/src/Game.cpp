@@ -40,6 +40,7 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     m_Underlying = glfwCreateWindow(width, height, "GOLDE", NULL, NULL);
+    glfwMaximizeWindow(m_Underlying);
 
     const auto deleteStbiImage = [](unsigned char* pixels) {
         stbi_image_free(pixels);
@@ -273,9 +274,9 @@ void Game::InitDockspace(uint32_t dockspaceID, ImVec2 windowSize) {
     ImGui::DockBuilderSetNodeSize(dockspaceID, windowSize);
 
     ImGuiID leftID{}, rightID{};
-    ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f, &leftID,
+    ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.15f, &leftID,
                                 &rightID);
-    auto downID = ImGui::DockBuilderSplitNode(rightID, ImGuiDir_Down, 0.25f,
+    auto downID = ImGui::DockBuilderSplitNode(rightID, ImGuiDir_Down, 0.15f,
                                               nullptr, &rightID);
 
     ImGui::DockBuilderDockWindow("Presets", downID);
