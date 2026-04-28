@@ -63,4 +63,9 @@ TEST(LifeRuleTest, IsValidRuleChecks) {
     EXPECT_FALSE(bad.has_value());
 }
 
+TEST(LifeRuleTest, BirthZeroCheck) {
+    const auto rule = LifeRule::IsValidRule("B0/S23");
+    EXPECT_FALSE(rule.has_value());
+}
+
 } // namespace gol

@@ -15,9 +15,10 @@ GOLDE is a high-performance Conway's Game of Life simulator with an intuitive GU
 
 ## Features
 
-- **Interactive GUI**: Full-featured ImGui-based interface with intuitive controls
+- **Interactive GUI**: Full-featured interface with intuitive controls
 - **Simulation Control**: Play, pause, step, and adjust speed in real-time
 - **Hyper Speed**: Jump any number of generations into the future using HashLife
+- **Customizable Rules**: Experiment with outer-totalistic rules and toroidal topologies
 - **Pattern Editor**: Create and edit patterns with all the quality of life features of a paint program
 - **Customizable Shortcuts**: Edit keyboard shortcuts in real-time through [shortcuts.yml](GOLExecutable/config/shortcuts.yml)
 - **Preset Library**: Pre-loaded classic Game of Life patterns
@@ -94,6 +95,14 @@ A demonstration of basic GOLDE editing features.
 
 
 Game of Life simulating itself in GOLDE.
+
+## What's Next?
+
+GOLDE will continue receiving updates and is moving towards the goal of supporting modular extensions to the editor. In order of priority, the major features that GOLDE is next targeting are:
+1. Support for multi-state rules
+2. Support for Python and Lua scripting
+3. Robust extension support for adding rules, algorithms, topologies, and data structures (both in C++ and Lua)
+4. Support for making additions and modifications to the UI through extensions, such as additional widgets
 
 ## License
 
