@@ -35,6 +35,10 @@ OpenGLWindow::OpenGLWindow(int32_t width, int32_t height)
     if (!glfwInit())
         throw GLException("Failed to initialize glfw");
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     m_Underlying = glfwCreateWindow(width, height, "GOLDE", NULL, NULL);
 
     const auto deleteStbiImage = [](unsigned char* pixels) {
