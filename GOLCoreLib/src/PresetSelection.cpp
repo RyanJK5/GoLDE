@@ -68,22 +68,14 @@ PresetSelectionResult PresetSelection::Update(const EditorResult& info) {
 
     const auto spacing = ImGui::GetStyle().ItemSpacing;
     const float layoutWidth = std::max(1.f, ImGui::GetContentRegionAvail().x);
-    const float layoutHeight = std::max(1.f, ImGui::GetContentRegionAvail().y);
+    // Base ideal width (e.g. 10em) to prevent thumbnails from getting tiny
+    const float idealWidth = ImGui::GetFontSize() * 10.f;
 
-    size_t activeItems = 0;
-    for (const auto& item : m_Library) {
-        if (item.FileName.contains(m_SearchText))
-            activeItems++;
-    }
-
-    // Semi-dynamic grid: adjust columns based on aspect ratio to best fit all
-    // squares into the bounds
-    int numPerRow = 1;
-    if (activeItems > 0) {
-        numPerRow =
-            std::max(1, static_cast<int>(std::round(std::sqrt(
-                            activeItems * (layoutWidth / layoutHeight)))));
-    }
+    // Semi-dynamic grid: calculate how many items fit comfortably in the
+    // available layout width
+    const int numPerRow =
+        std::max(1, static_cast<int>((layoutWidth + spacing.x) /
+                                     (idealWidth + spacing.x)));
 
     // Calculate item width to optimally fit exactly `numPerRow` columns
     const float templateWidth =

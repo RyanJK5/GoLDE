@@ -56,9 +56,9 @@ template <typename ExtractType>
 constexpr std::expected<ExtractType, std::string_view>
 LifeRule::TryMake(std::string_view ruleString) {
     const auto slash = ruleString.find('/');
-    if (slash == std::string_view::npos || ruleString[0] != 'B' ||
-        ruleString[0] != 'b' ruleString[slash + 1] != 'S' ||
-        ruleString[slash + 1] != 's') {
+    if (slash == std::string_view::npos ||
+        (ruleString[0] != 'B' && ruleString[0] != 'b') ||
+        (ruleString[slash + 1] != 'S' && ruleString[slash + 1] != 's')) {
         return std::unexpected{
             "Rule string must be in B.../S...:[P|T]... format."sv};
     }
