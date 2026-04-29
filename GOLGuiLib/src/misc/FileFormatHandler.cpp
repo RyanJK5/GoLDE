@@ -616,7 +616,14 @@ DecodeMacrocell(std::string_view fileContents) {
 
             auto parse = [&](std::string_view sv, int32_t& out)
                 -> std::expected<std::string_view, DecodeError> {
-                sv = sv.substr(sv.find_first_not_of(' '));
+                const auto startIndex = sv.find_first_not_of(' ');
+                if (startIndex == std::string_view::npos) {
+                    return std::unexpected{DecodeError{
+                        DecodeError::Type::IncorrectHeader,
+                        std::format("Expected integer but got '{}'", sv)}};
+                }
+
+                sv = sv.substr(startIndex);
                 auto [ptr, ec] =
                     std::from_chars(sv.data(), sv.data() + sv.size(), out);
                 if (ec != std::errc{})
