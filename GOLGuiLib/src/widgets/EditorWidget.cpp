@@ -79,7 +79,7 @@ DeselectButton::DeselectButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::Deselect, shortcuts) {}
 
 Size2F DeselectButton::Dimensions() const {
-    return {ImGui::GetContentRegionAvail().x / 4.f,
+    return {ImGui::GetContentRegionAvail().x,
             ActionButton::DefaultButtonHeight()};
 }
 
@@ -91,19 +91,38 @@ bool DeselectButton::Enabled(const EditorResult& state) const {
     return state.Editing.SelectionActive;
 }
 
-RotateButton::RotateButton(std::span<const ImGuiKeyChord> shortcuts)
-    : ActionButton(SelectionAction::Rotate, shortcuts) {}
+RotateClockwiseButton::RotateClockwiseButton(
+    std::span<const ImGuiKeyChord> shortcuts)
+    : ActionButton(SelectionAction::RotateClockwise, shortcuts) {}
 
-Size2F RotateButton::Dimensions() const {
+Size2F RotateClockwiseButton::Dimensions() const {
     return {ImGui::GetContentRegionAvail().x / 3.f,
             ActionButton::DefaultButtonHeight()};
 }
 
-std::string RotateButton::Label(const EditorResult&) const {
-    return ICON_FA_ROTATE;
+std::string RotateClockwiseButton::Label(const EditorResult&) const {
+    return ICON_FA_ARROW_ROTATE_RIGHT;
 }
 
-bool RotateButton::Enabled(const EditorResult& state) const {
+bool RotateClockwiseButton::Enabled(const EditorResult& state) const {
+    return state.Editing.SelectionActive &&
+           Actions::Editable(state.Simulation.State);
+}
+
+RotateCounterclockwiseButton::RotateCounterclockwiseButton(
+    std::span<const ImGuiKeyChord> shortcuts)
+    : ActionButton(SelectionAction::RotateCounterclockwise, shortcuts) {}
+
+Size2F RotateCounterclockwiseButton::Dimensions() const {
+    return {ImGui::GetContentRegionAvail().x / 4.f,
+            ActionButton::DefaultButtonHeight()};
+}
+
+std::string RotateCounterclockwiseButton::Label(const EditorResult&) const {
+    return ICON_FA_ARROW_ROTATE_LEFT;
+}
+
+bool RotateCounterclockwiseButton::Enabled(const EditorResult& state) const {
     return state.Editing.SelectionActive &&
            Actions::Editable(state.Simulation.State);
 }
@@ -147,7 +166,7 @@ SelectAllButton::SelectAllButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(SelectionAction::SelectAll, shortcuts) {}
 
 Size2F SelectAllButton::Dimensions() const {
-    return {ImGui::GetContentRegionAvail().x / 4.f,
+    return {ImGui::GetContentRegionAvail().x / 2.f,
             ActionButton::DefaultButtonHeight()};
 }
 
@@ -164,12 +183,12 @@ UndoButton::UndoButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(EditorAction::Undo, shortcuts, true) {}
 
 Size2F UndoButton::Dimensions() const {
-    return {ImGui::GetContentRegionAvail().x / 3.f,
+    return {ImGui::GetContentRegionAvail().x / 4.f,
             ActionButton::DefaultButtonHeight()};
 }
 
 std::string UndoButton::Label(const EditorResult&) const {
-    return ICON_FA_ARROW_ROTATE_LEFT;
+    return ICON_FA_REPLY;
 }
 
 bool UndoButton::Enabled(const EditorResult& state) const {
@@ -182,12 +201,12 @@ RedoButton::RedoButton(std::span<const ImGuiKeyChord> shortcuts)
     : ActionButton(EditorAction::Redo, shortcuts, true) {}
 
 Size2F RedoButton::Dimensions() const {
-    return {ImGui::GetContentRegionAvail().x / 2.f,
+    return {ImGui::GetContentRegionAvail().x / 3.f,
             ActionButton::DefaultButtonHeight()};
 }
 
 std::string RedoButton::Label(const EditorResult&) const {
-    return ICON_FA_ARROW_ROTATE_RIGHT;
+    return ICON_FA_SHARE;
 }
 
 bool RedoButton::Enabled(const EditorResult& state) const {
@@ -202,7 +221,8 @@ EditorWidget::EditorWidget(const ShortcutMap& shortcuts)
       m_PasteButton(shortcuts.at(SelectionAction::Paste)),
       m_DeleteButton(shortcuts.at(SelectionAction::Delete)),
       m_DeselectButton(shortcuts.at(SelectionAction::Deselect)),
-      m_RotateButton(shortcuts.at(SelectionAction::Rotate)),
+      m_RotateCWButton(shortcuts.at(SelectionAction::RotateClockwise)),
+      m_RotateCCWButton(shortcuts.at(SelectionAction::RotateCounterclockwise)),
       m_FlipHorizontalButton(shortcuts.at(SelectionAction::FlipHorizontally)),
       m_FlipVerticalButton(shortcuts.at(SelectionAction::FlipVertically)),
       m_SelectAllButton(shortcuts.at(SelectionAction::SelectAll)),
@@ -217,16 +237,17 @@ WidgetResult EditorWidget::UpdateImpl(const EditorResult& state) {
     UpdateResult(result, m_CutButton.Update(state));
     UpdateResult(result, m_DeleteButton.Update(state));
 
-    UpdateResult(result, m_DeselectButton.Update(state));
-    UpdateResult(result, m_RotateButton.Update(state));
+    UpdateResult(result, m_RotateCCWButton.Update(state));
+    UpdateResult(result, m_RotateCWButton.Update(state));
     UpdateResult(result, m_FlipVerticalButton.Update(state));
     UpdateResult(result, m_FlipHorizontalButton.Update(state));
-    UpdateResult(result, m_SelectAllButton.Update(state));
 
     UpdateResult(result, m_UndoButton.Update(state));
-
-    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
     UpdateResult(result, m_RedoButton.Update(state));
+
+    UpdateResult(result, m_SelectAllButton.Update(state));
+    ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, ImGui::GetFontSize());
+    UpdateResult(result, m_DeselectButton.Update(state));
     ImGui::PopStyleVar();
 
     if (result.Command) {
@@ -243,12 +264,15 @@ void EditorWidget::SetShortcutsImpl(const ShortcutMap& shortcuts) {
     m_CutButton.SetShortcuts(shortcuts.at(SelectionAction::Cut));
     m_PasteButton.SetShortcuts(shortcuts.at(SelectionAction::Paste));
     m_DeleteButton.SetShortcuts(shortcuts.at(SelectionAction::Delete));
-    m_DeselectButton.SetShortcuts(shortcuts.at(SelectionAction::Deselect));
-    m_RotateButton.SetShortcuts(shortcuts.at(SelectionAction::Rotate));
+    m_RotateCWButton.SetShortcuts(
+        shortcuts.at(SelectionAction::RotateClockwise));
+    m_RotateCCWButton.SetShortcuts(
+        shortcuts.at(SelectionAction::RotateCounterclockwise));
     m_FlipHorizontalButton.SetShortcuts(
         shortcuts.at(SelectionAction::FlipHorizontally));
     m_FlipVerticalButton.SetShortcuts(
         shortcuts.at(SelectionAction::FlipVertically));
+    m_DeselectButton.SetShortcuts(shortcuts.at(SelectionAction::Deselect));
     m_SelectAllButton.SetShortcuts(shortcuts.at(SelectionAction::SelectAll));
     m_UndoButton.SetShortcuts(shortcuts.at(EditorAction::Undo));
     m_RedoButton.SetShortcuts(shortcuts.at(EditorAction::Redo));

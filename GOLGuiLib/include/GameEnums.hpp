@@ -26,7 +26,8 @@ enum class EditorAction {
 };
 
 enum class SelectionAction {
-    Rotate,
+    RotateClockwise,
+    RotateCounterclockwise,
     Select,
     Deselect,
     Delete,
@@ -65,7 +66,8 @@ inline const std::unordered_map<std::string_view, EditorAction>
                                {"generate_noise", EditorAction::GenerateNoise}};
 inline const std::unordered_map<std::string_view, SelectionAction>
     SelectionActionDefinitions = {
-        {"rotate", SelectionAction::Rotate},
+        {"rotate_clockwise", SelectionAction::RotateClockwise},
+        {"rotate_counterclockwise", SelectionAction::RotateCounterclockwise},
         {"deselect", SelectionAction::Deselect},
         {"delete", SelectionAction::Delete},
         {"copy", SelectionAction::Copy},

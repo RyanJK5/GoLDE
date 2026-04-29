@@ -227,7 +227,8 @@ bool EditorModel::HandleSelectionAction(SelectionAction action,
 
     if (!actionResult && (action == SelectionAction::FlipHorizontally ||
                           action == SelectionAction::FlipVertically ||
-                          action == SelectionAction::Rotate)) {
+                          action == SelectionAction::RotateClockwise ||
+                          action == SelectionAction::RotateCounterclockwise)) {
         return false;
     } else {
         return true;

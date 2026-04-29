@@ -24,7 +24,8 @@ shortcuts:
     copy: [Ctrl+C]
     cut: [Ctrl+X]
     paste: [Ctrl+V]
-    rotate: [R]
+    rotate_clockwise: [R]
+    rotate_counterclockwise: [Shift+R]
     flip_horizontal: [Ctrl+K]
     flip_vertical: [Ctrl+L]
 

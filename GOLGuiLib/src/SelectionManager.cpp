@@ -297,12 +297,14 @@ SelectionManager::HandleAction(SelectionAction action, GameGrid& grid,
         return Nudge({0, -nudgeSize}, grid);
     case NudgeDown:
         return Nudge({0, nudgeSize}, grid);
-    case Rotate:
-        return this->Rotate(true, grid);
+    case RotateClockwise:
+        return Rotate(true, grid);
+    case RotateCounterclockwise:
+        return Rotate(false, grid);
     case FlipVertically:
         [[fallthrough]];
     case FlipHorizontally:
-        return this->Flip(action, grid);
+        return Flip(action, grid);
     default:
         assert(false && "Invalid action passed to HandleAction");
     }

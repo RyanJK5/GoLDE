@@ -54,7 +54,7 @@ class DeleteButton : public ActionButton<SelectionAction, false> {
     virtual bool Enabled(const EditorResult& state) const final;
 };
 
-class DeselectButton : public ActionButton<SelectionAction, true> {
+class DeselectButton : public ActionButton<SelectionAction, false> {
   public:
     DeselectButton(std::span<const ImGuiKeyChord> shortcuts = {});
 
@@ -64,9 +64,20 @@ class DeselectButton : public ActionButton<SelectionAction, true> {
     virtual bool Enabled(const EditorResult& state) const final;
 };
 
-class RotateButton : public ActionButton<SelectionAction, false> {
+class RotateClockwiseButton : public ActionButton<SelectionAction, false> {
   public:
-    RotateButton(std::span<const ImGuiKeyChord> shortcuts = {});
+    RotateClockwiseButton(std::span<const ImGuiKeyChord> shortcuts = {});
+
+  protected:
+    virtual Size2F Dimensions() const final;
+    virtual std::string Label(const EditorResult&) const override final;
+    virtual bool Enabled(const EditorResult& state) const final;
+};
+
+class RotateCounterclockwiseButton
+    : public ActionButton<SelectionAction, true> {
+  public:
+    RotateCounterclockwiseButton(std::span<const ImGuiKeyChord> shortcuts = {});
 
   protected:
     virtual Size2F Dimensions() const final;
@@ -94,7 +105,7 @@ class FlipVerticalButton : public ActionButton<SelectionAction, false> {
     virtual bool Enabled(const EditorResult& state) const final;
 };
 
-class SelectAllButton : public ActionButton<SelectionAction, true> {
+class SelectAllButton : public ActionButton<SelectionAction, false> {
   public:
     SelectAllButton(std::span<const ImGuiKeyChord> shortcuts = {});
 
@@ -104,7 +115,7 @@ class SelectAllButton : public ActionButton<SelectionAction, true> {
     virtual bool Enabled(const EditorResult& state) const final;
 };
 
-class UndoButton : public ActionButton<EditorAction, false> {
+class UndoButton : public ActionButton<EditorAction, true> {
   public:
     UndoButton(std::span<const ImGuiKeyChord> shortcuts = {});
 
@@ -140,8 +151,9 @@ class EditorWidget : public Widget {
     PasteButton m_PasteButton;
     DeleteButton m_DeleteButton;
 
+    RotateClockwiseButton m_RotateCWButton;
+    RotateCounterclockwiseButton m_RotateCCWButton;
     DeselectButton m_DeselectButton;
-    RotateButton m_RotateButton;
     FlipHorizontalButton m_FlipHorizontalButton;
     FlipVerticalButton m_FlipVerticalButton;
     SelectAllButton m_SelectAllButton;
